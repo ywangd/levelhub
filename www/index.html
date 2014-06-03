@@ -4,34 +4,36 @@
         <meta charset="utf-8" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
-        <link rel="stylesheet" type="text/css" href="css/index.css" />
         <link rel="stylesheet" type="text/css" href="jq/jquery.mobile-1.4.2.css" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
         <title>LevelHub</title>
     </head>
     <body>
         <section id="teachStudentList" data-role="page">
             <header data-role="header">
-                <h1>Level Hub</h1>
+                <h1>Violin Class</h1>
             </header>
             <div data-role="content">
-                <p>List of Student</p>
-                <p><a href="#studentStamp" data-transition="slide">go second page!</a></p>
+                <ul data-role="listview">
+                    <li><a href="#studentStamp" data-transition="slide">Student A</a></li>
+                    <li><a href="#studentStamp" data-transition="slide">Student B</a></li>
+                </ul>
                 <div id="testClick">click me</div>
             </div>
-            <footer data-role="footer" data-position="fixed">
-                <h3>First Attempt</h3>
-            </footer>
         </section>
         <section id="studentStamp" data-role="page">
             <header data-role="header">
-                <h1>Level Hub</h1>
+                <h1>Violin Class</h1>
             </header>
             <div data-role="content">
                 <p>This is the second page</p>
                 <p><a href="#teachStudentList" data-transition="slide" data-direction="reverse">go first page!</a></p>
             </div>
-            <footer data-role="footer" data-position="fixed">
-                <h3>First Attempt</h3>
+            <footer data-role="footer" data-position="fixed" style="text-align: center;">
+                <div class="ui-grid-a">
+                    <div class="ui-block-a"><a href="#" data-role="button" data-theme="d" style="display: block;">Cancel</a></div>
+                    <div class="ui-block-b"><a href="#" data-role="button" data-theme="b" style="display: block;">Save</a></div>
+                </div>
             </footer>
         </section>
         <script type="text/javascript" src="jq/jquery-2.1.1.js"></script>
