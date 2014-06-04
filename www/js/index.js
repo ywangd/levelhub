@@ -9,21 +9,52 @@
         },
 
         onDeviceReady: function () {
-            db = window.openDatabase("levelhub", "1.0", "LevelHub", 5 * 1024 * 1024);
+            db = window.openDatabase("levelhub", "1.0", "LevelHub", 65536);
             app.prepareDatabase();
-            app.diplayTeach(1);
+            app.displayTeach(1);
+            $("#teachRegs header a").click(function () {
+                $.mobile.changePage($("#addStudent"), {
+                    transition: "slidedown"
+                });
+            });
+            $("#addStudent footer a:eq(1)").click(function () {
+                var fields = [];
+                $.each($("#newStudentForm").serializeArray(), function (idx, field) {
+                    fields.push(field.value);
+                });
+                if (fields.toString() == ",,") {
+                    alert("More information required");
+                } else {
+                    db.transaction(
+                        function (tx) {
+                            tx.executeSql("INSERT INTO Students (fname, lname, dname) VALUES (?, ?, ?);",
+                                fields
+                                );
+                            tx.executeSql("INSERT INTO TeachRegs (teach, student, total, unused) VALUES" +
+                                    "(1, 3, 0, 0);",
+                                undefined,
+                                function () {
+                                    $.mobile.changePage($("#teachRegs"), {
+                                        transition: "slideup"
+                                    });
+                                    app.listStudentsForTeach(1);
+                                },
+                                app.dbError)
+                        });
+                }
+            });
         },
 
-        diplayTeach: function (teach_id) {
+        displayTeach: function (teach_id) {
             db.transaction(
                 function (tx) {
-                    tx.executeSql("SELECT * FROM Teaches where id = ?",
-                    [teach_id],
-                    function (tx, result) {
-                        var row = result.rows.item(0);
-                        $("#teachRegs header h1").text(row.name);
-                        app.listStudentsForTeach(teach_id);
-                    })
+                    tx.executeSql("SELECT * FROM Teaches WHERE id = ?",
+                        [teach_id],
+                        function (tx, result) {
+                            var row = result.rows.item(0);
+                            $("#teachRegs header h1").text(row.name);
+                            app.listStudentsForTeach(teach_id);
+                        })
                 }
             );
         },
@@ -125,7 +156,7 @@
                 tx.executeSql(
                         "SELECT S.id, S.fname, S.lname, S.dname, S.srv_id, T.total, T.unused " +
                         "FROM TeachRegs T " +
-                            "JOIN Students S ON T.student = S.id " +
+                        "JOIN Students S ON T.student = S.id " +
                         "WHERE teach = ?;",
                     [teach_id],
                     function (tx, result) {
@@ -156,7 +187,8 @@
 
     app.initialize();
 
-    $("#popdb").click(function (e) {
+    $("#popdb").click(function () {
+        alert("PopDB");
         app.nukeDatabase();
         app.prepareDatabase();
         app.mockData();
