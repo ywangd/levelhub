@@ -9,37 +9,77 @@
         <title>LevelHub</title>
     </head>
     <body>
-        <section id="teachStudentList" data-role="page">
+        <section id="teachRegs" data-role="page">
             <header data-role="header">
-                <h1>Violin Class</h1>
-                <a href="#" data-role="button" data-icon="plus" data-iconpos="notext" class="ui-btn-right">Add Student</a> 
+                <h1 style="margin-left: 10%; margin-right: 10%;"></h1>
+                <a href="#addStudent" data-transition="slidedown"
+                   data-role="button" data-icon="plus" data-iconpos="notext" class="ui-btn-right">Add Student</a>
             </header>
             <div data-role="content">
-                <ul data-id="studentList" data-role="listview">
+                <ul id="studentList" data-role="listview">
                     <li><a href="#studentStamp" data-transition="slide">Student A</a></li>
                     <li><a href="#studentStamp" data-transition="slide">Student B</a></li>
                 </ul>
-                <div id="testClick">click me</div>
             </div>
+            <footer data-role="footer" data-position="fixed">
+                <h1>Footer</h1>
+                <a id="popdb" href="#" data-role="button" data-icon="plus" data-iconpos="notext" class="ui-btn-right">Populate DB</a>
+            </footer>
         </section>
+
         <section id="studentStamp" data-role="page">
             <header data-role="header">
                 <h1>Violin Class</h1>
             </header>
             <div data-role="content">
                 <p>This is the second page</p>
-                <p><a href="#teachStudentList" data-transition="slide" data-direction="reverse">go first page!</a></p>
+                <p><a href="#teachRegs" data-transition="slide" data-direction="reverse">go first page!</a></p>
             </div>
             <footer data-role="footer" data-position="fixed" style="text-align: center;">
                 <div class="ui-grid-a">
                     <div class="ui-block-a">
-                    	<a href="#teachStudentList" data-transition="slide" data-direction="reverse" 
+                    	<a href="#teachRegs" data-transition="slide" data-direction="reverse" 
                     	   data-role="button" data-theme="d" data-icon="delete" style="display: block;">Cancel</a>
                     </div>
-                    <div class="ui-block-b"><a href="#" data-role="button" data-theme="b" data-icon="check" style="display: block;">Save</a></div>
+                    <div class="ui-block-b">
+                        <a href="#" data-role="button" data-theme="b" data-icon="check" style="display: block;">Save</a>
+                    </div>
                 </div>
             </footer>
         </section>
+
+        <section id="addStudent" data-role="page">
+            <header data-role="header">
+                <h1>New Student</h1>
+            </header>
+            <div>
+
+                <form style="margin-left: 10%; margin-right: 10%;">
+                    <label for="addfname" class="ui-hidden-accessible">First Name</label>
+                    <input type="text" name="addfname" id="addfname" value="" placeholder="First Name"/>
+
+                    <label for="addlname" class="ui-hidden-accessible">Last Name</label>
+                    <input type="text" name="addlname" id="addlname" value="" placeholder="Last Name"/>
+
+                    <label for="addnname" class="ui-hidden-accessible">Nick Name</label>
+                    <input type="text" name="addnname" id="addnname" value="" placeholder="Nick Name"/>
+                </form>
+
+            </div>
+            <footer data-role="footer" data-position="fixed" style="text-align: center;">
+                <div class="ui-grid-a">
+                    <div class="ui-block-a">
+                        <a href="#teachRegs" data-transition="slideup"
+                           data-role="button" data-theme="d" data-icon="delete" style="display: block;">Cancel</a>
+                    </div>
+                    <div class="ui-block-b">
+                        <a href="#" data-role="button" data-theme="b" data-icon="check" style="display: block;">Save</a>
+                    </div>
+                </div>
+            </footer>
+        </section>
+
+
         <script type="text/javascript" src="jq/jquery-2.1.1.js"></script>
         <script type="text/javascript" src="jq/jquery.mobile-1.4.2.js"></script>
         <script type="text/javascript" src="cordova.js"></script>
