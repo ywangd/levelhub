@@ -12,9 +12,10 @@
         <section id="teachStudentList" data-role="page">
             <header data-role="header">
                 <h1>Violin Class</h1>
+                <a href="#" data-role="button" data-icon="plus" data-iconpos="notext" class="ui-btn-right">Add Student</a> 
             </header>
             <div data-role="content">
-                <ul data-role="listview">
+                <ul data-id="studentList" data-role="listview">
                     <li><a href="#studentStamp" data-transition="slide">Student A</a></li>
                     <li><a href="#studentStamp" data-transition="slide">Student B</a></li>
                 </ul>
@@ -31,8 +32,11 @@
             </div>
             <footer data-role="footer" data-position="fixed" style="text-align: center;">
                 <div class="ui-grid-a">
-                    <div class="ui-block-a"><a href="#" data-role="button" data-theme="d" style="display: block;">Cancel</a></div>
-                    <div class="ui-block-b"><a href="#" data-role="button" data-theme="b" style="display: block;">Save</a></div>
+                    <div class="ui-block-a">
+                    	<a href="#teachStudentList" data-transition="slide" data-direction="reverse" 
+                    	   data-role="button" data-theme="d" data-icon="delete" style="display: block;">Cancel</a>
+                    </div>
+                    <div class="ui-block-b"><a href="#" data-role="button" data-theme="b" data-icon="check" style="display: block;">Save</a></div>
                 </div>
             </footer>
         </section>
@@ -40,7 +44,5 @@
         <script type="text/javascript" src="jq/jquery.mobile-1.4.2.js"></script>
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
-        <script type="text/javascript">
-        </script>
     </body>
 </html>

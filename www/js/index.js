@@ -1,39 +1,62 @@
 (function ($) {
+    var db;
+
     var app = {
-        // Application Constructor
-        initialize: function() {
-            this.bindEvents();
+        initialize: function () {
+            $(document).ready(function () {
+                $(document).bind("deviceready", app.onDeviceReady)
+            });
         },
-        // Bind Event Listeners
-        //
-        // Bind any events that are required on startup. Common events are:
-        // 'load', 'deviceready', 'offline', and 'online'.
-        bindEvents: function() {
-            document.addEventListener('deviceready', this.onDeviceReady, false);
-        },
-        // deviceready Event Handler
-        //
-        // The scope of 'this' is the event. In order to call the 'receivedEvent'
-        // function, we must explicity call 'app.receivedEvent(...);'
-        onDeviceReady: function() {
-            //app.db = window.openDatabase("levelhub", "1.0", "LevelHub", 5*1024*1024);
-            app.receivedEvent('deviceready');
-        },
-        // Update DOM on a Received Event
-        receivedEvent: function(id) {
-            var parentElement = document.getElementById(id);
-            var listeningElement = parentElement.querySelector('.listening');
-            var receivedElement = parentElement.querySelector('.received');
 
-            listeningElement.setAttribute('style', 'display:none;');
-            receivedElement.setAttribute('style', 'display:block;');
+        onDeviceReady: function () {
+            db = window.openDatabase("levelhub.sqlite", "1.0", "LevelHub", 5 * 1024 * 1024);
+            var ul = $("ul[data-id='studentList']");
+            $.each(app.queryStudentForTeach(1), function (idx, val) {
+                ul.append(val);
+            })
 
-            console.log('Received Event: ' + id);
+        },
+
+        queryStudentForTeach: function (teach_id) {
+            alert("queryStudentForTeach");
+            db.transaction(function (tx) {
+                tx.executeSql(
+                    "SELECT * FROM TeachRegs WHERE teach = ?;",
+                    [teach_id],
+                    function (tx, result) {
+                        app.buildStudentsForTeach(result);
+                    },
+                    app.dbError
+                );
+            });
+        },
+
+        buildStudentsForTeach: function (result) {
+            alert("buildStudentsForTeach");
+            var ret = []
+            for (var i = 0; i < result.rows.length; i++) {
+                var row = result.rows.item(i);
+                ret.push($("<li>").append($("<a>", {
+                    "href": "#studentStamp",
+                    "data-transition": "slide",
+                    text: row.fname + " " + row.lname
+                })));
+            }
+            return $(ret);
+        },
+
+        dbError: function (tx, err) {
+            alert("DB Error " + err.message);
+            console.log("DB error: " + err.message);
+            return false;
         }
     };
 
-    $("#testClick").click(function(e) {
+
+    $("#testClick").click(function (e) {
         alert("Clicked");
     });
+
+    app.initialize();
 
 })(jQuery);
