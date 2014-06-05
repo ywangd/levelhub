@@ -12,12 +12,16 @@
             db = window.openDatabase("levelhub", "1.0", "LevelHub", 65536);
             app.prepareDatabase();
             app.displayTeach(1);
+            
+            // Handle Add Student button
             $("#teachRegs header a").click(function () {
-                $.mobile.changePage($("#addStudent"), {
+                $.mobile.changePage($("#newStudent"), {
                     transition: "slidedown"
                 });
             });
-            $("#addStudent footer a:eq(1)").click(function () {
+            
+            // Handle Save button for new student page
+            $("#newStudent footer a:eq(1)").click(function () {
                 var fields = [];
                 $.each($("#newStudentForm").serializeArray(), function (idx, field) {
                     fields.push(field.value);
@@ -25,23 +29,28 @@
                 if (fields.toString() == ",,") {
                     alert("More information required");
                 } else {
+                    fields.unshift($("#teachRegs").data("teach_id"));
                     db.transaction(
                         function (tx) {
-                            tx.executeSql("INSERT INTO Students (fname, lname, dname) VALUES (?, ?, ?);",
-                                fields
-                                );
-                            tx.executeSql("INSERT INTO TeachRegs (teach, student, total, unused) VALUES" +
-                                    "(1, 3, 0, 0);",
-                                undefined,
+                            tx.executeSql(
+                                "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, user_dname) " +
+                                "VALUES (?, ?, ?, ?);",
+                                fields,
                                 function () {
                                     $.mobile.changePage($("#teachRegs"), {
                                         transition: "slideup"
                                     });
                                     app.listStudentsForTeach(1);
                                 },
-                                app.dbError)
+                                app.dbError
+                            );
                         });
                 }
+            });
+
+            // Handle page transition to student stamp page
+            $("#studentStamp").on("pagebeforeshow", function() {
+                $(this).find(".ui-content").append($("<p>reg id is " + window.localStorage.getItem("selectedRegId")+"</p>"));
             });
         },
 
@@ -52,124 +61,36 @@
                         [teach_id],
                         function (tx, result) {
                             var row = result.rows.item(0);
-                            $("#teachRegs header h1").text(row.name);
+                            var teachRegs = $("#teachRegs");
+                            teachRegs.data("teach_id", teach_id);
+                            teachRegs.data("desc", row.desc);
+                            teachRegs.find("header h1").text(row.name);
                             app.listStudentsForTeach(teach_id);
                         })
                 }
             );
         },
 
-        nukeDatabase: function () {
-            db.transaction(
-                function (tx) {
-                    tx.executeSql("DROP TABLE IF EXISTS TeachRegs;");
-                    tx.executeSql("DROP TABLE IF EXISTS Students;");
-                    tx.executeSql("DROP TABLE IF EXISTS Teaches;");
-                }
-            );
-        },
-
-        prepareDatabase: function () {
-            db.transaction(
-                function (tx) {
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS ClassMsgs (" +
-                        "id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL , " +
-                        "srv_class INTEGER NOT NULL , " +
-                        "srv_user INTEGER NOT NULL , " +
-                        "srv_user_dname VARCHAR, " +
-                        "title VARCHAR NOT NULL , " +
-                        "body TEXT, " +
-                        "is_teacher_post BOOL NOT NULL DEFAULT 0, " +
-                        "ctime DATETIME NOT NULL , " +
-                        "data TEXT, " +
-                        "is_author BOOL NOT NULL  DEFAULT 0, " +
-                        "srv_id INTEGER);");
-
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS Learns (" +
-                        "id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL , " +
-                        "srv_class INTEGER NOT NULL , " +
-                        "ctime DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP, " +
-                        "srv_id INTEGER);");
-
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS Me (" +
-                        "key VARCHAR PRIMARY KEY  NOT NULL , " +
-                        "val TEXT);");
-
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS Students (" +
-                        "id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL , " +
-                        "fname VARCHAR, " +
-                        "lname VARCHAR, " +
-                        "dname VARCHAR, " +
-                        "data TEXT, " +
-                        "srv_id INTEGER);");
-
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS TeachRegLogs (" +
-                        "id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL , " +
-                        "reg INTEGER NOT NULL , " +
-                        "ctime DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP, " +
-                        "data TEXT, " +
-                        "srv_id INTEGER);");
-
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS TeachRegs (" +
-                        "id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL , " +
-                        "teach INTEGER NOT NULL , " +
-                        "student INTEGER NOT NULL , " +
-                        "total INTEGER NOT NULL , " +
-                        "unused INTEGER NOT NULL , " +
-                        "ctime DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP, " +
-                        "data TEXT, " +
-                        "srv_id INTEGER);");
-
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS Teaches (" +
-                        "id INTEGER PRIMARY KEY  NOT NULL ," +
-                        "name VARCHAR NOT NULL ," +
-                        "desc TEXT," +
-                        "is_active BOOL NOT NULL  DEFAULT 1 ," +
-                        "ctime DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP ," +
-                        "data TEXT," +
-                        "srv_id INTEGER);");
-
-                },
-                app.dbError,
-                function () {
-                    console.log("DB preparation completed.")
-                });
-        },
-
-        mockData: function () {
-            db.transaction(
-                function (tx) {
-                    tx.executeSql("INSERT INTO Teaches (name, desc) VALUES ('Folk Guitar Basics', 'An introductory lesson for people who want to pick up guitar fast with no previous experience');");
-                    tx.executeSql("INSERT INTO Students (fname, lname) VALUES ('Emma', 'Wang');");
-                    tx.executeSql("INSERT INTO Students (fname, lname) VALUES ('Tia', 'Wang');");
-                    tx.executeSql("INSERT INTO TeachRegs (teach, student, total, unused) VALUES (1, 1, 24, 24);");
-                    tx.executeSql("INSERT INTO TeachRegs (teach, student, total, unused) VALUES (1, 2, 5, 5);");
-                },
-                app.dbError,
-                function () {
-                    console.log("Mock data ready.");
-                });
-        },
-
         listStudentsForTeach: function (teach_id) {
             db.transaction(function (tx) {
                 tx.executeSql(
-                        "SELECT S.id, S.fname, S.lname, S.dname, S.srv_id, T.total, T.unused " +
-                        "FROM TeachRegs T " +
-                        "JOIN Students S ON T.student = S.id " +
-                        "WHERE teach = ?;",
+                    "SELECT * FROM TeachRegs WHERE teach_id = ? ORDER BY id;",
                     [teach_id],
                     function (tx, result) {
                         var ul = $("#studentList");
                         ul.empty();
                         for (var i = 0; i < result.rows.length; i++) {
                             var row = result.rows.item(i);
-                            var li = $("<li>").append($("<a>", {
+                            var a = $("<a>", {
                                 "href": "#studentStamp",
                                 "data-transition": "slide",
-                                text: row.fname + " " + row.lname
-                            }));
-                            ul.append(li);
+                                text: row.user_fname + " " + row.user_lname
+                            });
+                            a.data("reg_id", row.id);
+                            a.click(function() {
+                                window.localStorage.setItem("selectedRegId", $(this).data("reg_id"));
+                            });
+                            ul.append($("<li>").append(a));
                         }
                         ul.listview('refresh');
                     },
@@ -182,7 +103,94 @@
             alert("DB Error " + err.message);
             console.log("DB error: " + err.message);
             return false;
+        },
+
+        prepareDatabase: function () {
+            db.transaction(
+                function (tx) {
+                    tx.executeSql("CREATE TABLE IF NOT EXISTS Me (" +
+                        "key VARCHAR PRIMARY KEY  NOT NULL , " +
+                        "val TEXT);");
+
+                    tx.executeSql("CREATE TABLE IF NOT EXISTS Teaches (" +
+                        "id INTEGER PRIMARY KEY  NOT NULL ," +
+                        "name VARCHAR NOT NULL ," +
+                        "desc TEXT," +
+                        "is_active BOOL NOT NULL  DEFAULT 1 ," +
+                        "ctime DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP ," +
+                        "data TEXT," +
+                        "srv_id INTEGER);");
+
+                    tx.executeSql("CREATE TABLE IF NOT EXISTS TeachRegs (" +
+                        "id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL , " +
+                        "teach_id INTEGER NOT NULL , " +
+                        "user_fname VARCHAR , user_lname VARCHAR, user_dname VARCHAR, srv_user_id INTEGER, " +
+                        "total INTEGER NOT NULL DEFAULT 0, " +
+                        "unused INTEGER NOT NULL DEFAULT 0, " +
+                        "ctime DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP, " +
+                        "data TEXT, " +
+                        "srv_id INTEGER);");
+
+                    tx.executeSql("CREATE TABLE IF NOT EXISTS TeachRegLogs (" +
+                        "id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL , " +
+                        "reg_id INTEGER NOT NULL , " +
+                        "ctime DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP, " +
+                        "data TEXT, " +
+                        "srv_id INTEGER);");
+
+                    tx.executeSql("CREATE TABLE IF NOT EXISTS ClassMsgs (" +
+                        "id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL , " +
+                        "srv_class_id INTEGER NOT NULL , " +
+                        "srv_user_id INTEGER NOT NULL , " +
+                        "srv_user_dname VARCHAR, " +
+                        "title VARCHAR NOT NULL , " +
+                        "body TEXT, " +
+                        "is_teacher_post BOOL NOT NULL DEFAULT 0, " +
+                        "ctime DATETIME NOT NULL , " +
+                        "data TEXT, " +
+                        "is_author BOOL NOT NULL  DEFAULT 0, " +
+                        "srv_id INTEGER);");
+
+                    tx.executeSql("CREATE TABLE IF NOT EXISTS Learns (" +
+                        "id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL , " +
+                        "srv_class_id INTEGER NOT NULL , " +
+                        "ctime DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP, " +
+                        "srv_id INTEGER);");
+
+                },
+                app.dbError,
+                function () {
+                    console.log("DB preparation completed.")
+                });
+        },
+
+        nukeDatabase: function () {
+            db.transaction(
+                function (tx) {
+                    tx.executeSql("DROP TABLE IF EXISTS TeachRegs;");
+                    tx.executeSql("DROP TABLE IF EXISTS Students;");
+                    tx.executeSql("DROP TABLE IF EXISTS Teaches;");
+                    tx.executeSql("DROP TABLE IF EXISTS TeachRegLogs;");
+                    tx.executeSql("DROP TABLE IF EXISTS ClassMsgs;");
+                    tx.executeSql("DROP TABLE IF EXISTS Learns;");
+                    tx.executeSql("DROP TABLE IF EXISTS Me;");
+                }
+            );
+        },
+
+        mockData: function () {
+            db.transaction(
+                function (tx) {
+                    tx.executeSql("INSERT INTO Teaches (name, desc) VALUES ('Folk Guitar Basics', 'An introductory lesson for people who want to pick up guitar fast with no previous experience');");
+                    tx.executeSql("INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) VALUES (1, 'Emma', 'Wang', 24, 24);");
+                    tx.executeSql("INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) VALUES (1, 'Tia', 'Wang', 5, 5);");
+                },
+                app.dbError,
+                function () {
+                    console.log("Mock data ready.");
+                });
         }
+
     };
 
     app.initialize();

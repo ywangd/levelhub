@@ -5,7 +5,7 @@
     * ID
     * fname
     * lname
-    * dname
+    * dname (display name)
     * desc
     * email
     * phone
@@ -72,24 +72,19 @@
     * data
     * SRV_ID (server side Classes ID)
 
-* Students
-    * ID
-    * fname
-    * lname
-    * dname (display name)
-    * data
-    * SRV_ID (ID on server table)
-
 * Learns (always refresh from server)
     * ID
-    * SRV_class (server side class ID)
+    * SRV_class_id (server side class ID)
     * ctime
     * SRV_ID (server side ClassRegs ID)
 
 * TeachRegs
     * ID
-    * teach (local teach ID)
-    * student (local student ID)
+    * teach_id (local teach ID)
+    * user_fname
+    * user_lname
+    * user_dname
+    * SRV_user_id (server side Users ID)
     * total
     * unused
     * ctime
@@ -98,15 +93,15 @@
 
 * TeachRegLogs
     * ID
-    * reg (FK using local TeachRegs ID)
+    * reg_id (FK using local TeachRegs ID)
     * ctime
     * data
     * SRV_ID
 
 * ClassMsgs 
     * ID
-    * SRV_class (server side Classes ID)
-    * SRV_user (server side Users ID)
+    * SRV_class_id (server side Classes ID)
+    * SRV_user_id (server side Users ID)
     * SRV_user_dname
     * title
     * body
