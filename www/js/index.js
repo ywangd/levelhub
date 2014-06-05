@@ -11,7 +11,7 @@
         onDeviceReady: function () {
             db = window.openDatabase("levelhub", "1.0", "LevelHub", 65536);
             app.prepareDatabase();
-            app.displayTeach(1);
+            app.displayTeachRegs(1);
             
             // Handle Add Student button
             $("#teachRegs header a").click(function () {
@@ -54,12 +54,91 @@
                 var student_item = $("#teachRegs ul li a").eq(idx);
                 var $this = $(this);
                 $this.find("header h1").text(student_item.text());
-                var stamps = $this.find(".ui-grid-b");
+                window.localStorage.setItem("check", []);
+                window.localStorage.setItem("uncheck", []);
+                window.localStorage.setItem("new", []);
+                db.transaction(
+                    function (tx) {
+                        tx.executeSql(
+                            "SELECT * FROM TeachRegLogs WHERE reg_id = ?",
+                            [student_item.data("reg_id")],
+                            function (tx, result) {
+                                var length = result.rows.length;
+                                var nPages = Math.ceil(length/9);
+
+                                var firstUnusedIdx = 0;
+                                for (var i=0; i < length; i++) {
+                                    if (!result.rows.item(i).use_time) {
+                                        firstUnusedIdx = i;
+                                        break;
+                                    }
+                                }
+                                var currentPageIdx = Math.floor(firstUnusedIdx/9);
+                                var firstIdx =  currentPageIdx * 9;
+                                var lastIdx = Math.min(firstIdx+9, length);
+                                var stampDoms = $this.find(".stamp");
+                                var imgDoms = stampDoms.find("img");
+                                stampDoms.addClass("hidden");
+                                imgDoms.addClass("hidden");
+                                for (var i=firstIdx; i < lastIdx; i++) {
+                                    var row = result.rows.item(i);
+                                    stampDoms.eq(i-firstIdx).removeClass("hidden");
+                                    if (row.use_time != null) {
+                                        imgDoms.eq(i-firstIdx).removeClass("hidden");
+                                    }
+                                }
+                                stampDoms.filter(":not(.hidden)").off("tap").on("tap", function () {
+                                    $(this).find("img").toggleClass("hidden");
+                                    return false;
+                                });
+                                $this.find(".ui-content").off("swiperight").on("swiperight", function () {
+                                    if (firstIdx >= 9) {
+                                        firstIdx -= 9;
+                                        lastIdx = firstIdx + 9;
+                                        stampDoms.addClass("hidden");
+                                        imgDoms.addClass("hidden");
+                                        for (var i=firstIdx; i < lastIdx; i++) {
+                                            var row = result.rows.item(i);
+                                            stampDoms.eq(i-firstIdx).removeClass("hidden");
+                                            if (row.use_time != null) {
+                                                imgDoms.eq(i-firstIdx).removeClass("hidden");
+                                            }
+                                        }
+                                        stampDoms.filter(":not(.hidden)").off("tap").on("tap", function () {
+                                            $(this).find("img").toggleClass("hidden");
+                                            return false;
+                                        });
+                                    }
+                                });
+                                $this.find(".ui-content").off("swipeleft").on("swipeleft", function () {
+                                    if (lastIdx < length) {
+                                        firstIdx = lastIdx;
+                                        lastIdx = firstIdx + 9;
+                                        stampDoms.addClass("hidden");
+                                        imgDoms.addClass("hidden");
+                                        for (var i=firstIdx; i < lastIdx; i++) {
+                                            var row = result.rows.item(i);
+                                            stampDoms.eq(i-firstIdx).removeClass("hidden");
+                                            if (row.use_time != null) {
+                                                imgDoms.eq(i-firstIdx).removeClass("hidden");
+                                            }
+                                        }
+                                        stampDoms.filter(":not(.hidden)").off("tap").on("tap", function () {
+                                            $(this).find("img").toggleClass("hidden");
+                                            return false;
+                                        });
+                                    }
+                                });
+                            }
+                        );
+                    }
+                );
+
 
             });
         },
 
-        displayTeach: function (teach_id) {
+        displayTeachRegs: function (teach_id) {
             db.transaction(
                 function (tx) {
                     tx.executeSql("SELECT * FROM Teaches WHERE id = ?",
@@ -143,6 +222,7 @@
                     tx.executeSql("CREATE TABLE IF NOT EXISTS TeachRegLogs (" +
                         "id INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL , " +
                         "reg_id INTEGER NOT NULL , " +
+                        "use_time DATETIME, " +
                         "ctime DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP, " +
                         "data TEXT, " +
                         "srv_id INTEGER);");
@@ -193,6 +273,14 @@
                     tx.executeSql("INSERT INTO Teaches (name, desc) VALUES ('Folk Guitar Basics', 'An introductory lesson for people who want to pick up guitar fast with no previous experience');");
                     tx.executeSql("INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) VALUES (1, 'Emma', 'Wang', 24, 24);");
                     tx.executeSql("INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) VALUES (1, 'Tia', 'Wang', 5, 5);");
+                    for (var i=0; i<24; i++) {
+                        tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(1);");
+                    }
+                    tx.executeSql("UPDATE TeachRegLogs SET use_time = '2014-06-05' WHERE id < 11;");
+                    for (var i=0; i<5; i++) {
+                        tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(2);");
+                    }
+                    tx.executeSql("UPDATE TeachRegLogs SET use_time = '2014-06-05' WHERE id in (25, 26, 27);");
                 },
                 app.dbError,
                 function () {
