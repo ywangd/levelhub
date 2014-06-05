@@ -94,6 +94,7 @@
 * TeachRegLogs
     * ID
     * reg_id (FK using local TeachRegs ID)
+    * use_time (null if unused)
     * ctime
     * data
     * SRV_ID

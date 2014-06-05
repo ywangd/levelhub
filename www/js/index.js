@@ -1,5 +1,7 @@
 (function ($) {
     var db;
+    var stamps;
+    var stampFirstIdx, stampLastIdx;
 
     var app = {
         initialize: function () {
@@ -48,93 +50,71 @@
                 }
             });
 
-            // Handle page transition to student stamp page
-            $("#studentStamp").on("pagebeforeshow", function() {
-                var idx = window.localStorage.getItem("selectedStudentItemIndex");
-                var student_item = $("#teachRegs ul li a").eq(idx);
-                var $this = $(this);
-                $this.find("header h1").text(student_item.text());
-                window.localStorage.setItem("check", []);
-                window.localStorage.setItem("uncheck", []);
-                window.localStorage.setItem("new", []);
-                db.transaction(
-                    function (tx) {
-                        tx.executeSql(
-                            "SELECT * FROM TeachRegLogs WHERE reg_id = ?",
-                            [student_item.data("reg_id")],
-                            function (tx, result) {
-                                var length = result.rows.length;
-                                var nPages = Math.ceil(length/9);
-
-                                var firstUnusedIdx = 0;
-                                for (var i=0; i < length; i++) {
-                                    if (!result.rows.item(i).use_time) {
-                                        firstUnusedIdx = i;
-                                        break;
-                                    }
-                                }
-                                var currentPageIdx = Math.floor(firstUnusedIdx/9);
-                                var firstIdx =  currentPageIdx * 9;
-                                var lastIdx = Math.min(firstIdx+9, length);
-                                var stampDoms = $this.find(".stamp");
-                                var imgDoms = stampDoms.find("img");
-                                stampDoms.addClass("hidden");
-                                imgDoms.addClass("hidden");
-                                for (var i=firstIdx; i < lastIdx; i++) {
-                                    var row = result.rows.item(i);
-                                    stampDoms.eq(i-firstIdx).removeClass("hidden");
-                                    if (row.use_time != null) {
-                                        imgDoms.eq(i-firstIdx).removeClass("hidden");
-                                    }
-                                }
-                                stampDoms.filter(":not(.hidden)").off("tap").on("tap", function () {
-                                    $(this).find("img").toggleClass("hidden");
-                                    return false;
-                                });
-                                $this.find(".ui-content").off("swiperight").on("swiperight", function () {
-                                    if (firstIdx >= 9) {
-                                        firstIdx -= 9;
-                                        lastIdx = firstIdx + 9;
-                                        stampDoms.addClass("hidden");
-                                        imgDoms.addClass("hidden");
-                                        for (var i=firstIdx; i < lastIdx; i++) {
-                                            var row = result.rows.item(i);
-                                            stampDoms.eq(i-firstIdx).removeClass("hidden");
-                                            if (row.use_time != null) {
-                                                imgDoms.eq(i-firstIdx).removeClass("hidden");
-                                            }
-                                        }
-                                        stampDoms.filter(":not(.hidden)").off("tap").on("tap", function () {
-                                            $(this).find("img").toggleClass("hidden");
-                                            return false;
-                                        });
-                                    }
-                                });
-                                $this.find(".ui-content").off("swipeleft").on("swipeleft", function () {
-                                    if (lastIdx < length) {
-                                        firstIdx = lastIdx;
-                                        lastIdx = firstIdx + 9;
-                                        stampDoms.addClass("hidden");
-                                        imgDoms.addClass("hidden");
-                                        for (var i=firstIdx; i < lastIdx; i++) {
-                                            var row = result.rows.item(i);
-                                            stampDoms.eq(i-firstIdx).removeClass("hidden");
-                                            if (row.use_time != null) {
-                                                imgDoms.eq(i-firstIdx).removeClass("hidden");
-                                            }
-                                        }
-                                        stampDoms.filter(":not(.hidden)").off("tap").on("tap", function () {
-                                            $(this).find("img").toggleClass("hidden");
-                                            return false;
-                                        });
-                                    }
-                                });
-                            }
-                        );
+            // Handle page transition for multi-page stamps
+            $("#studentStamp-0, #studentStamp-1").find(".ui-content").on("swipeleft swiperight", function (event) {
+                var currentPage = $(this).closest("section").attr("id");
+                var targetPage;
+                if (currentPage == "studentStamp-0") {
+                    targetPage = $("#studentStamp-1");
+                } else {
+                    targetPage = $("#studentStamp-0");
+                }
+                var length = stamps.length;
+                var eventName = event.type;
+                if (eventName == "swipeleft") {
+                    if (stampLastIdx < length) {
+                        stampFirstIdx = stampLastIdx;
+                        stampLastIdx = Math.min(stampFirstIdx + 9, length);
+                        app.refreshStamps(targetPage);
+                        $.mobile.changePage(targetPage, {
+                            transition: "slide"
+                        })
                     }
-                );
+                } else {
+                    if (stampFirstIdx >= 9) {
+                        stampFirstIdx -= 9;
+                        stampLastIdx = stampFirstIdx + 9;
+                        app.refreshStamps(targetPage);
+                        $.mobile.changePage(targetPage, {
+                            transition: "slide",
+                            reverse: true
+                        })
+                    }
+                }
+            });
 
-
+            // Handle page transition to student stamp page
+            $("#studentStamp-0, #studentStamp-1").on("pagebeforeshow", function(event, ui) {
+                if (ui.prevPage.attr("id") == "teachRegs") {
+                    var idx = window.localStorage.getItem("selectedStudentItemIndex");
+                    var student_item = $("#teachRegs ul li a").eq(idx);
+                    $("#studentStamp-0, #studentStamp-1").find("header h1").text(student_item.text());
+                    var $this = $(this);
+                    db.transaction(
+                        function (tx) {
+                            tx.executeSql(
+                                "SELECT * FROM TeachRegLogs WHERE reg_id = ?",
+                                [student_item.data("reg_id")],
+                                function (tx, result) {
+                                    var length = result.rows.length;
+                                    var firstUnusedIdx = 0;
+                                    for (var i = 0; i < length; i++) {
+                                        if (!result.rows.item(i).use_time) {
+                                            firstUnusedIdx = i;
+                                            break;
+                                        }
+                                    }
+                                    var currentPageIdx = Math.floor(firstUnusedIdx / 9);
+                                    stampFirstIdx = currentPageIdx * 9;
+                                    stampLastIdx = Math.min(stampFirstIdx + 9, length);
+                                    stamps = [];
+                                    for (var i=0; i < length; i++) {
+                                        stamps.push(result.rows.item(i));
+                                    }
+                                    app.refreshStamps($this);
+                                });
+                        });
+                }
             });
         },
 
@@ -166,7 +146,7 @@
                         for (var i = 0; i < result.rows.length; i++) {
                             var row = result.rows.item(i);
                             var a = $("<a>", {
-                                "href": "#studentStamp",
+                                "href": "#studentStamp-0",
                                 "data-transition": "slide",
                                 text: row.user_fname + " " + row.user_lname
                             });
@@ -185,6 +165,27 @@
                     app.dbError
                 );
             });
+        },
+
+        refreshStamps: function (page) {
+            var stampDoms = page.find(".stamp");
+            var imgDoms = stampDoms.find("img");
+            stampDoms.addClass("hidden");
+            imgDoms.addClass("hidden");
+            for (var i=stampFirstIdx; i < stampLastIdx; i++) {
+                var row = stamps[i];
+                stampDoms.eq(i-stampFirstIdx).removeClass("hidden");
+                if (row.use_time != null) {
+                    imgDoms.eq(i-stampFirstIdx).removeClass("hidden");
+                }
+            }
+            stampDoms.off("tap").filter(":not(.hidden)").on("tap", function () {
+                $(this).find("img").toggleClass("hidden");
+                return false;
+            });
+            page.find(".pageCount").empty().append($("<div>", {
+                text: (Math.floor(stampFirstIdx/9) + 1) + "/" + Math.ceil(stamps.length/9)
+            }))
         },
 
         dbError: function (tx, err) {
