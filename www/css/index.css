@@ -7,8 +7,16 @@
 }
 
 .stamp {
-
+    width: 80%;
+    margin: 10%;
+    padding: 5%;
     -webkit-box-shadow: 0 10px 6px -6px #777;
     -moz-box-shadow: 0 10px 6px -6px #777;
     box-shadow: 0 10px 6px -6px #777;
+    border: 1px solid;
+    border-radius: 5px;
+}
+
+.hidden {
+    display: none;
 }

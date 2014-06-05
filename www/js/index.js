@@ -55,11 +55,7 @@
                 var $this = $(this);
                 $this.find("header h1").text(student_item.text());
                 var stamps = $this.find(".ui-grid-b");
-                stamps.html(
-                    '<div class="ui-block-a stamp" style="border: 1px solid; border-radius: 5px; width: 95px;"><img src="jq/images/icons-svg/check-black.svg" style="width: 100%;"/></div>' +
-                    '<div class="ui-block-b stamp" style="border: 1px solid; border-radius: 5px; width: 95px;"><img src="jq/images/icons-svg/check-black.svg" style="width: 100%;"/></div>' +
-                    '<div class="ui-block-c stamp" style="border: 1px solid; border-radius: 5px; width: 95px;"><img src="jq/images/icons-svg/check-black.svg" style="width: 100%;"/></div>'
-                );
+
             });
         },
 
