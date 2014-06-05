@@ -50,7 +50,16 @@
 
             // Handle page transition to student stamp page
             $("#studentStamp").on("pagebeforeshow", function() {
-                $(this).find(".ui-content").append($("<p>reg id is " + window.localStorage.getItem("selectedRegId")+"</p>"));
+                var idx = window.localStorage.getItem("selectedStudentItemIndex");
+                var student_item = $("#teachRegs ul li a").eq(idx);
+                var $this = $(this);
+                $this.find("header h1").text(student_item.text());
+                var stamps = $this.find(".ui-grid-b");
+                stamps.html(
+                    '<div class="ui-block-a stamp" style="border: 1px solid; border-radius: 5px; width: 95px;"><img src="jq/images/icons-svg/check-black.svg" style="width: 100%;"/></div>' +
+                    '<div class="ui-block-b stamp" style="border: 1px solid; border-radius: 5px; width: 95px;"><img src="jq/images/icons-svg/check-black.svg" style="width: 100%;"/></div>' +
+                    '<div class="ui-block-c stamp" style="border: 1px solid; border-radius: 5px; width: 95px;"><img src="jq/images/icons-svg/check-black.svg" style="width: 100%;"/></div>'
+                );
             });
         },
 
@@ -87,8 +96,12 @@
                                 text: row.user_fname + " " + row.user_lname
                             });
                             a.data("reg_id", row.id);
+                            a.data("total", row.total);
+                            a.data("unused", row.unused);
+                            a.data("srv_id", row.srv_id);
                             a.click(function() {
-                                window.localStorage.setItem("selectedRegId", $(this).data("reg_id"));
+                                window.localStorage.setItem("selectedStudentItemIndex",
+                                    $(this).parent().prevAll().length);
                             });
                             ul.append($("<li>").append(a));
                         }

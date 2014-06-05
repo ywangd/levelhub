@@ -1,7 +1,14 @@
 .center-wrapper {
-    text-align: center;
+    text-align: center !important;
 }
 
 .center-wrapper * {
-    margin: 0 auto;
+    margin: 0 auto !important;
+}
+
+.stamp {
+
+    -webkit-box-shadow: 0 10px 6px -6px #777;
+    -moz-box-shadow: 0 10px 6px -6px #777;
+    box-shadow: 0 10px 6px -6px #777;
 }
