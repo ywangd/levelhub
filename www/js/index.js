@@ -50,6 +50,50 @@
                 }
             });
 
+            // Handle the transition from teachRegs to stamps page
+            $("#studentList").on("click", "a", function () {
+                var $this = $(this);
+                $("#studentStamp-0, #studentStamp-1").find("header h1").text($this.text());
+                db.transaction(
+                    function (tx) {
+                        tx.executeSql(
+                            "SELECT * FROM TeachRegLogs WHERE reg_id = ?",
+                            [$this.data("reg_id")],
+                            function (tx, result) {
+                                var length = result.rows.length;
+                                var firstUnusedIdx = 0;
+                                for (var i = 0; i < length; i++) {
+                                    if (!result.rows.item(i).use_time) {
+                                        firstUnusedIdx = i;
+                                        break;
+                                    }
+                                }
+                                var currentPageIdx = Math.floor(firstUnusedIdx / 9);
+                                stampFirstIdx = currentPageIdx * 9;
+                                stampLastIdx = Math.min(stampFirstIdx + 9, length);
+                                stamps = [];
+                                for (var i = 0; i < length; i++) {
+                                    var row = result.rows.item(i);
+                                    stamps.push({
+                                        updated: false,
+                                        id: row.id,
+                                        reg_id: row.reg_id,
+                                        use_time: row.use_time,
+                                        ctime: row.ctime,
+                                        data: row.data,
+                                        srv_id: row.srv_id
+                                    });
+                                }
+                                var toPage = $("#studentStamp-0");
+                                app.refreshStamps(toPage);
+                                $.mobile.changePage(toPage, {
+                                    transition: "slide"
+                                });
+                            });
+                    });
+                return false;
+            });
+
             // Handle page transition for multi-page stamps
             $("#studentStamp-0, #studentStamp-1").find(".ui-content").on("swipeleft swiperight", function (event) {
                 var currentPage = $(this).closest("section").attr("id");
@@ -133,48 +177,6 @@
                             a.data("total", row.total);
                             a.data("unused", row.unused);
                             a.data("srv_id", row.srv_id);
-                            a.click(function () {
-                                var $this = $(this);
-                                $("#studentStamp-0, #studentStamp-1").find("header h1").text($this.text());
-                                db.transaction(
-                                    function (tx) {
-                                        tx.executeSql(
-                                            "SELECT * FROM TeachRegLogs WHERE reg_id = ?",
-                                            [$this.data("reg_id")],
-                                            function (tx, result) {
-                                                var length = result.rows.length;
-                                                var firstUnusedIdx = 0;
-                                                for (var i = 0; i < length; i++) {
-                                                    if (!result.rows.item(i).use_time) {
-                                                        firstUnusedIdx = i;
-                                                        break;
-                                                    }
-                                                }
-                                                var currentPageIdx = Math.floor(firstUnusedIdx / 9);
-                                                stampFirstIdx = currentPageIdx * 9;
-                                                stampLastIdx = Math.min(stampFirstIdx + 9, length);
-                                                stamps = [];
-                                                for (var i = 0; i < length; i++) {
-                                                    var row = result.rows.item(i);
-                                                    stamps.push({
-                                                        updated: false,
-                                                        id: row.id,
-                                                        reg_id: row.reg_id,
-                                                        use_time: row.use_time,
-                                                        ctime: row.ctime,
-                                                        data: row.data,
-                                                        srv_id: row.srv_id
-                                                    });
-                                                }
-                                                var toPage = $("#studentStamp-0");
-                                                app.refreshStamps(toPage);
-                                                $.mobile.changePage(toPage, {
-                                                    transition: "slide"
-                                                });
-                                            });
-                                    });
-                                return false;
-                            });
                             ul.append($("<li>").append(a));
                         }
                         ul.listview('refresh');
