@@ -86,6 +86,8 @@
                                 }
                                 var toPage = $("#studentStamp-0");
                                 app.refreshStamps(toPage);
+                                // Make sure the header is visible. It could be off during stamps page transition
+                                toPage.find("header").css("visibility", "visible");
                                 $.mobile.changePage(toPage, {
                                     transition: "slide"
                                 });
@@ -96,9 +98,9 @@
 
             // Handle page transition for multi-page stamps
             $("#studentStamp-0, #studentStamp-1").find(".ui-content").on("swipeleft swiperight", function (event) {
-                var currentPage = $(this).closest("section").attr("id");
+                var currentPage = $(this).closest("section");
                 var targetPage;
-                if (currentPage == "studentStamp-0") {
+                if (currentPage.attr("id") == "studentStamp-0") {
                     targetPage = $("#studentStamp-1");
                 } else {
                     targetPage = $("#studentStamp-0");
@@ -110,19 +112,25 @@
                         stampFirstIdx = stampLastIdx;
                         stampLastIdx = Math.min(stampFirstIdx + 9, length);
                         app.refreshStamps(targetPage);
+                        // Simulate fixed persistent header during transition
+                        currentPage.find("header").css("visibility", "hidden");
+                        targetPage.find("header").css("visibility", "visible");
                         $.mobile.changePage(targetPage, {
                             transition: "slide"
-                        })
+                        });
                     }
                 } else {
                     if (stampFirstIdx >= 9) {
                         stampFirstIdx -= 9;
                         stampLastIdx = stampFirstIdx + 9;
                         app.refreshStamps(targetPage);
+                        // Simulate fixed persistent header during transition
+                        currentPage.find("header").css("visibility", "hidden");
+                        targetPage.find("header").css("visibility", "visible");
                         $.mobile.changePage(targetPage, {
                             transition: "slide",
                             reverse: true
-                        })
+                        });
                     }
                 }
             });
