@@ -96,17 +96,23 @@
         <h1>New Student</h1>
     </header>
     <div role="main" class="ui-content">
+        <div>
+            <div class="new-avatar">
+                <img src="img/smiley.svg" style="width: 100%;"/>
+            </div>
+            <div class="new-form">
+                <form id="newStudentForm">
+                    <label for="addfname" class="ui-hidden-accessible">First Name</label>
+                    <input type="text" name="addfname" id="addfname" value="" placeholder="First Name"/>
 
-        <form id="newStudentForm" style="margin-left: 10%; margin-right: 10%;">
-            <label for="addfname" class="ui-hidden-accessible">First Name</label>
-            <input type="text" name="addfname" id="addfname" value="" placeholder="First Name"/>
+                    <label for="addlname" class="ui-hidden-accessible">Last Name</label>
+                    <input type="text" name="addlname" id="addlname" value="" placeholder="Last Name"/>
+                </form>
 
-            <label for="addlname" class="ui-hidden-accessible">Last Name</label>
-            <input type="text" name="addlname" id="addlname" value="" placeholder="Last Name"/>
+            </div>
+        </div>
 
-            <label for="addnname" class="ui-hidden-accessible">Nick Name</label>
-            <input type="text" name="addnname" id="addnname" value="" placeholder="Prefered Name"/>
-        </form>
+
 
     </div>
     <footer data-role="footer" data-position="fixed" style="text-align: center;">

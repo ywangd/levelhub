@@ -25,6 +25,29 @@
     text-align: center;
 }
 
+.ui-li-count.ui-btn-up-c.ui-btn-corner-all {
+    -moz-border-radius: 1em;
+    -webkit-border-radius: 1em;
+    border-radius: 1em;
+}
+
+.new-avatar {
+    display: inline-block;
+    width: 40%;
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
+}
+
+.new-form {
+    display: inline-block;
+    width: 58%;
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
+}
+
+
 .hidden {
     visibility: hidden;
 }

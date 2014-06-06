@@ -28,15 +28,15 @@
                 $.each($("#newStudentForm").serializeArray(), function (idx, field) {
                     fields.push(field.value);
                 });
-                if (fields.toString() == ",,") {
+                if (fields.toString() == ",") {
                     alert("More information required");
                 } else {
                     fields.unshift($("#teachRegs").data("teach_id"));
                     db.transaction(
                         function (tx) {
                             tx.executeSql(
-                                "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, user_dname) " +
-                                    "VALUES (?, ?, ?, ?);",
+                                "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
+                                    "VALUES (?, ?, ?);",
                                 fields,
                                 function () {
                                     $.mobile.changePage($("#teachRegs"), {
@@ -53,7 +53,7 @@
             // Handle the transition from teachRegs to stamps page
             $("#studentList").on("click", "a", function () {
                 var $this = $(this);
-                $("#studentStamp-0, #studentStamp-1").find("header h1").text($this.text());
+                $("#studentStamp-0, #studentStamp-1").find("header h1").text($this.data("name"));
                 db.transaction(
                     function (tx) {
                         tx.executeSql(
@@ -169,14 +169,20 @@
                         ul.empty();
                         for (var i = 0; i < result.rows.length; i++) {
                             var row = result.rows.item(i);
+                            var name = row.user_fname + " " + row.user_lname;
                             var a = $("<a>", {
                                 "href": "#",
-                                text: row.user_fname + " " + row.user_lname
+                                text: name
                             });
+                            a.data("name", name);
                             a.data("reg_id", row.id);
                             a.data("total", row.total);
                             a.data("unused", row.unused);
                             a.data("srv_id", row.srv_id);
+                            a.append($("<span>", {
+                                class: "ui-li-count ui-btn-up-c ui-btn-corner-all",
+                                text: row.unused
+                            }));
                             ul.append($("<li>").append(a));
                         }
                         ul.listview('refresh');
@@ -341,7 +347,7 @@
     app.initialize();
 
     $("#popdb").click(function () {
-        alert("PopDB");
+        console.log("PopDB");
         app.nukeDatabase();
         app.prepareDatabase();
         app.mockData();
