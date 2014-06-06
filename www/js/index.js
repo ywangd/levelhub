@@ -212,9 +212,10 @@
                 }
                 return false;
             });
-            page.find(".pageCount").empty().append($("<div>", {
-                text: (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1)
-            }));
+            page.find(".pageCount").empty().text(
+                    (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1)
+            );
+
         },
 
         getCurrentTimestamp: function () {

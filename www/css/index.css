@@ -21,6 +21,10 @@
     width: 100%;
 }
 
+.pageCount {
+    text-align: center;
+}
+
 .hidden {
     visibility: hidden;
 }
