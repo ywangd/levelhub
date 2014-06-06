@@ -17,6 +17,10 @@
     border-radius: 5px;
 }
 
+.stamp > img {
+    width: 100%;
+}
+
 .hidden {
     visibility: hidden;
 }
