@@ -14,14 +14,14 @@
             db = window.openDatabase("levelhub", "1.0", "LevelHub", 65536);
             app.prepareDatabase();
             app.displayTeachRegs(1);
-            
+
             // Handle Add Student button
             $("#teachRegs header a").click(function () {
                 $.mobile.changePage($("#newStudent"), {
                     transition: "slidedown"
                 });
             });
-            
+
             // Handle Save button for new student page
             $("#newStudent footer a:eq(1)").click(function () {
                 var fields = [];
@@ -36,7 +36,7 @@
                         function (tx) {
                             tx.executeSql(
                                 "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, user_dname) " +
-                                "VALUES (?, ?, ?, ?);",
+                                    "VALUES (?, ?, ?, ?);",
                                 fields,
                                 function () {
                                     $.mobile.changePage($("#teachRegs"), {
@@ -83,8 +83,21 @@
                 }
             });
 
+            // Debug function to deal with the slowness of android emulator
+            $(document).keyup(function (event) {
+                if ($.mobile.activePage.attr("id") == "studentStamp-0" || $.mobile.activePage.attr("id") == "studentStamp-1") {
+                    if (event.which == 65) {
+                        $.mobile.activePage.find(".ui-content").trigger("swiperight");
+                    } else if (event.which == 68) {
+                        $.mobile.activePage.find(".ui-content").trigger("swipeleft");
+                    }
+                }
+
+                return false;
+            });
+
             // Handle page transition to student stamp page
-            $("#studentStamp-0, #studentStamp-1").on("pagebeforeshow", function(event, ui) {
+            $("#studentStamp-0, #studentStamp-1").on("pagebeforeshow", function (event, ui) {
                 if (ui.prevPage.attr("id") == "teachRegs") {
                     var idx = window.localStorage.getItem("selectedStudentItemIndex");
                     var student_item = $("#teachRegs ul li a").eq(idx);
@@ -108,8 +121,17 @@
                                     stampFirstIdx = currentPageIdx * 9;
                                     stampLastIdx = Math.min(stampFirstIdx + 9, length);
                                     stamps = [];
-                                    for (var i=0; i < length; i++) {
-                                        stamps.push(result.rows.item(i));
+                                    for (var i = 0; i < length; i++) {
+                                        var row = result.rows.item(i);
+                                        stamps.push({
+                                            updated: false,
+                                            id: row.id,
+                                            reg_id: row.reg_id,
+                                            use_time: row.use_time,
+                                            ctime: row.ctime,
+                                            data: row.data,
+                                            srv_id: row.srv_id
+                                        });
                                     }
                                     app.refreshStamps($this);
                                 });
@@ -154,7 +176,7 @@
                             a.data("total", row.total);
                             a.data("unused", row.unused);
                             a.data("srv_id", row.srv_id);
-                            a.click(function() {
+                            a.click(function () {
                                 window.localStorage.setItem("selectedStudentItemIndex",
                                     $(this).parent().prevAll().length);
                             });
@@ -172,20 +194,47 @@
             var imgDoms = stampDoms.find("img");
             stampDoms.addClass("hidden");
             imgDoms.addClass("hidden");
-            for (var i=stampFirstIdx; i < stampLastIdx; i++) {
-                var row = stamps[i];
-                stampDoms.eq(i-stampFirstIdx).removeClass("hidden");
-                if (row.use_time != null) {
-                    imgDoms.eq(i-stampFirstIdx).removeClass("hidden");
+            for (var i = stampFirstIdx; i < stampLastIdx; i++) {
+                var stamp = stamps[i];
+                stampDoms.eq(i - stampFirstIdx).removeClass("hidden");
+                if (stamp.use_time != null) {
+                    imgDoms.eq(i - stampFirstIdx).removeClass("hidden");
                 }
             }
             stampDoms.off("tap").filter(":not(.hidden)").on("tap", function () {
-                $(this).find("img").toggleClass("hidden");
+                $this = $(this);
+                var unchecked = $this.find("img").toggleClass("hidden").hasClass("hidden");
+                var stampIdx = stampFirstIdx + $this.parent().prevAll().length;
+                var stamp = stamps[stampIdx];
+                stamp.updated = true;
+                if (unchecked) {
+                    stamp.use_time = null;
+                } else {
+                    var t = app.getCurrentTimestamp();
+                    stamp.use_time = t;
+                }
                 return false;
             });
             page.find(".pageCount").empty().append($("<div>", {
-                text: (Math.floor(stampFirstIdx/9) + 1) + "/" + Math.ceil(stamps.length/9)
-            }))
+                text: (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1)
+            }));
+        },
+
+        getCurrentTimestamp: function () {
+            var now = new Date();
+            var mon = now.getMonth() + 1;
+            var date = now.getDate();
+            var hour = now.getHours();
+            var min = now.getMinutes();
+            var sec = now.getSeconds();
+            if (mon < 10) mon = '0' + mon;
+            if (date < 10) date = '0' + date;
+            if (hour < 10) hour = '0' + hour;
+            if (min < 10) min = '0' + min;
+            if (sec < 10) sec = '0' + sec;
+
+            var ret = now.getFullYear() + '-' + mon + '-' + date + ' ' + hour + ':' + min + ':' + sec;
+            return ret;
         },
 
         dbError: function (tx, err) {
@@ -274,14 +323,14 @@
                     tx.executeSql("INSERT INTO Teaches (name, desc) VALUES ('Folk Guitar Basics', 'An introductory lesson for people who want to pick up guitar fast with no previous experience');");
                     tx.executeSql("INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) VALUES (1, 'Emma', 'Wang', 24, 24);");
                     tx.executeSql("INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) VALUES (1, 'Tia', 'Wang', 5, 5);");
-                    for (var i=0; i<24; i++) {
+                    for (var i = 0; i < 24; i++) {
                         tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(1);");
                     }
                     tx.executeSql("UPDATE TeachRegLogs SET use_time = '2014-06-05' WHERE id < 11;");
-                    for (var i=0; i<5; i++) {
+                    for (var i = 0; i < 5; i++) {
                         tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(2);");
                     }
-                    tx.executeSql("UPDATE TeachRegLogs SET use_time = '2014-06-05' WHERE id in (25, 26, 27);");
+                    tx.executeSql("UPDATE TeachRegLogs SET use_time = '2014-06-05' WHERE id IN (25, 26, 27);");
                 },
                 app.dbError,
                 function () {
