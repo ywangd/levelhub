@@ -231,7 +231,7 @@
             page.find(".pageCount").empty().text(
                     (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1)
             );
-
+            page.find(".unusedCount").empty().text(14);
         },
 
         getCurrentTimestamp: function () {
@@ -335,8 +335,8 @@
             db.transaction(
                 function (tx) {
                     tx.executeSql("INSERT INTO Teaches (name, desc) VALUES ('Folk Guitar Basics', 'An introductory lesson for people who want to pick up guitar fast with no previous experience');");
-                    tx.executeSql("INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) VALUES (1, 'Emma', 'Wang', 24, 24);");
-                    tx.executeSql("INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) VALUES (1, 'Tia', 'Wang', 5, 5);");
+                    tx.executeSql("INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) VALUES (1, 'Emma', 'Wang', 24, 14);");
+                    tx.executeSql("INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) VALUES (1, 'Tia', 'Wang', 5, 2);");
                     for (var i = 0; i < 24; i++) {
                         tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(1);");
                     }

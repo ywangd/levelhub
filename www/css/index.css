@@ -22,7 +22,18 @@
 }
 
 .pageCount {
-    text-align: center;
+    background-color: transparent !important;
+    border: 0 !important;
+}
+
+.unusedCount {
+    background-color: transparent !important;
+    border: 0 !important;
+}
+
+.icon-btn-in-ctrlgrp {
+    border-radius: 1em !important;
+    padding: 0.5em !important;
 }
 
 .ui-li-count.ui-btn-up-c.ui-btn-corner-all {
