@@ -11,6 +11,7 @@
         },
 
         onDeviceReady: function () {
+            StatusBar.overlaysWebView(false);
             db = window.openDatabase("levelhub", "1.0", "LevelHub", 65536);
             app.prepareDatabase();
             app.displayTeachRegs(1);
@@ -133,6 +134,7 @@
                         });
                     }
                 }
+                return false;
             });
 
             // Debug function to deal with the slowness of android emulator

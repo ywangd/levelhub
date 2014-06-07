@@ -6,6 +6,8 @@
 
 # Plugins
 `cordova plugin add https://git-wip-us.apache.org/repos/asf/cordova-plugin-console.git`
+`cordova plugin add org.apache.cordova.statusbar` 
+    * To show ios statusbar above the webview via `StatusBar.overlaysWebView(false);`
 
 * On Windows, if error occurs relating to temporary directory (e.g. fatal:
   could not create work tree dir), create the required directory manually to
