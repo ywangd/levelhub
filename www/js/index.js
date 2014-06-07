@@ -64,7 +64,8 @@
                             [currentStudent.reg_id],
                             function (tx, result) {
                                 var length = result.rows.length;
-                                var firstUnusedIdx = 0;
+                                // pre-set to last idx in case no unused slot is available
+                                var firstUnusedIdx = length == 0 ? 0 : length - 1;
                                 for (var i = 0; i < length; i++) {
                                     if (!result.rows.item(i).use_time) {
                                         firstUnusedIdx = i;
@@ -82,6 +83,7 @@
                                         id: row.id,
                                         reg_id: row.reg_id,
                                         use_time: row.use_time,
+                                        old_is_used: row.use_time ? true : false,
                                         ctime: row.ctime,
                                         data: row.data,
                                         srv_id: row.srv_id
@@ -139,6 +141,49 @@
                 return false;
             });
 
+            // Handle save button on stamps page
+            $("#studentStamp-0, #studentStamp-1").find("footer a:eq(1)").on("click", function () {
+                $.mobile.loading("show");
+                var sqlParms = [];
+                $.each(stamps, function (idx, stamp) {
+                    if (stamp.updated) {
+                        if (stamp.id == -1) { // new stamp
+                            sqlParms.push([
+                                "INSERT INTO TeachRegLogs (reg_id, use_time) VALUES (?, ?);",
+                                [stamp.reg_id, stamp.use_time]]);
+                        } else {
+                            sqlParms.push([
+                                "UPDATE TeachRegLogs SET use_time = ? WHERE id = ?;",
+                                [stamp.use_time, stamp.id]]);
+                        }
+                    }
+                });
+                console.log("here");
+                db.transaction(
+                    function (tx) {
+                        $.each(sqlParms, function (idx, sqlParm) {
+                            tx.executeSql(sqlParm[0], sqlParm[1]);
+                        });
+
+                        tx.executeSql(
+                            "UPDATE TeachRegs SET total = ?, unused = ? WHERE id = ?;",
+                            [currentStudent.total, currentStudent.unused, currentStudent.reg_id]
+                        );
+                    },
+                    app.dbError,
+                    function () {
+                        var idx = students.indexOf(currentStudent);
+                        var toPage = $("#teachRegs");
+                        toPage.find("ul a span").eq(idx).empty().text(currentStudent.unused);
+                        $.mobile.changePage(toPage, {
+                            transition: "pop",
+                            reverse: true
+                        });
+                    }
+                );
+            });
+
+
             // Debug function to deal with the slowness of android emulator
             $(document).keyup(function (event) {
                 if ($.mobile.activePage.attr("id") == "studentStamp-0" || $.mobile.activePage.attr("id") == "studentStamp-1") {
@@ -148,7 +193,6 @@
                         $.mobile.activePage.find(".ui-content").trigger("swipeleft");
                     }
                 }
-
                 return false;
             });
 
