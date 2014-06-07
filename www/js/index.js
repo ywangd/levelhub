@@ -1,5 +1,6 @@
 (function ($) {
     var db;
+    var students, currentStudent;
     var stamps;
     var stampFirstIdx, stampLastIdx;
 
@@ -36,7 +37,7 @@
                     db.transaction(
                         function (tx) {
                             tx.executeSql(
-                                "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
+                                    "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
                                     "VALUES (?, ?, ?);",
                                 fields,
                                 function () {
@@ -54,12 +55,13 @@
             // Handle the transition from teachRegs to stamps page
             $("#studentList").on("click", "a", function () {
                 var $this = $(this);
-                $("#studentStamp-0, #studentStamp-1").find("header h1").text($this.data("name"));
+                currentStudent = students[$this.parent().prevAll().length];
+                $("#studentStamp-0, #studentStamp-1").find("header h1").text(currentStudent.name);
                 db.transaction(
                     function (tx) {
                         tx.executeSql(
                             "SELECT * FROM TeachRegLogs WHERE reg_id = ?",
-                            [$this.data("reg_id")],
+                            [currentStudent.reg_id],
                             function (tx, result) {
                                 var length = result.rows.length;
                                 var firstUnusedIdx = 0;
@@ -177,18 +179,15 @@
                     function (tx, result) {
                         var ul = $("#studentList");
                         ul.empty();
+                        students = [];
                         for (var i = 0; i < result.rows.length; i++) {
                             var row = result.rows.item(i);
-                            var name = row.user_fname + " " + row.user_lname;
+                            var student = app.populateStudent(row);
+                            students.push(student);
                             var a = $("<a>", {
                                 "href": "#",
-                                text: name
+                                text: student.name
                             });
-                            a.data("name", name);
-                            a.data("reg_id", row.id);
-                            a.data("total", row.total);
-                            a.data("unused", row.unused);
-                            a.data("srv_id", row.srv_id);
                             a.append($("<span>", {
                                 class: "ui-li-count ui-btn-up-c ui-btn-corner-all",
                                 text: row.unused
@@ -200,6 +199,23 @@
                     app.dbError
                 );
             });
+        },
+
+        populateStudent: function (row) {
+            var student = {
+                fname: row.user_fname,
+                lname: row.user_lname,
+                reg_id: row.id,
+                total: row.total,
+                unused: row.unused,
+                srv_id: row.srv_id
+            };
+            var name = row.user_fname;
+            if (row.user_lname != '') {
+                name += ' ' + row.user_lname;
+            }
+            student.name = name;
+            return student;
         },
 
         refreshStamps: function (page) {
@@ -222,16 +238,19 @@
                 stamp.updated = true;
                 if (unchecked) {
                     stamp.use_time = null;
+                    currentStudent.unused += 1;
                 } else {
                     var t = app.getCurrentTimestamp();
                     stamp.use_time = t;
+                    currentStudent.unused -= 1;
                 }
+                $this.closest("section").find(".unusedCount").empty().text(currentStudent.unused);
                 return false;
             });
             page.find(".pageCount").empty().text(
                     (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1)
             );
-            page.find(".unusedCount").empty().text(14);
+            page.find(".unusedCount").empty().text(currentStudent.unused);
         },
 
         getCurrentTimestamp: function () {
