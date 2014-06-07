@@ -59,6 +59,18 @@
 }
 
 
+#topUpDialog0-popup {
+    width: 80%;
+    left: 10%;
+    right: 10%;
+}
+
+#topUpDialog1-popup {
+    width: 80%;
+    left: 10%;
+    right: 10%;
+}
+
 .hidden {
     visibility: hidden;
 }

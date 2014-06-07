@@ -27,7 +27,8 @@
             // Handle Save button for new student page
             $("#newStudent footer a:eq(1)").click(function () {
                 var fields = [];
-                $.each($("#newStudentForm").serializeArray(), function (idx, field) {
+                var form = $("#newStudentForm");
+                $.each(form.serializeArray(), function (idx, field) {
                     fields.push(field.value);
                 });
                 if (fields.toString() == ",") {
@@ -41,10 +42,11 @@
                                     "VALUES (?, ?, ?);",
                                 fields,
                                 function () {
+                                    app.listStudentsForTeach(1);
                                     $.mobile.changePage($("#teachRegs"), {
                                         transition: "slideup"
                                     });
-                                    app.listStudentsForTeach(1);
+                                    form.get(0).reset();
                                 },
                                 app.dbError
                             );
@@ -102,7 +104,7 @@
             });
 
             // Handle page transition for multi-page stamps
-            $("#studentStamp-0, #studentStamp-1").find(".ui-content").on("swipeleft swiperight", function (event) {
+            $("#studentStamp-0, #studentStamp-1").find("> div[role='main']").on("swipeleft swiperight", function (event) {
                 var currentPage = $(this).closest("section");
                 var targetPage;
                 if (currentPage.attr("id") == "studentStamp-0") {
@@ -181,6 +183,12 @@
                         });
                     }
                 );
+            });
+
+            // Handle Save button on Top up dialog
+            $("#topUpDialog0, #topUpDialog1").find("a:eq(1)").on("click", function () {
+                var value = $(this).closest("div").find("input").val();
+                alert(value);
             });
 
 
