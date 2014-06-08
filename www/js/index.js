@@ -58,6 +58,9 @@
             $("#studentList").on("click", "a", function () {
                 var $this = $(this);
                 currentStudent = students[$this.parent().prevAll().length];
+                // Save the start values in case the operations are cancelled
+                currentStudent.saved_total = currentStudent.total;
+                currentStudent.saved_unused = currentStudent.unused;
                 $("#studentStamp-0, #studentStamp-1").find("header h1").text(currentStudent.name);
                 db.transaction(
                     function (tx) {
@@ -85,7 +88,6 @@
                                         id: row.id,
                                         reg_id: row.reg_id,
                                         use_time: row.use_time,
-                                        old_is_used: row.use_time ? true : false,
                                         ctime: row.ctime,
                                         data: row.data,
                                         srv_id: row.srv_id
@@ -143,6 +145,12 @@
                 return false;
             });
 
+            // Handle cancel button on stamps page
+            $("#studentStamp-0, #studentStamp-1").find("footer a:eq(0)").on("click", function () {
+                currentStudent.total = currentStudent.saved_total;
+                currentStudent.unused = currentStudent.saved_unused;
+            });
+
             // Handle save button on stamps page
             $("#studentStamp-0, #studentStamp-1").find("footer a:eq(1)").on("click", function () {
                 $.mobile.loading("show");
@@ -185,12 +193,42 @@
                 );
             });
 
-            // Handle Save button on Top up dialog
-            $("#topUpDialog0, #topUpDialog1").find("a:eq(1)").on("click", function () {
-                var value = $(this).closest("div").find("input").val();
-                alert(value);
+            // sync top up slider value and Handle OK button on Top up dialog
+            $("#topUpDialog0, #topUpDialog1").find("a").on("click", function () {
+                var thisSlider = $(this).closest("div").find("input");
+                var thatSlider;
+                var value = parseInt(thisSlider.val());
+                if (thisSlider.attr("id") == "topup-slider0") {
+                    thatSlider = $("#topup-slider1");
+                } else {
+                    thatSlider = $("#topup-slider0");
+                }
+                if (thatSlider.data("mobile-slider")) { // already enhanced
+                    thatSlider.val(value).slider("refresh");
+                } else { // not yet enhanced
+                    thatSlider.attr("value", value);
+                }
+                // Top up
+                if (this.textContent == "Ok") {
+                    for (var i = 0; i < value; i++) {
+                        stamps.push({
+                            updated: true,
+                            id: -1,
+                            reg_id: currentStudent.reg_id,
+                            use_time: null,
+                            ctime: app.getCurrentTimestamp()
+                        });
+                    }
+                    var page = $(this).closest("section");
+                    currentStudent.unused += value;
+                    currentStudent.total += value;
+                    app.refreshStampsCount(page);
+                    if (stampLastIdx - stampFirstIdx < 9) {
+                        stampLastIdx = Math.min(stampFirstIdx + 9, stamps.length);
+                        app.refreshStamps(page);
+                    }
+                }
             });
-
 
             // Debug function to deal with the slowness of android emulator
             $(document).keyup(function (event) {
@@ -299,9 +337,12 @@
                 $this.closest("section").find(".unusedCount").empty().text(currentStudent.unused);
                 return false;
             });
+            app.refreshStampsCount(page);
+        },
+
+        refreshStampsCount: function (page) {
             page.find(".pageCount").empty().text(
-                    (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1)
-            );
+                    (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
             page.find(".unusedCount").empty().text(currentStudent.unused);
         },
 
