@@ -1,4 +1,7 @@
 (function ($) {
+    // Tell jquery to not fire tap event when taphold is fired
+    $.event.special.tap.emitTapOnTaphold = false;
+
     var db;
     var students, currentStudent;
     var stamps;
