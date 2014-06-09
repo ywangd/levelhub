@@ -1,11 +1,11 @@
 * {
-    -webkit-tap-highlight-color: rgba(0,0,0,0) !important; /* make transparent link selection, adjust last value opacity 0 to 1.0 */
+    -webkit-tap-highlight-color: rgba(0,0,0,0); /* make transparent link selection, adjust last value opacity 0 to 1.0 */
 }
 
 body {
-    -webkit-touch-callout: none !important;                /* prevent callout to copy image, etc when tap to hold */
-    -webkit-text-size-adjust: none !important;             /* prevent webkit from resizing text to fit */
-    -webkit-user-select: none !important;                  /* prevent copy paste, to allow, change 'none' to 'text' */
+    -webkit-touch-callout: none;                /* prevent callout to copy image, etc when tap to hold */
+    -webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
+    -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
 }
 
 
@@ -26,6 +26,7 @@ body {
     box-shadow: 0 10px 6px -6px #777;
     border: 1px solid;
     border-radius: 5px;
+    -webkit-transform: translate3d(0px,0px,0px);
 }
 
 .stamp > img {
