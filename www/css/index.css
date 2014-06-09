@@ -74,3 +74,34 @@
 .hidden {
     visibility: hidden;
 }
+
+@keyframes wobble {
+    from {
+        transform: rotate(2deg);
+    }
+    to {
+        transform: rotate(-2deg);
+    }
+}
+
+@-webkit-keyframes wobble {
+    from {
+        -webkit-transform: rotate(2deg);
+    }
+    to {
+        -webkit-transform: rotate(-2deg);
+    }
+}
+
+.wobbly {
+    animation-duration: 0.2s;
+    animation-name: wobble;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    -webkit-animation-duration: 0.2s;
+    -webkit-animation-name: wobble;
+    -webkit-animation-timing-function: ease-in-out;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-direction: alternate;
+}

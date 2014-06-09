@@ -105,6 +105,12 @@
                 return false;
             });
 
+            // Handle taphold for stamps deletion
+            $("#studentStamp-0, #studentStamp-1").find("> div[role='main']").on("taphold", ".stamp:not(.hidden)", function (event) {
+                $("#studentStamp-0, #studentStamp-1").find(".stamp").toggleClass("wobbly");
+                return false;
+            });
+
             // Handle page transition for multi-page stamps
             $("#studentStamp-0, #studentStamp-1").find("> div[role='main']").on("swipeleft swiperight", function (event) {
                 var currentPage = $(this).closest("section");
