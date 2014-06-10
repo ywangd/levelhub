@@ -27,11 +27,25 @@ body {
     border: 1px solid;
     border-radius: 5px;
     -webkit-transform: translate3d(0px,0px,0px);
+    position: relative;
 }
 
-.stamp > img {
+#studentStamp-0 .ui-grid-b, #studentStamp-1 .ui-grid-b {
+    overflow: visible;
+}
+
+.stamp > img.checkmark {
     width: 100%;
 }
+
+.stamp > img.x-delete {
+    position: absolute;
+    width: 25%;
+    height: 25%;
+    top: -12.5%;
+    left: -12.5%;
+}
+
 
 .pageCount {
     background-color: transparent !important;
@@ -98,10 +112,10 @@ body {
 
 @-webkit-keyframes wobble {
     from {
-        -webkit-transform: rotate(2deg);
+        -webkit-transform: rotate(1deg);
     }
     to {
-        -webkit-transform: rotate(-2deg);
+        -webkit-transform: rotate(-1deg);
     }
 }
 

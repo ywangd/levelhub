@@ -4,7 +4,7 @@
 
     var db;
     var students, currentStudent;
-    var stamps;
+    var stamps, stampsDeleted;
     var stampFirstIdx, stampLastIdx;
 
     var app = {
@@ -57,6 +57,9 @@
                 }
             });
 
+            var stampsPages = $("#studentStamp-0, #studentStamp-1");
+            var stampDoms = stampsPages.find(".stamp");
+
             // Handle the transition from teachRegs to stamps page
             $("#studentList").on("click", "a", function () {
                 var $this = $(this);
@@ -64,7 +67,12 @@
                 // Save the start values in case the operations are cancelled
                 currentStudent.saved_total = currentStudent.total;
                 currentStudent.saved_unused = currentStudent.unused;
-                $("#studentStamp-0, #studentStamp-1").find("header h1").text(currentStudent.name);
+                stampsPages.find("header h1").text(currentStudent.name);
+
+                // No wobbly or delete badge when the stamps page is transitioned from teachRegs page
+                stampDoms.removeClass("wobbly");
+                stampDoms.find("img.x-delete").addClass("hidden");
+
                 db.transaction(
                     function (tx) {
                         tx.executeSql(
@@ -84,6 +92,7 @@
                                 stampFirstIdx = currentPageIdx * 9;
                                 stampLastIdx = Math.min(stampFirstIdx + 9, length);
                                 stamps = [];
+                                stampsDeleted = [];
                                 for (var i = 0; i < length; i++) {
                                     var row = result.rows.item(i);
                                     stamps.push({
@@ -108,14 +117,8 @@
                 return false;
             });
 
-            // Handle taphold for stamps deletion
-            $("#studentStamp-0, #studentStamp-1").find("> div[role='main']").on("taphold", ".stamp:not(.hidden)", function (event) {
-                $("#studentStamp-0, #studentStamp-1").find(".stamp").toggleClass("wobbly");
-                return false;
-            });
-
             // Handle page transition for multi-page stamps
-            $("#studentStamp-0, #studentStamp-1").find("> div[role='main']").on("swipeleft swiperight", function (event) {
+            stampsPages.find("> div[role='main']").on("swipeleft swiperight", function (event) {
                 var currentPage = $(this).closest("section");
                 var targetPage;
                 if (currentPage.attr("id") == "studentStamp-0") {
@@ -154,14 +157,62 @@
                 return false;
             });
 
+            // Handle stamps checkmark and deletion
+            stampDoms.on("tap", function (event) {
+                var $this = $(this);
+                var stampIdx = stampFirstIdx + $this.parent().prevAll().length;
+                var stamp = stamps[stampIdx];
+                var page = $this.closest("section");
+
+                if (event.target.className == "x-delete") {
+                    currentStudent.total -= 1;
+                    if (stamp.use_time == null) {
+                        currentStudent.unused -= 1;
+                    }
+                    stampsDeleted.push(stamps.splice(stampIdx, 1)[0]);
+                    // When deleting last stamp
+                    if (stampLastIdx > stamps.length) {
+                        stampLastIdx = stamps.length;
+                    }
+                    // Refresh the stamps page
+                    app.refreshStamps(page);
+                    // When deleting only stamp of a page
+                    if (stampFirstIdx == stampLastIdx) {
+                        page.find("> div[role='main']").trigger("swiperight");
+                    }
+                    return false;
+                    
+                } else {
+                    var unchecked = $this.find("img.checkmark").toggleClass("hidden").hasClass("hidden");
+                    stamp.updated = true;
+                    if (unchecked) {
+                        stamp.use_time = null;
+                        currentStudent.unused += 1;
+                    } else {
+                        var t = app.getCurrentTimestamp();
+                        stamp.use_time = t;
+                        currentStudent.unused -= 1;
+                    }
+                    // update the unused count display
+                    page.find(".unusedCount").empty().text(currentStudent.unused);
+                    return false;
+                }
+            });
+
+            // Handle taphold for stamps deletion
+            stampDoms.on("taphold", function () {
+                stampDoms.toggleClass("wobbly");
+                stampDoms.find("> img.x-delete").toggleClass("hidden");
+            });
+
             // Handle cancel button on stamps page
-            $("#studentStamp-0, #studentStamp-1").find("footer a:eq(0)").on("click", function () {
+            stampsPages.find("footer a:eq(0)").on("click", function () {
                 currentStudent.total = currentStudent.saved_total;
                 currentStudent.unused = currentStudent.saved_unused;
             });
 
             // Handle save button on stamps page
-            $("#studentStamp-0, #studentStamp-1").find("footer a:eq(1)").on("click", function () {
+            stampsPages.find("footer a:eq(1)").on("click", function () {
                 $.mobile.loading("show");
                 var sqlParms = [];
                 $.each(stamps, function (idx, stamp) {
@@ -177,11 +228,18 @@
                         }
                     }
                 });
-                console.log("here");
                 db.transaction(
                     function (tx) {
+                        // update TeachRegLogs
                         $.each(sqlParms, function (idx, sqlParm) {
                             tx.executeSql(sqlParm[0], sqlParm[1]);
+                        });
+
+                        // Delete any deleted logs
+                        $.each(stampsDeleted, function (idx, stamp) {
+                            if (stamp.id != -1) {
+                                tx.executeSql("DELETE FROM TeachRegLogs WHERE id = ?;", [stamp.id]);
+                            }
                         });
 
                         tx.executeSql(
@@ -200,6 +258,12 @@
                         });
                     }
                 );
+            });
+
+            stampsPages.find("header a").eq(3).on("click", function () {
+                // Cancel wobbly when top up is about to show
+                stampDoms.removeClass("wobbly");
+                stampDoms.find("img.x-delete").addClass("hidden");
             });
 
             // sync top up slider value and Handle OK button on Top up dialog
@@ -319,7 +383,7 @@
 
         refreshStamps: function (page) {
             var stampDoms = page.find(".stamp");
-            var imgDoms = stampDoms.find("img");
+            var imgDoms = stampDoms.find("img.checkmark");
             stampDoms.addClass("hidden");
             imgDoms.addClass("hidden");
             for (var i = stampFirstIdx; i < stampLastIdx; i++) {
@@ -329,23 +393,6 @@
                     imgDoms.eq(i - stampFirstIdx).removeClass("hidden");
                 }
             }
-            stampDoms.off("tap").filter(":not(.hidden)").on("tap", function () {
-                $this = $(this);
-                var unchecked = $this.find("img").toggleClass("hidden").hasClass("hidden");
-                var stampIdx = stampFirstIdx + $this.parent().prevAll().length;
-                var stamp = stamps[stampIdx];
-                stamp.updated = true;
-                if (unchecked) {
-                    stamp.use_time = null;
-                    currentStudent.unused += 1;
-                } else {
-                    var t = app.getCurrentTimestamp();
-                    stamp.use_time = t;
-                    currentStudent.unused -= 1;
-                }
-                $this.closest("section").find(".unusedCount").empty().text(currentStudent.unused);
-                return false;
-            });
             app.refreshStampsCount(page);
         },
 
