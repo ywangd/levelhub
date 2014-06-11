@@ -15,8 +15,19 @@
         },
 
         onDeviceReady: function () {
-            StatusBar.overlaysWebView(false);
-            db = window.openDatabase("levelhub", "1.0", "LevelHub", 65536);
+            try {
+                StatusBar.overlaysWebView(false);
+            } catch (err) {
+                // Just ignore it on android
+            }
+            //
+            try {
+                db = window.openDatabase("levelhub", "1.0", "LevelHub", 65536);
+            } catch (err) {
+                // If database cannot be opened, do not proceed further
+                alert(err.message);
+                return false;
+            }
             app.prepareDatabase();
             app.displayTeachRegs(1);
 
@@ -58,7 +69,7 @@
             });
 
             var stampsPages = $("#studentStamp-0, #studentStamp-1");
-            var stampDoms = stampsPages.find(".stamp");
+            var stampsContainers = stampsPages.find(".stamps-container");
 
             // Handle the transition from teachRegs to stamps page
             $("#studentList").on("click", "a", function () {
@@ -70,6 +81,7 @@
                 stampsPages.find("header h1").text(currentStudent.name);
 
                 // No wobbly or delete badge when the stamps page is transitioned from teachRegs page
+                var stampDoms = stampsContainers.find(".stamp");
                 stampDoms.removeClass("wobbly");
                 stampDoms.find("img.x-delete").addClass("hidden");
 
@@ -118,7 +130,7 @@
             });
 
             // Handle page transition for multi-page stamps
-            stampsPages.find("> div[role='main']").on("swipeleft swiperight", function (event) {
+            stampsPages.find(".stampspage-content").on("swipeleft swiperight", function (event) {
                 var currentPage = $(this).closest("section");
                 var targetPage;
                 if (currentPage.attr("id") == "studentStamp-0") {
@@ -157,31 +169,50 @@
                 return false;
             });
 
-            // Handle stamps checkmark and deletion
-            stampDoms.on("tap", function (event) {
-                var $this = $(this);
-                var stampIdx = stampFirstIdx + $this.parent().prevAll().length;
+            // Handle stamps deletion and checkmark
+            stampsContainers.on("tap", ".stamp", function (event) {
+                var $this = $(this); // this is stamp
+                var idxWithinPage = $this.parent().prevAll().length;
+                var stampIdx = stampFirstIdx + idxWithinPage;
                 var stamp = stamps[stampIdx];
                 var page = $this.closest("section");
 
                 if (event.target.className == "x-delete") {
-                    currentStudent.total -= 1;
-                    if (stamp.use_time == null) {
-                        currentStudent.unused -= 1;
-                    }
-                    stampsDeleted.push(stamps.splice(stampIdx, 1)[0]);
-                    // When deleting last stamp
-                    if (stampLastIdx > stamps.length) {
-                        stampLastIdx = stamps.length;
-                    }
-                    // Refresh the stamps page
-                    app.refreshStamps(page);
-                    // When deleting only stamp of a page
-                    if (stampFirstIdx == stampLastIdx) {
-                        page.find("> div[role='main']").trigger("swiperight");
-                    }
+                    // 1. Fade out the stamp dom by setting its display to none
+                    // 2. Remove the stamp box dom to animate deletion (the animation
+                    //    is achieved by pure css transition).
+                    // 3. set the stamp dom to hidden and display to block (so it is
+                    //    ready to be processed by refreshStamps
+                    // 4. Add the stamp box dom to the end of the page
+                    // 5. Call refreshStamps to display stamps correctly (this is mainly
+                    //    just for the last inserted stamp box. Maybe it can be optimised
+                    //    to only refresh the inserted stamp box dom.
+                    $this.fadeOut("normal", function () {
+                        currentStudent.total -= 1;
+                        if (stamp.use_time == null) {
+                            currentStudent.unused -= 1;
+                        }
+                        stampsDeleted.push(stamps.splice(stampIdx, 1)[0]);
+                        // When deleting last stamp
+                        if (stampLastIdx > stamps.length) {
+                            stampLastIdx = stamps.length;
+                        }
+                        // Remove the stamp box from Page
+                        var stampBox = $this.parent();
+                        stampBox.remove(); // parent is stamp-box
+                        // Add to the end of page as hidden but display is reverted to show
+                        $this.addClass("hidden");
+                        $this.show();
+                        page.find(".stamps-container").append(stampBox);
+                        // Refresh the stamps page
+                        app.refreshStamps(page);
+                        // When deleting only stamp of a page
+                        if (stampFirstIdx == stampLastIdx) {
+                            page.find(".stampspage-content").trigger("swiperight");
+                        }
+                    });
                     return false;
-                    
+
                 } else {
                     var unchecked = $this.find("img.checkmark").toggleClass("hidden").hasClass("hidden");
                     stamp.updated = true;
@@ -200,7 +231,8 @@
             });
 
             // Handle taphold for stamps deletion
-            stampDoms.on("taphold", function () {
+            stampsContainers.on("taphold", ".stamp", function () {
+                var stampDoms = stampsContainers.find(".stamp");
                 stampDoms.toggleClass("wobbly");
                 stampDoms.find("> img.x-delete").toggleClass("hidden");
             });
@@ -260,8 +292,9 @@
                 );
             });
 
-            stampsPages.find("header a").eq(3).on("click", function () {
-                // Cancel wobbly when top up is about to show
+             // Cancel wobbly when top up is about to show
+            stampsPages.find("header a[href^='#topUpDialog']").on("click", function () {
+                var stampDoms = stampsContainers.find(".stamp");
                 stampDoms.removeClass("wobbly");
                 stampDoms.find("img.x-delete").addClass("hidden");
             });

@@ -12,3 +12,11 @@
 * On Windows, if error occurs relating to temporary directory (e.g. fatal:
   could not create work tree dir), create the required directory manually to
   fix it.
+
+# Debug
+* Apache Ripple (not the chrome extension)
+    * npm install -g ripple-emulator
+    * `ripple emulate` in root directory
+    * Note that this only works with Chrome as Firefox does not support WebSQL
+        - To emulate the app without seeing ripple UI, do not append enable ripple at URL.
+        - For any pop up message, just click cancel.

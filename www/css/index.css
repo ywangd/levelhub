@@ -8,7 +8,6 @@ body {
     -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
 }
 
-
 .center-wrapper {
     text-align: center !important;
 }
@@ -16,36 +15,6 @@ body {
 .center-wrapper * {
     margin: 0 auto !important;
 }
-
-.stamp {
-    width: 80%;
-    margin: 10%;
-    padding: 5%;
-    -webkit-box-shadow: 0 10px 6px -6px #777;
-    -moz-box-shadow: 0 10px 6px -6px #777;
-    box-shadow: 0 10px 6px -6px #777;
-    border: 1px solid;
-    border-radius: 5px;
-    -webkit-transform: translate3d(0px,0px,0px);
-    position: relative;
-}
-
-#studentStamp-0 .ui-grid-b, #studentStamp-1 .ui-grid-b {
-    overflow: visible;
-}
-
-.stamp > img.checkmark {
-    width: 100%;
-}
-
-.stamp > img.x-delete {
-    position: absolute;
-    width: 25%;
-    height: 25%;
-    top: -12.5%;
-    left: -12.5%;
-}
-
 
 .pageCount {
     background-color: transparent !important;
@@ -131,3 +100,60 @@ body {
     -webkit-animation-iteration-count: infinite;
     -webkit-animation-direction: alternate;
 }
+
+
+.stampspage-content {
+    overflow: visible;
+}
+
+.stamps-container {
+    padding: 0;
+    position: relative;
+    width: 100%;
+    overflow: visible;
+}
+
+.stamps-container > .stamp-box {
+    width: 33%;
+    position: absolute;
+    top: 0; left: 0;
+    -webkit-transition: all 0.3s ease-out;
+    transition: all 0.3s ease-out;
+}
+
+.stamp {
+    width: 85%;
+    margin: 7%;
+    -webkit-box-shadow: 0 10px 6px -6px #777;
+    -moz-box-shadow: 0 10px 6px -6px #777;
+    box-shadow: 0 10px 6px -6px #777;
+    border: 1px solid;
+    border-radius: 5px;
+    -webkit-transform: translate3d(0px,0px,0px);
+    position: relative;
+}
+
+.stamp > img.checkmark {
+    width: 80%;
+    margin: 10%;
+}
+
+.stamp > img.x-delete {
+    position: absolute;
+    width: 25%;
+    height: 25%;
+    top: -12.5%;
+    left: -12.5%;
+}
+
+/* See later in the blog post for a cleaner way to generate these rules */
+.stamps-container > .stamp-box:nth-child(1)  { -webkit-transform: translate3d(0, 0%, 0); transform: translate3d(0, 0%, 0); }
+.stamps-container > .stamp-box:nth-child(2)  { -webkit-transform: translate3d(100%, 0%, 0); transform: translate3d(100%, 0%, 0); }
+.stamps-container > .stamp-box:nth-child(3)  { -webkit-transform: translate3d(200%, 0%, 0); transform: translate3d(200%, 0%, 0); }
+.stamps-container > .stamp-box:nth-child(4)  { -webkit-transform: translate3d(0, 100%, 0); transform: translate3d(0, 100%, 0); }
+.stamps-container > .stamp-box:nth-child(5)  { -webkit-transform: translate3d(100%, 100%, 0); transform: translate3d(100%, 100%, 0); }
+.stamps-container > .stamp-box:nth-child(6)  { -webkit-transform: translate3d(200%, 100%, 0); transform: translate3d(200%, 100%, 0); }
+.stamps-container > .stamp-box:nth-child(7)  { -webkit-transform: translate3d(0, 200%, 0); transform: translate3d(0, 200%, 0); }
+.stamps-container > .stamp-box:nth-child(8)  { -webkit-transform: translate3d(100%, 200%, 0); transform: translate3d(100%, 200%, 0); }
+.stamps-container > .stamp-box:nth-child(9)  { -webkit-transform: translate3d(200%, 200%, 0); transform: translate3d(200%, 200%, 0); }
+
