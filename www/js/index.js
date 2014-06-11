@@ -197,13 +197,12 @@
                         if (stampLastIdx > stamps.length) {
                             stampLastIdx = stamps.length;
                         }
-                        // Remove the stamp box from Page
-                        var stampBox = $this.parent();
-                        stampBox.remove(); // parent is stamp-box
-                        // Add to the end of page as hidden but display is reverted to show
+
+                        // Move the stamp box to the end of page as hidden but display is reverted to show
                         $this.addClass("hidden");
                         $this.show();
-                        page.find(".stamps-container").append(stampBox);
+                        $this.parent().appendTo(page.find(".stamps-container"));
+
                         // Refresh the stamps page
                         app.refreshStamps(page);
                         // When deleting only stamp of a page
