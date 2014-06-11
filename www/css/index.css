@@ -8,14 +8,6 @@ body {
     -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
 }
 
-.center-wrapper {
-    text-align: center !important;
-}
-
-.center-wrapper * {
-    margin: 0 auto !important;
-}
-
 .pageCount {
     background-color: transparent !important;
     border: 0 !important;
@@ -54,13 +46,7 @@ body {
 }
 
 
-#topUpDialog0-popup {
-    width: 80%;
-    left: 10%;
-    right: 10%;
-}
-
-#topUpDialog1-popup {
+#topup-dialog-popup {
     width: 80%;
     left: 10%;
     right: 10%;
@@ -112,6 +98,16 @@ body {
     width: 100%;
     overflow: visible;
 }
+
+/*
+#s-con-0 .stamp {
+    border: 1px solid red;
+}
+
+#s-con-1 .stamp {
+    border: 1px solid green;
+}
+*/
 
 .stamps-container > .stamp-box {
     width: 33%;

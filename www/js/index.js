@@ -31,15 +31,18 @@
             app.prepareDatabase();
             app.displayTeachRegs(1);
 
+            var pageTeachRegs = $("#teach-regs-page"),
+                pageNewstudent = $("#newStudent");
+
             // Handle Add Student button
-            $("#teachRegs header a").click(function () {
+            pageTeachRegs.find("header a").click(function () {
                 $.mobile.changePage($("#newStudent"), {
                     transition: "slidedown"
                 });
             });
 
             // Handle Save button for new student page
-            $("#newStudent footer a:eq(1)").click(function () {
+            pageNewstudent.find("footer a:eq(1)").click(function () {
                 var fields = [];
                 var form = $("#newStudentForm");
                 $.each(form.serializeArray(), function (idx, field) {
@@ -48,7 +51,7 @@
                 if (fields.toString() == ",") {
                     alert("More information required");
                 } else {
-                    fields.unshift($("#teachRegs").data("teach_id"));
+                    fields.unshift(pageTeachRegs.data("teach_id"));
                     db.transaction(
                         function (tx) {
                             tx.executeSql(
@@ -57,7 +60,7 @@
                                 fields,
                                 function () {
                                     app.listStudentsForTeach(1);
-                                    $.mobile.changePage($("#teachRegs"), {
+                                    $.mobile.changePage(pageTeachRegs, {
                                         transition: "slideup"
                                     });
                                     form.get(0).reset();
@@ -68,19 +71,20 @@
                 }
             });
 
-            var stampsPages = $("#studentStamp-0, #studentStamp-1");
-            var stampsContainers = stampsPages.find(".stamps-container");
+            var pageStamps = $("#stamps-page");
+            var stampsContainers = pageStamps.find(".stamps-container");
 
-            // Handle the transition from teachRegs to stamps page
+            // Handle the transition from teach regs page to stamps page
             $("#studentList").on("click", "a", function () {
                 var $this = $(this);
                 currentStudent = students[$this.parent().prevAll().length];
                 // Save the start values in case the operations are cancelled
                 currentStudent.saved_total = currentStudent.total;
                 currentStudent.saved_unused = currentStudent.unused;
-                stampsPages.find("header h1").text(currentStudent.name);
+                pageStamps.find("header h1").text(currentStudent.name);
 
-                // No wobbly or delete badge when the stamps page is transitioned from teachRegs page
+                // No wobbly or delete badge when the stamps page is transitioned
+                // from teach regs page
                 var stampDoms = stampsContainers.find(".stamp");
                 stampDoms.removeClass("wobbly");
                 stampDoms.find("img.x-delete").addClass("hidden");
@@ -117,11 +121,10 @@
                                         srv_id: row.srv_id
                                     });
                                 }
-                                var toPage = $("#studentStamp-0");
-                                app.refreshStamps(toPage);
-                                // Make sure the header is visible. It could be off during stamps page transition
-                                toPage.find("header").css("visibility", "visible");
-                                $.mobile.changePage(toPage, {
+                                // Prepare the stamps display
+                                app.updateStampsContainer(pageStamps.find(".stamps-container:eq(0)"));
+                                // transition
+                                $.mobile.changePage(pageStamps, {
                                     transition: "slide"
                                 });
                             });
@@ -129,41 +132,51 @@
                 return false;
             });
 
-            // Handle page transition for multi-page stamps
-            stampsPages.find(".stampspage-content").on("swipeleft swiperight", function (event) {
-                var currentPage = $(this).closest("section");
-                var targetPage;
-                if (currentPage.attr("id") == "studentStamp-0") {
-                    targetPage = $("#studentStamp-1");
-                } else {
-                    targetPage = $("#studentStamp-0");
-                }
+            // Set the second stamps container to off screen at start up
+            pageStamps.eq(0).find(".stamps-container:eq(1)").css("left", "150%");
+
+            // Handle swipe transitions between stamps container divs
+            pageStamps.find(".stampspage-content").on("swipeleft swiperight", function (event) {
+                $this = $(this);
+
+                var divs = $this.find(".stamps-container"),
+                    outDiv = divs.eq(0), inDiv = divs.eq(1),
+                    speed = 400;
+
                 var length = stamps.length;
-                var eventName = event.type;
-                if (eventName == "swipeleft") {
+
+                function animateStampsContainers(left_start, left_end) {
+                    inDiv.css("left", left_start);
+                    outDiv.animate(
+                        {left: left_end},
+                        speed,
+                        function () {
+                            outDiv.appendTo($this);
+                        }
+                    );
+                    inDiv.animate(
+                        {left: 0},
+                        speed
+                    );
+                }
+
+                if (event.type == "swipeleft") {
                     if (stampLastIdx < length) {
                         stampFirstIdx = stampLastIdx;
                         stampLastIdx = Math.min(stampFirstIdx + 9, length);
-                        app.refreshStamps(targetPage);
-                        // Simulate fixed persistent header during transition
-                        currentPage.find("header").css("visibility", "hidden");
-                        targetPage.find("header").css("visibility", "visible");
-                        $.mobile.changePage(targetPage, {
-                            transition: "slide"
-                        });
+                        // refresh target stamps-container
+                        app.updateStampsContainer(inDiv);
+                        // animate the transition
+                        animateStampsContainers("150%", "-150%");
                     }
                 } else {
                     if (stampFirstIdx >= 9) {
                         stampFirstIdx -= 9;
                         stampLastIdx = stampFirstIdx + 9;
-                        app.refreshStamps(targetPage);
-                        // Simulate fixed persistent header during transition
-                        currentPage.find("header").css("visibility", "hidden");
-                        targetPage.find("header").css("visibility", "visible");
-                        $.mobile.changePage(targetPage, {
-                            transition: "slide",
-                            reverse: true
-                        });
+                        // refresh target stamps-contaier
+                        app.updateStampsContainer(inDiv);
+                        // animate the transition
+                        animateStampsContainers("-150%", "150%");
                     }
                 }
                 return false;
@@ -198,33 +211,39 @@
                             stampLastIdx = stamps.length;
                         }
 
-                        // Move the stamp box to the end of page as hidden but display is reverted to show
+                        // Move the stamp box to the end of current stamps container
+                        // as hidden but display is reverted to show
                         $this.addClass("hidden");
                         $this.show();
-                        $this.parent().appendTo(page.find(".stamps-container"));
+                        var stampsContainer = $this.closest(".stamps-container")
+                        $this.parent().appendTo(stampsContainer);
 
-                        // Refresh the stamps page
-                        app.refreshStamps(page);
-                        // When deleting only stamp of a page
+                        // Refresh the stamps container
+                        app.updateStampsContainer(stampsContainer);
+
+                        // When deleting only stamp of a page, trigger swipe
                         if (stampFirstIdx == stampLastIdx) {
-                            page.find(".stampspage-content").trigger("swiperight");
+                            stampsContainer.closest(".stampspage-content").trigger("swiperight");
                         }
                     });
                     return false;
 
                 } else {
-                    var unchecked = $this.find("img.checkmark").toggleClass("hidden").hasClass("hidden");
-                    stamp.updated = true;
-                    if (unchecked) {
-                        stamp.use_time = null;
-                        currentStudent.unused += 1;
-                    } else {
-                        var t = app.getCurrentTimestamp();
-                        stamp.use_time = t;
-                        currentStudent.unused -= 1;
+                    // Tap for checkmark is not processed if wobbly is on
+                    if (! $this.hasClass("wobbly")) {
+                        var unchecked = $this.find("img.checkmark").toggleClass("hidden").hasClass("hidden");
+                        stamp.updated = true;
+                        if (unchecked) {
+                            stamp.use_time = null;
+                            currentStudent.unused += 1;
+                        } else {
+                            var t = app.getCurrentTimestamp();
+                            stamp.use_time = t;
+                            currentStudent.unused -= 1;
+                        }
+                        // update the unused count display
+                        page.find(".unusedCount").empty().text(currentStudent.unused);
                     }
-                    // update the unused count display
-                    page.find(".unusedCount").empty().text(currentStudent.unused);
                     return false;
                 }
             });
@@ -237,13 +256,13 @@
             });
 
             // Handle cancel button on stamps page
-            stampsPages.find("footer a:eq(0)").on("click", function () {
+            pageStamps.find("footer a:eq(0)").on("click", function () {
                 currentStudent.total = currentStudent.saved_total;
                 currentStudent.unused = currentStudent.saved_unused;
             });
 
             // Handle save button on stamps page
-            stampsPages.find("footer a:eq(1)").on("click", function () {
+            pageStamps.find("footer a:eq(1)").on("click", function () {
                 $.mobile.loading("show");
                 var sqlParms = [];
                 $.each(stamps, function (idx, stamp) {
@@ -281,7 +300,7 @@
                     app.dbError,
                     function () {
                         var idx = students.indexOf(currentStudent);
-                        var toPage = $("#teachRegs");
+                        var toPage = pageTeachRegs;
                         toPage.find("ul a span").eq(idx).empty().text(currentStudent.unused);
                         $.mobile.changePage(toPage, {
                             transition: "pop",
@@ -291,28 +310,18 @@
                 );
             });
 
-             // Cancel wobbly when top up is about to show
-            stampsPages.find("header a[href^='#topUpDialog']").on("click", function () {
+            // Cancel wobbly when top up is about to show
+            pageStamps.find("header a[href='#topUpDialog']").on("click", function () {
                 var stampDoms = stampsContainers.find(".stamp");
                 stampDoms.removeClass("wobbly");
                 stampDoms.find("img.x-delete").addClass("hidden");
             });
 
             // sync top up slider value and Handle OK button on Top up dialog
-            $("#topUpDialog0, #topUpDialog1").find("a").on("click", function () {
-                var thisSlider = $(this).closest("div").find("input");
-                var thatSlider;
-                var value = parseInt(thisSlider.val());
-                if (thisSlider.attr("id") == "topup-slider0") {
-                    thatSlider = $("#topup-slider1");
-                } else {
-                    thatSlider = $("#topup-slider0");
-                }
-                if (thatSlider.data("mobile-slider")) { // already enhanced
-                    thatSlider.val(value).slider("refresh");
-                } else { // not yet enhanced
-                    thatSlider.attr("value", value);
-                }
+            $("#topup-dialog").find("a").on("click", function () {
+                $this = $(this);
+                var slider = $this.closest("div").find("input");
+                var value = parseInt(slider.val());
                 // Top up
                 if (this.textContent == "Ok") {
                     for (var i = 0; i < value; i++) {
@@ -324,20 +333,20 @@
                             ctime: app.getCurrentTimestamp()
                         });
                     }
-                    var page = $(this).closest("section");
+                    var page = $this.closest("section");
                     currentStudent.unused += value;
                     currentStudent.total += value;
-                    app.refreshStampsCount(page);
+                    app.updateStampsCount(page);
                     if (stampLastIdx - stampFirstIdx < 9) {
                         stampLastIdx = Math.min(stampFirstIdx + 9, stamps.length);
-                        app.refreshStamps(page);
+                        app.updateStampsContainer(page.find(".stamps-container:eq(0)"));
                     }
                 }
             });
 
             // Debug function to deal with the slowness of android emulator
             $(document).keyup(function (event) {
-                if ($.mobile.activePage.attr("id") == "studentStamp-0" || $.mobile.activePage.attr("id") == "studentStamp-1") {
+                if ($.mobile.activePage.attr("id") == "stamps-page" || $.mobile.activePage.attr("id") == "studentStamp-1") {
                     if (event.which == 65) {
                         $.mobile.activePage.find(".ui-content").trigger("swiperight");
                     } else if (event.which == 68) {
@@ -356,10 +365,10 @@
                         [teach_id],
                         function (tx, result) {
                             var row = result.rows.item(0);
-                            var teachRegs = $("#teachRegs");
-                            teachRegs.data("teach_id", teach_id);
-                            teachRegs.data("desc", row.desc);
-                            teachRegs.find("header h1").text(row.name);
+                            var pageTeachRegs = $("#teach-regs-page");
+                            pageTeachRegs.data("teach_id", teach_id);
+                            pageTeachRegs.data("desc", row.desc);
+                            pageTeachRegs.find("header h1").text(row.name);
                             app.listStudentsForTeach(teach_id);
                         })
                 }
@@ -412,9 +421,9 @@
             student.name = name;
             return student;
         },
-
-        refreshStamps: function (page) {
-            var stampDoms = page.find(".stamp");
+        
+        updateStampsContainer: function (div) {
+            var stampDoms = div.find(".stamp");
             var imgDoms = stampDoms.find("img.checkmark");
             stampDoms.addClass("hidden");
             imgDoms.addClass("hidden");
@@ -425,10 +434,10 @@
                     imgDoms.eq(i - stampFirstIdx).removeClass("hidden");
                 }
             }
-            app.refreshStampsCount(page);
+            app.updateStampsCount(div.closest("section"));
         },
 
-        refreshStampsCount: function (page) {
+        updateStampsCount: function (page) {
             page.find(".pageCount").empty().text(
                     (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
             page.find(".unusedCount").empty().text(currentStudent.unused);
