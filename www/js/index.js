@@ -10,7 +10,7 @@
     var app = {
         initialize: function () {
             $(document).ready(function () {
-                $(document).bind("deviceready", app.onDeviceReady)
+                $(document).bind("deviceready", app.onDeviceReady);
             });
         },
 
@@ -32,11 +32,13 @@
             app.displayTeachRegs(1);
 
             var pageTeachRegs = $("#teach-regs-page"),
-                pageNewstudent = $("#newStudent");
+                pageNewstudent = $("#new-student"),
+                pageStamps = $("#stamps-page"),
+                stampsContainers = pageStamps.find(".stamps-container");
 
             // Handle Add Student button
             pageTeachRegs.find("header a").click(function () {
-                $.mobile.changePage($("#newStudent"), {
+                $.mobile.changePage(pageNewstudent, {
                     transition: "slidedown"
                 });
             });
@@ -44,7 +46,7 @@
             // Handle Save button for new student page
             pageNewstudent.find("footer a:eq(1)").click(function () {
                 var fields = [];
-                var form = $("#newStudentForm");
+                var form = $("#new-student-form");
                 $.each(form.serializeArray(), function (idx, field) {
                     fields.push(field.value);
                 });
@@ -55,7 +57,7 @@
                     db.transaction(
                         function (tx) {
                             tx.executeSql(
-                                    "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
+                                "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
                                     "VALUES (?, ?, ?);",
                                 fields,
                                 function () {
@@ -71,8 +73,7 @@
                 }
             });
 
-            var pageStamps = $("#stamps-page");
-            var stampsContainers = pageStamps.find(".stamps-container");
+
 
             // Handle the transition from teach regs page to stamps page
             $("#studentList").on("click", "a", function () {
@@ -92,7 +93,7 @@
                 db.transaction(
                     function (tx) {
                         tx.executeSql(
-                            "SELECT * FROM TeachRegLogs WHERE reg_id = ?",
+                            "SELECT * FROM TeachRegLogs WHERE reg_id = ?;",
                             [currentStudent.reg_id],
                             function (tx, result) {
                                 var length = result.rows.length;
@@ -230,7 +231,7 @@
 
                 } else {
                     // Tap for checkmark is not processed if wobbly is on
-                    if (! $this.hasClass("wobbly")) {
+                    if (!$this.hasClass("wobbly")) {
                         var unchecked = $this.find("img.checkmark").toggleClass("hidden").hasClass("hidden");
                         stamp.updated = true;
                         if (unchecked) {
@@ -300,9 +301,8 @@
                     app.dbError,
                     function () {
                         var idx = students.indexOf(currentStudent);
-                        var toPage = pageTeachRegs;
-                        toPage.find("ul a span").eq(idx).empty().text(currentStudent.unused);
-                        $.mobile.changePage(toPage, {
+                        pageTeachRegs.find("ul a span").eq(idx).empty().text(currentStudent.unused);
+                        $.mobile.changePage(pageTeachRegs, {
                             transition: "pop",
                             reverse: true
                         });
@@ -319,7 +319,7 @@
 
             // sync top up slider value and Handle OK button on Top up dialog
             $("#topup-dialog").find("a").on("click", function () {
-                $this = $(this);
+                var $this = $(this);
                 var slider = $this.closest("div").find("input");
                 var value = parseInt(slider.val());
                 // Top up
@@ -361,7 +361,7 @@
         displayTeachRegs: function (teach_id) {
             db.transaction(
                 function (tx) {
-                    tx.executeSql("SELECT * FROM Teaches WHERE id = ?",
+                    tx.executeSql("SELECT * FROM Teaches WHERE id = ?;",
                         [teach_id],
                         function (tx, result) {
                             var row = result.rows.item(0);
@@ -421,7 +421,7 @@
             student.name = name;
             return student;
         },
-        
+
         updateStampsContainer: function (div) {
             var stampDoms = div.find(".stamp");
             var imgDoms = stampDoms.find("img.checkmark");
@@ -439,7 +439,7 @@
 
         updateStampsCount: function (page) {
             page.find(".pageCount").empty().text(
-                    (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
+                (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
             page.find(".unusedCount").empty().text(currentStudent.unused);
         },
 
@@ -450,6 +450,7 @@
             var hour = now.getHours();
             var min = now.getMinutes();
             var sec = now.getSeconds();
+
             if (mon < 10) mon = '0' + mon;
             if (date < 10) date = '0' + date;
             if (hour < 10) hour = '0' + hour;

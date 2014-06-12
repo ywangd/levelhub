@@ -1,11 +1,11 @@
 * {
-    -webkit-tap-highlight-color: rgba(0,0,0,0); /* make transparent link selection, adjust last value opacity 0 to 1.0 */
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0); /* make transparent link selection, adjust last value opacity 0 to 1.0 */
 }
 
 body {
-    -webkit-touch-callout: none;                /* prevent callout to copy image, etc when tap to hold */
-    -webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
-    -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
+    -webkit-touch-callout: none; /* prevent callout to copy image, etc when tap to hold */
+    -webkit-text-size-adjust: none; /* prevent webkit from resizing text to fit */
+    -webkit-user-select: none; /* prevent copy paste, to allow, change 'none' to 'text' */
 }
 
 .pageCount {
@@ -44,7 +44,6 @@ body {
     padding: 0;
     vertical-align: middle;
 }
-
 
 #topup-dialog-popup {
     width: 80%;
@@ -87,7 +86,6 @@ body {
     -webkit-animation-direction: alternate;
 }
 
-
 .stampspage-content {
     overflow: visible;
 }
@@ -112,7 +110,8 @@ body {
 .stamps-container > .stamp-box {
     width: 33%;
     position: absolute;
-    top: 0; left: 0;
+    top: 0;
+    left: 0;
     -webkit-transition: all 0.3s ease-out;
     transition: all 0.3s ease-out;
 }
@@ -125,7 +124,7 @@ body {
     box-shadow: 0 10px 6px -6px #777;
     border: 1px solid;
     border-radius: 5px;
-    -webkit-transform: translate3d(0px,0px,0px);
+    -webkit-transform: translate3d(0px, 0px, 0px);
     position: relative;
 }
 
@@ -143,13 +142,48 @@ body {
 }
 
 /* See later in the blog post for a cleaner way to generate these rules */
-.stamps-container > .stamp-box:nth-child(1)  { -webkit-transform: translate3d(0, 0%, 0); transform: translate3d(0, 0%, 0); }
-.stamps-container > .stamp-box:nth-child(2)  { -webkit-transform: translate3d(100%, 0%, 0); transform: translate3d(100%, 0%, 0); }
-.stamps-container > .stamp-box:nth-child(3)  { -webkit-transform: translate3d(200%, 0%, 0); transform: translate3d(200%, 0%, 0); }
-.stamps-container > .stamp-box:nth-child(4)  { -webkit-transform: translate3d(0, 100%, 0); transform: translate3d(0, 100%, 0); }
-.stamps-container > .stamp-box:nth-child(5)  { -webkit-transform: translate3d(100%, 100%, 0); transform: translate3d(100%, 100%, 0); }
-.stamps-container > .stamp-box:nth-child(6)  { -webkit-transform: translate3d(200%, 100%, 0); transform: translate3d(200%, 100%, 0); }
-.stamps-container > .stamp-box:nth-child(7)  { -webkit-transform: translate3d(0, 200%, 0); transform: translate3d(0, 200%, 0); }
-.stamps-container > .stamp-box:nth-child(8)  { -webkit-transform: translate3d(100%, 200%, 0); transform: translate3d(100%, 200%, 0); }
-.stamps-container > .stamp-box:nth-child(9)  { -webkit-transform: translate3d(200%, 200%, 0); transform: translate3d(200%, 200%, 0); }
+.stamps-container > .stamp-box:nth-child(1) {
+    -webkit-transform: translate3d(0, 0%, 0);
+    transform: translate3d(0, 0%, 0);
+}
+
+.stamps-container > .stamp-box:nth-child(2) {
+    -webkit-transform: translate3d(100%, 0%, 0);
+    transform: translate3d(100%, 0%, 0);
+}
+
+.stamps-container > .stamp-box:nth-child(3) {
+    -webkit-transform: translate3d(200%, 0%, 0);
+    transform: translate3d(200%, 0%, 0);
+}
+
+.stamps-container > .stamp-box:nth-child(4) {
+    -webkit-transform: translate3d(0, 100%, 0);
+    transform: translate3d(0, 100%, 0);
+}
+
+.stamps-container > .stamp-box:nth-child(5) {
+    -webkit-transform: translate3d(100%, 100%, 0);
+    transform: translate3d(100%, 100%, 0);
+}
+
+.stamps-container > .stamp-box:nth-child(6) {
+    -webkit-transform: translate3d(200%, 100%, 0);
+    transform: translate3d(200%, 100%, 0);
+}
+
+.stamps-container > .stamp-box:nth-child(7) {
+    -webkit-transform: translate3d(0, 200%, 0);
+    transform: translate3d(0, 200%, 0);
+}
+
+.stamps-container > .stamp-box:nth-child(8) {
+    -webkit-transform: translate3d(100%, 200%, 0);
+    transform: translate3d(100%, 200%, 0);
+}
+
+.stamps-container > .stamp-box:nth-child(9) {
+    -webkit-transform: translate3d(200%, 200%, 0);
+    transform: translate3d(200%, 200%, 0);
+}
 
