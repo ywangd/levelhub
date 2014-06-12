@@ -8,6 +8,30 @@ body {
     -webkit-user-select: none; /* prevent copy paste, to allow, change 'none' to 'text' */
 }
 
+#news, #teach, #study, #me {
+    display: none;
+}
+
+#icon-news:after {
+    background: url("../img/home-news.svg") 50% 50% no-repeat;
+    background-size: contain;
+}
+
+#icon-teach:after {
+    background: url("../img/home-teach.svg") 50% 50% no-repeat;
+    background-size: contain;
+}
+
+#icon-study:after {
+    background: url("../img/home-study.svg") 50% 50% no-repeat;
+    background-size: contain;
+}
+
+#icon-me:after {
+    background: url("../img/home-me.svg") 50% 50% no-repeat;
+    background-size: contain;
+}
+
 .pageCount {
     background-color: transparent !important;
     border: 0 !important;
@@ -35,6 +59,11 @@ body {
     margin: 0;
     padding: 0;
     vertical-align: middle;
+}
+
+.new-avatar img {
+    width: 80%;
+    margin: 10%;
 }
 
 .new-form {

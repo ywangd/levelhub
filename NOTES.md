@@ -20,3 +20,8 @@
     * Note that this only works with Chrome as Firefox does not support WebSQL
         - To emulate the app without seeing ripple UI, do not append enable ripple at URL.
         - For any pop up message, just click cancel.
+
+# ToDo
+* Clear history stack when back to the home page to avoid memory hog?
+* Make page DOMs properties of the app variable? So they are global to all methods?
+* Clean up the code by reduce file (e.g. svg) sizes and remove testing codees.

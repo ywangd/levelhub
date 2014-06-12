@@ -15,12 +15,14 @@
         },
 
         onDeviceReady: function () {
+            // Always show status bar above the app for iOS
             try {
                 StatusBar.overlaysWebView(false);
             } catch (err) {
                 // Just ignore it on android
             }
-            //
+
+            // Database init
             try {
                 db = window.openDatabase("levelhub", "1.0", "LevelHub", 65536);
             } catch (err) {
@@ -29,17 +31,58 @@
                 return false;
             }
             app.prepareDatabase();
-            app.displayTeachRegs(1);
 
-            var pageTeachRegs = $("#teach-regs-page"),
+            // All pages
+            var pageHome = $("#home"),
+                homeHeader = pageHome.find("#home-header"),
+                homeContentDivs = pageHome.find(".ui-content");
+
+             var pageTeachRegs = $("#teach-regs-page"),
                 pageNewstudent = $("#new-student"),
                 pageStamps = $("#stamps-page"),
                 stampsContainers = pageStamps.find(".stamps-container");
 
-            // Handle Add Student button
-            pageTeachRegs.find("header a").click(function () {
-                $.mobile.changePage(pageNewstudent, {
-                    transition: "slidedown"
+            // home page init
+            // Handle home nav icon press
+            pageHome.on("click", "#icon-news, #icon-teach, #icon-study, #icon-me", function () {
+                var $this = $(this);
+                // Do nothing if the nav button is already the current active one
+                if (!$this.hasClass("ui-btn-active")) {
+                    $this.parent().siblings().find("a").removeClass("ui-btn-active");
+                    $this.addClass("ui-btn-active");
+                    var idx = $this.parent().prevAll().length;
+                    homeContentDivs.hide();
+                    var activeContentDiv = homeContentDivs.eq(idx);
+                    activeContentDiv.show();
+                    switch (activeContentDiv.attr("id")) {
+                        case "news":
+                            homeHeader.find("h1").text("Recent News");
+                            break;
+                        case "teach":
+                            homeHeader.find("h1").text("My Teachings");
+                            app.prepareTeachs();
+                            break;
+                        case "study":
+                            homeHeader.find("h1").text("My Learnings");
+                            break;
+                        case "me":
+                            homeHeader.find("h1").text("Settings");
+                            break;
+                    }
+                }
+                return false;
+            });
+
+            // The first page to show
+            $("#icon-news").trigger("click");
+
+            // Handle click on teach list
+            $("#teach-list").on("click", "a", function () {
+                var $this = $(this);
+                var id = $this.data("id");
+                app.prepareTeachRegs(id);
+                $.mobile.changePage(pageTeachRegs, {
+                    transition: "slide"
                 });
             });
 
@@ -73,10 +116,8 @@
                 }
             });
 
-
-
             // Handle the transition from teach regs page to stamps page
-            $("#studentList").on("click", "a", function () {
+            $("#student-list").on("click", "a", function () {
                 var $this = $(this);
                 currentStudent = students[$this.parent().prevAll().length];
                 // Save the start values in case the operations are cancelled
@@ -302,6 +343,7 @@
                     function () {
                         var idx = students.indexOf(currentStudent);
                         pageTeachRegs.find("ul a span").eq(idx).empty().text(currentStudent.unused);
+
                         $.mobile.changePage(pageTeachRegs, {
                             transition: "pop",
                             reverse: true
@@ -311,7 +353,7 @@
             });
 
             // Cancel wobbly when top up is about to show
-            pageStamps.find("header a[href='#topUpDialog']").on("click", function () {
+            pageStamps.find("header a[href='#topup-dialog']").on("click", function () {
                 var stampDoms = stampsContainers.find(".stamp");
                 stampDoms.removeClass("wobbly");
                 stampDoms.find("img.x-delete").addClass("hidden");
@@ -358,7 +400,33 @@
 
         },
 
-        displayTeachRegs: function (teach_id) {
+        prepareTeachs: function () {
+            console.log("OK");
+            db.transaction(
+                function (tx) {
+                    tx.executeSql("SELECT * FROM Teaches;",
+                    undefined,
+                    function (tx, result) {
+                        var ul = $("#teach-list");
+                        ul.empty();
+                        for (var i=0; i < result.rows.length; i++) {
+                            var row = result.rows.item(i);
+                            var a = $("<a>", {
+                                "href": "#",
+                                text: row.name
+                            });
+                            a.data("id", row.id);
+                            ul.append($("<li>").append(a));
+                        }
+                        ul.listview("refresh");
+                        console.log(ul);
+                    },
+                    app.dbError)
+                }
+            );
+        },
+
+        prepareTeachRegs: function (teach_id) {
             db.transaction(
                 function (tx) {
                     tx.executeSql("SELECT * FROM Teaches WHERE id = ?;",
@@ -381,7 +449,7 @@
                     "SELECT * FROM TeachRegs WHERE teach_id = ? ORDER BY id;",
                     [teach_id],
                     function (tx, result) {
-                        var ul = $("#studentList");
+                        var ul = $("#student-list");
                         ul.empty();
                         students = [];
                         for (var i = 0; i < result.rows.length; i++) {
@@ -398,7 +466,7 @@
                             }));
                             ul.append($("<li>").append(a));
                         }
-                        ul.listview('refresh');
+                        ul.listview("refresh");
                     },
                     app.dbError
                 );
