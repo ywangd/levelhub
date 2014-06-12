@@ -6,6 +6,7 @@
     var students, currentStudent;
     var stamps, stampsDeleted;
     var stampFirstIdx, stampLastIdx;
+    var homeNavIdx = -1;
 
     var app = {
         initialize: function () {
@@ -46,14 +47,18 @@
             // Handle home nav icon press
             pageHome.on("click", "#icon-news, #icon-teach, #icon-study, #icon-me", function () {
                 var $this = $(this);
+                var idx = $this.parent().prevAll().length;
                 // Do nothing if the nav button is already the current active one
-                if (!$this.hasClass("ui-btn-active")) {
-                    $this.parent().siblings().find("a").removeClass("ui-btn-active");
-                    $this.addClass("ui-btn-active");
-                    var idx = $this.parent().prevAll().length;
+                if (idx != homeNavIdx) {
+                    homeNavIdx = idx;
+                    // Still need to manually manage classes to make highlight button persistent
+                    $this.parent().siblings().find("a").removeClass("ui-btn-active ui-state-persist");
+                    $this.addClass("ui-btn-active ui-state-persist");
+
                     homeContentDivs.hide();
                     var activeContentDiv = homeContentDivs.eq(idx);
                     activeContentDiv.show();
+
                     switch (activeContentDiv.attr("id")) {
                         case "news":
                             homeHeader.find("h1").text("Recent News");
@@ -401,7 +406,6 @@
         },
 
         prepareTeachs: function () {
-            console.log("OK");
             db.transaction(
                 function (tx) {
                     tx.executeSql("SELECT * FROM Teaches;",
@@ -419,7 +423,6 @@
                             ul.append($("<li>").append(a));
                         }
                         ul.listview("refresh");
-                        console.log(ul);
                     },
                     app.dbError)
                 }
