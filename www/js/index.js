@@ -8,7 +8,6 @@
     var stampFirstIdx, stampLastIdx;
     var homeNavIdx = -1;
     var teaches, currentTeach;
-    var listTapable = true;
 
     var app = {
         initialize: function () {
@@ -42,8 +41,10 @@
 
             var pageTeachRegs = $("#teach-regs-page"),
                 pageNewstudent = $("#new-student"),
-                pageStamps = $("#stamps-page"),
-                stampsContainers = pageStamps.find(".stamps-container");
+                pageStamps = $("#stamps-page");
+
+            var stampsContainers = pageStamps.find(".stamps-container"),
+                studentList = $("#student-list");
 
             // home page init
             // Handle home nav icon press
@@ -52,28 +53,28 @@
                 var idx = $this.parent().prevAll().length;
                 // Do nothing if the nav button is already the current active one
                 if (idx != homeNavIdx) {
+                    $.mobile.loading("show");
                     homeNavIdx = idx;
                     // Still need to manually manage classes to make highlight button persistent
                     $this.parent().siblings().find("a").removeClass("ui-btn-active ui-state-persist");
                     $this.addClass("ui-btn-active ui-state-persist");
 
-                    homeContentDivs.hide();
-                    var activeContentDiv = homeContentDivs.eq(idx);
-                    activeContentDiv.show();
-
-                    switch (activeContentDiv.attr("id")) {
+                    switch (homeContentDivs.eq(idx).attr("id")) {
                         case "news":
                             homeHeader.find("h1").text("Recent News");
+                            app.finishHomeNav();
                             break;
                         case "teach":
                             homeHeader.find("h1").text("My Teachings");
-                            app.prepareTeachs();
+                            app.prepareTeaches();
                             break;
                         case "study":
                             homeHeader.find("h1").text("My Learnings");
+                            app.finishHomeNav();
                             break;
                         case "setup":
                             homeHeader.find("h1").text("Settings");
+                            app.finishHomeNav();
                             break;
                     }
                 }
@@ -110,7 +111,7 @@
                         function (tx) {
                             currentTeach.nregs += 1;
                             tx.executeSql(
-                                "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
+                                    "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
                                     "VALUES (?, ?, ?);",
                                 fields
                             );
@@ -132,9 +133,9 @@
             });
 
             // Handle the transition from teach regs page to stamps page
-            $("#student-list").on("click", "a", function () {
+            studentList.on("click", "a", function () {
                 // Do not process tap is a swipe event is in process
-                if (! listTapable) {
+                if (studentList.hasClass("app-swiped")) {
                     return false;
                 }
                 var $this = $(this);
@@ -193,22 +194,39 @@
                 return false;
             });
 
-            $("#student-list").on("swipeleft swiperight", "li", function (event) {
-                listTapable = false;
+            // Handle swipe on student list
+            studentList.on("swipeleft swiperight", function (event) {
+                studentList.addClass("app-swiped");
                 if (event.type == "swipeleft") {
-                    $("#student-list").find("a").prepend('<img src="img/bar-delete.svg" class="bar-delete"/>');
-                    $("#student-list").find("li a").removeClass('ui-icon-carat-r');
-                    $("#student-list").find("li a").addClass('ui-icon-bars');
+                    if (!studentList.hasClass("app-swiped-left")) {
+                        studentList.addClass("app-swiped-left");
+                        var img = $("<img>", {
+                            src: "img/bar-delete.svg",
+                            "class": "bar-delete"
+                        });
+                        studentList.find("li a").prepend(img)
+                            .removeClass('ui-icon-carat-r')
+                            .addClass('ui-icon-bars');
+                    }
                 } else {
                     setTimeout(function () {
-                        listTapable = true;
+                        if (!studentList.hasClass("app-swiped-left")) {
+                            studentList.removeClass("app-swiped");
+                        }
                     }, 500);
-                    $("#student-list").find("img").remove();
-                    $("#student-list").find("li a").removeClass('ui-icon-bars');
-                    $("#student-list").find("li a").addClass('ui-icon-carat-r');
-
+                    studentList.removeClass("app-swiped-left");
+                    studentList.find("img").remove();
+                    studentList.find("li a").removeClass('ui-icon-bars').addClass('ui-icon-carat-r');
                 }
                 return false;
+            });
+
+            // turn off swipe status when the page is hide
+            pageTeachRegs.on("pagehide", function () {
+                studentList.removeClass("app-swiped");
+                if (studentList.hasClass("app-swiped-left")) {
+                    studentList.trigger("swiperight");
+                }
             });
 
             // Set the second stamps container to off screen at start up
@@ -436,7 +454,15 @@
             });
         },
 
-        prepareTeachs: function () {
+        finishHomeNav: function () {
+            var homeContentDivs = $("#home").find(".ui-content");
+            var activeContentDiv = homeContentDivs.eq(homeNavIdx);
+            homeContentDivs.hide();
+            activeContentDiv.show();
+            $.mobile.loading("hide");
+        },
+
+        prepareTeaches: function () {
             db.transaction(
                 function (tx) {
                     tx.executeSql("SELECT * FROM Teaches;",
@@ -460,6 +486,7 @@
                                 ul.append($("<li>").append(a));
                             }
                             ul.listview("refresh");
+                            app.finishHomeNav();
                         },
                         app.dbError)
                 }
@@ -561,7 +588,7 @@
 
         updateStampsCount: function (page) {
             page.find(".pageCount").empty().text(
-                (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
+                    (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
             page.find(".unusedCount").empty().text(currentStudent.unused);
         },
 
@@ -668,15 +695,15 @@
             db.transaction(
                 function (tx) {
                     tx.executeSql(
-                        "INSERT INTO Teaches (name, desc, nregs) " +
+                            "INSERT INTO Teaches (name, desc, nregs) " +
                             "VALUES ('Folk Guitar Basics', " +
                             "'An introductory lesson for people who want to pick up guitar fast with no previous experience', " +
                             "2);");
                     tx.executeSql(
-                        "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
+                            "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
                             "VALUES (1, 'Emma', 'Wang', 24, 14);");
                     tx.executeSql(
-                        "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
+                            "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
                             "VALUES (1, 'Tia', 'Wang', 5, 2);");
                     for (var i = 0; i < 24; i++) {
                         tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(1);");
