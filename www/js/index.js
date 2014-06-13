@@ -7,6 +7,7 @@
     var stamps, stampsDeleted;
     var stampFirstIdx, stampLastIdx;
     var homeNavIdx = -1;
+    var teaches, currentTeach;
 
     var app = {
         initialize: function () {
@@ -38,7 +39,7 @@
                 homeHeader = pageHome.find("#home-header"),
                 homeContentDivs = pageHome.find(".ui-content");
 
-             var pageTeachRegs = $("#teach-regs-page"),
+            var pageTeachRegs = $("#teach-regs-page"),
                 pageNewstudent = $("#new-student"),
                 pageStamps = $("#stamps-page"),
                 stampsContainers = pageStamps.find(".stamps-container");
@@ -84,8 +85,8 @@
             // Handle click on teach list
             $("#teach-list").on("click", "a", function () {
                 var $this = $(this);
-                var id = $this.data("id");
-                app.prepareTeachRegs(id);
+                currentTeach = teaches[$this.parent().prevAll().length];
+                app.prepareTeachRegs(currentTeach.teach_id);
                 $.mobile.changePage(pageTeachRegs, {
                     transition: "slide"
                 });
@@ -98,25 +99,33 @@
                 $.each(form.serializeArray(), function (idx, field) {
                     fields.push(field.value);
                 });
+
                 if (fields.toString() == ",") {
                     alert("More information required");
+                    console.log("More information required");
                 } else {
-                    fields.unshift(pageTeachRegs.data("teach_id"));
+                    fields.unshift(currentTeach.teach_id);
                     db.transaction(
                         function (tx) {
+                            currentTeach.nregs += 1;
                             tx.executeSql(
                                 "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
                                     "VALUES (?, ?, ?);",
-                                fields,
-                                function () {
-                                    app.listStudentsForTeach(1);
-                                    $.mobile.changePage(pageTeachRegs, {
-                                        transition: "slideup"
-                                    });
-                                    form.get(0).reset();
-                                },
-                                app.dbError
+                                fields
                             );
+                            tx.executeSql(
+                                "UPDATE Teaches SET nregs = ? WHERE id = ?;",
+                                [currentTeach.nregs, currentTeach.teach_id]);
+                        },
+                        app.dbError,
+                        function () {
+                            app.listStudentsForTeach(currentTeach.teach_id);
+                            $.mobile.changePage(pageTeachRegs, {
+                                transition: "slideup"
+                            });
+                            form.get(0).reset();
+                            var idxTeachList = teaches.indexOf(currentTeach);
+                            homeContentDivs.eq(homeNavIdx).find("ul a span").eq(idxTeachList).empty().text(currentTeach.nregs);
                         });
                 }
             });
@@ -346,8 +355,8 @@
                     },
                     app.dbError,
                     function () {
-                        var idx = students.indexOf(currentStudent);
-                        pageTeachRegs.find("ul a span").eq(idx).empty().text(currentStudent.unused);
+                        var idxStudentList = students.indexOf(currentStudent);
+                        pageTeachRegs.find("ul a span").eq(idxStudentList).empty().text(currentStudent.unused);
 
                         $.mobile.changePage(pageTeachRegs, {
                             transition: "pop",
@@ -402,31 +411,50 @@
                 }
                 return false;
             });
-
         },
 
         prepareTeachs: function () {
             db.transaction(
                 function (tx) {
                     tx.executeSql("SELECT * FROM Teaches;",
-                    undefined,
-                    function (tx, result) {
-                        var ul = $("#teach-list");
-                        ul.empty();
-                        for (var i=0; i < result.rows.length; i++) {
-                            var row = result.rows.item(i);
-                            var a = $("<a>", {
-                                "href": "#",
-                                text: row.name
-                            });
-                            a.data("id", row.id);
-                            ul.append($("<li>").append(a));
-                        }
-                        ul.listview("refresh");
-                    },
-                    app.dbError)
+                        undefined,
+                        function (tx, result) {
+                            var ul = $("#teach-list");
+                            ul.empty();
+                            teaches = [];
+                            for (var i = 0; i < result.rows.length; i++) {
+                                var row = result.rows.item(i);
+                                var teach = app.populateTeach(row);
+                                teaches.push(teach)
+                                var a = $("<a>", {
+                                    "href": "#",
+                                    text: teach.name
+                                });
+                                a.append($("<span>", {
+                                    class: "ui-li-count ui-btn-up-c ui-btn-corner-all",
+                                    text: teach.nregs
+                                }));
+                                ul.append($("<li>").append(a));
+                            }
+                            ul.listview("refresh");
+                        },
+                        app.dbError)
                 }
             );
+        },
+
+        populateTeach: function (row) {
+            var teach = {
+                teach_id: row.id,
+                name: row.name,
+                desc: row.desc,
+                nregs: row.nregs,
+                is_active: row.is_active,
+                ctime: row.ctime,
+                data: row.data,
+                srv_id: row.srv_id
+            };
+            return teach;
         },
 
         prepareTeachRegs: function (teach_id) {
@@ -460,7 +488,7 @@
                             var student = app.populateStudent(row);
                             students.push(student);
                             var a = $("<a>", {
-                                "href": "#",
+                                href: "#",
                                 text: student.name
                             });
                             a.append($("<span>", {
@@ -549,6 +577,7 @@
                         "id INTEGER PRIMARY KEY  NOT NULL ," +
                         "name VARCHAR NOT NULL ," +
                         "desc TEXT," +
+                        "nregs INTEGER NOT NULL DEFAULT 0, " + // number of registered students
                         "is_active BOOL NOT NULL  DEFAULT 1 ," +
                         "ctime DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP ," +
                         "data TEXT," +
@@ -615,9 +644,17 @@
         mockData: function () {
             db.transaction(
                 function (tx) {
-                    tx.executeSql("INSERT INTO Teaches (name, desc) VALUES ('Folk Guitar Basics', 'An introductory lesson for people who want to pick up guitar fast with no previous experience');");
-                    tx.executeSql("INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) VALUES (1, 'Emma', 'Wang', 24, 14);");
-                    tx.executeSql("INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) VALUES (1, 'Tia', 'Wang', 5, 2);");
+                    tx.executeSql(
+                        "INSERT INTO Teaches (name, desc, nregs) " +
+                            "VALUES ('Folk Guitar Basics', " +
+                            "'An introductory lesson for people who want to pick up guitar fast with no previous experience', " +
+                            "2);");
+                    tx.executeSql(
+                        "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
+                            "VALUES (1, 'Emma', 'Wang', 24, 14);");
+                    tx.executeSql(
+                        "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
+                            "VALUES (1, 'Tia', 'Wang', 5, 2);");
                     for (var i = 0; i < 24; i++) {
                         tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(1);");
                     }
