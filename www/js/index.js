@@ -46,7 +46,7 @@
 
             // home page init
             // Handle home nav icon press
-            pageHome.on("click", "#icon-news, #icon-teach, #icon-study, #icon-me", function () {
+            pageHome.on("click", "#icon-news, #icon-teach, #icon-study, #icon-setup", function () {
                 var $this = $(this);
                 var idx = $this.parent().prevAll().length;
                 // Do nothing if the nav button is already the current active one
@@ -71,7 +71,7 @@
                         case "study":
                             homeHeader.find("h1").text("My Learnings");
                             break;
-                        case "me":
+                        case "setup":
                             homeHeader.find("h1").text("Settings");
                             break;
                     }

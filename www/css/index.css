@@ -8,7 +8,7 @@ body {
     -webkit-user-select: none; /* prevent copy paste, to allow, change 'none' to 'text' */
 }
 
-#news, #teach, #study, #me {
+#news, #teach, #study, #setup {
     display: none;
 }
 
@@ -27,8 +27,8 @@ body {
     background-size: contain;
 }
 
-#icon-me:after {
-    background: url("../img/home-me.svg") 50% 50% no-repeat;
+#icon-setup:after {
+    background: url("../img/home-setup.svg") 50% 50% no-repeat;
     background-size: contain;
 }
 
