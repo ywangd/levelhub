@@ -216,3 +216,6 @@ body {
     transform: translate3d(200%, 200%, 0);
 }
 
+.bar-delete {
+    margin-right: 5px;
+}

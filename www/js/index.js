@@ -8,6 +8,7 @@
     var stampFirstIdx, stampLastIdx;
     var homeNavIdx = -1;
     var teaches, currentTeach;
+    var listTapable = true;
 
     var app = {
         initialize: function () {
@@ -132,6 +133,10 @@
 
             // Handle the transition from teach regs page to stamps page
             $("#student-list").on("click", "a", function () {
+                // Do not process tap is a swipe event is in process
+                if (! listTapable) {
+                    return false;
+                }
                 var $this = $(this);
                 currentStudent = students[$this.parent().prevAll().length];
                 // Save the start values in case the operations are cancelled
@@ -188,12 +193,30 @@
                 return false;
             });
 
+            $("#student-list").on("swipeleft swiperight", "li", function (event) {
+                listTapable = false;
+                if (event.type == "swipeleft") {
+                    $("#student-list").find("a").prepend('<img src="img/bar-delete.svg" class="bar-delete"/>');
+                    $("#student-list").find("li a").removeClass('ui-icon-carat-r');
+                    $("#student-list").find("li a").addClass('ui-icon-bars');
+                } else {
+                    setTimeout(function () {
+                        listTapable = true;
+                    }, 500);
+                    $("#student-list").find("img").remove();
+                    $("#student-list").find("li a").removeClass('ui-icon-bars');
+                    $("#student-list").find("li a").addClass('ui-icon-carat-r');
+
+                }
+                return false;
+            });
+
             // Set the second stamps container to off screen at start up
             pageStamps.eq(0).find(".stamps-container:eq(1)").css("left", "150%");
 
             // Handle swipe transitions between stamps container divs
             pageStamps.find(".stampspage-content").on("swipeleft swiperight", function (event) {
-                $this = $(this);
+                var $this = $(this);
 
                 var divs = $this.find(".stamps-container"),
                     outDiv = divs.eq(0), inDiv = divs.eq(1),
@@ -669,7 +692,6 @@
                     console.log("Mock data ready.");
                 });
         }
-
     };
 
     app.initialize();
