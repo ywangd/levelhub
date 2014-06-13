@@ -194,19 +194,22 @@
                 return false;
             });
 
+            studentList.on("sortstop", function (event, ui) {
+                console.log("SORT STOP");
+                studentList.listview("refresh");
+            });
+
             // Handle swipe on student list
             studentList.on("swipeleft swiperight", function (event) {
                 studentList.addClass("app-swiped");
                 if (event.type == "swipeleft") {
                     if (!studentList.hasClass("app-swiped-left")) {
                         studentList.addClass("app-swiped-left");
-                        var img = $("<img>", {
-                            src: "img/bar-delete.svg",
-                            "class": "bar-delete"
-                        });
-                        studentList.find("li a").prepend(img)
-                            .removeClass('ui-icon-carat-r')
+                        studentList.find("img").removeClass("hidden");
+                        studentList.find("li a").removeClass('ui-icon-carat-r')
                             .addClass('ui-icon-bars');
+                        studentList.sortable("enable");
+                        studentList.disableSelection();
                     }
                 } else {
                     setTimeout(function () {
@@ -215,8 +218,9 @@
                         }
                     }, 500);
                     studentList.removeClass("app-swiped-left");
-                    studentList.find("img").remove();
+                    studentList.find("img").addClass("hidden");
                     studentList.find("li a").removeClass('ui-icon-bars').addClass('ui-icon-carat-r');
+                    studentList.sortable("disable");
                 }
                 return false;
             });
@@ -541,13 +545,20 @@
                                 href: "#",
                                 text: student.name
                             });
+                            var img = $("<img>", {
+                                src: "img/bar-delete.svg",
+                                "class": "bar-delete ui-li-icon hidden"
+                            });
+                            a.prepend(img);
                             a.append($("<span>", {
-                                class: "ui-li-count ui-btn-up-c ui-btn-corner-all",
+                                "class": "ui-li-count ui-btn-up-c ui-btn-corner-all",
                                 text: row.unused
                             }));
                             ul.append($("<li>").append(a));
                         }
                         ul.listview("refresh");
+                        ul.sortable();
+                        ul.sortable("disable");
                     },
                     app.dbError
                 );

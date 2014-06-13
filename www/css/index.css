@@ -217,7 +217,9 @@ body {
 }
 
 .bar-delete {
+    /*
     margin-right: 5px;
-    height: 100%;
     display: inline-block;
+    position: static !important;
+    */
 }
