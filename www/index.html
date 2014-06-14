@@ -71,7 +71,7 @@
         <h1></h1>
 
         <div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-left">
-            <a href="#" class="ui-btn ui-icon-bars ui-btn-icon-notext ui-corner-all ui-btn-d icon-btn-in-ctrlgrp">Details</a>
+            <a id="student-details-button" class="ui-btn ui-icon-bars ui-btn-icon-notext ui-corner-all ui-btn-d icon-btn-in-ctrlgrp">Details</a>
             <a href="#" class="ui-btn pageCount"></a>
         </div>
 
@@ -222,6 +222,34 @@
             <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b" data-rel="back"
                data-transition="flow">Ok</a>
         </div>
+    </div>
+</section>
+
+
+<section id="student-details-page" data-role="page">
+    <header data-role="header">
+        <h1 style="margin-left: 10%; margin-right: 10%;">Registration Details</h1>
+        <a href="#stamps-page" data-transition="slide"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-left ui-btn-icon-notext">Back</a>
+    </header>
+    <div role="main" class="ui-content">
+        <ul id="student-details-list" data-role="listview" data-inset="true">
+            <li data-icon="false"><a>
+                <img src="img/smiley.svg" style="width: 80px;">
+                <h2></h2>
+                <p></p></a>
+            </li>
+        </ul>
+        <ul data-role="listview" style="border: 0;">
+            <li style="border: 0;">
+                <fieldset class="ui-grid-solo">
+                    <div class="ui-block-a">
+                        <button id="delete-reg-button" class="ui-btn ui-corner-all ui-btn-a" style="background-color: lightcoral;"
+                                >Delete</button>
+                    </div>
+                </fieldset>
+            </li>
+        </ul>
     </div>
 </section>
 

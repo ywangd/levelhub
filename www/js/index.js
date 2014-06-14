@@ -43,6 +43,8 @@
                 pageNewstudent = $("#new-student"),
                 pageStamps = $("#stamps-page");
 
+            var pageStudentDetails = $("#student-details-page");
+
             var stampsContainers = pageStamps.find(".stamps-container"),
                 studentList = $("#student-list");
 
@@ -420,7 +422,21 @@
                 stampDoms.find("img.x-delete").addClass("hidden");
             });
 
-            // sync top up slider value and Handle OK button on Top up dialog
+            $("#student-details-button").on("click", function () {
+                var li0 = pageStudentDetails.find(".ui-content li:eq(0)");
+                console.log(li0);
+                li0.find("h2").text(currentStudent.name);
+                li0.find("p").text("from " + currentStudent.ctime.split(" ")[0]);
+
+                $.mobile.changePage(pageStudentDetails, {
+                    transition: "slide",
+                    reverse: true
+                });
+                return false;
+            });
+
+
+            // Handle OK button on Top up dialog
             $("#topup-dialog").find("a").on("click", function () {
                 var $this = $(this);
                 var slider = $this.closest("div").find("input");
@@ -588,6 +604,8 @@
                 reg_id: row.id,
                 total: row.total,
                 unused: row.unused,
+                ctime: row.ctime,
+                data: row.data,
                 srv_id: row.srv_id
             };
             var name = row.user_fname;
