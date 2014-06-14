@@ -105,8 +105,12 @@
                 });
 
                 if (fields.indexOf("") >= 0) {
-                    alert("More information required");
-                    console.log("More information required");
+                    navigator.notification.alert(
+                        "More information is required.",
+                        undefined,
+                        "Invalid Input"
+                    );
+                    console.log("More information is required");
                 } else {
                     fields.unshift(currentTeach.teach_id);
                     db.transaction(
@@ -119,7 +123,8 @@
                             );
                             tx.executeSql(
                                 "UPDATE Teaches SET nregs = ? WHERE id = ?;",
-                                [currentTeach.nregs, currentTeach.teach_id]);
+                                [currentTeach.nregs, currentTeach.teach_id]
+                            );
                         },
                         app.dbError,
                         function () {
@@ -197,45 +202,45 @@
             });
 
             /*
-            studentList.on("sortstop", function (event, ui) {
-                console.log("SORT STOP");
-                studentList.listview("refresh");
-            });
+             studentList.on("sortstop", function (event, ui) {
+             console.log("SORT STOP");
+             studentList.listview("refresh");
+             });
 
-            // Handle swipe on student list
-            studentList.on("swipeleft swiperight", function (event) {
-                studentList.addClass("app-swiped");
-                if (event.type == "swipeleft") {
-                    if (!studentList.hasClass("app-swiped-left")) {
-                        studentList.addClass("app-swiped-left");
-                        studentList.find("img").removeClass("hidden");
-                        studentList.find("li a").removeClass('ui-icon-carat-r')
-                            .addClass('ui-icon-bars');
-                        studentList.sortable("enable");
-                        studentList.disableSelection();
-                    }
-                } else {
-                    setTimeout(function () {
-                        if (!studentList.hasClass("app-swiped-left")) {
-                            studentList.removeClass("app-swiped");
-                        }
-                    }, 500);
-                    studentList.removeClass("app-swiped-left");
-                    studentList.find("img").addClass("hidden");
-                    studentList.find("li a").removeClass('ui-icon-bars').addClass('ui-icon-carat-r');
-                    studentList.sortable("disable");
-                }
-                return false;
-            });
+             // Handle swipe on student list
+             studentList.on("swipeleft swiperight", function (event) {
+             studentList.addClass("app-swiped");
+             if (event.type == "swipeleft") {
+             if (!studentList.hasClass("app-swiped-left")) {
+             studentList.addClass("app-swiped-left");
+             studentList.find("img").removeClass("hidden");
+             studentList.find("li a").removeClass('ui-icon-carat-r')
+             .addClass('ui-icon-bars');
+             studentList.sortable("enable");
+             studentList.disableSelection();
+             }
+             } else {
+             setTimeout(function () {
+             if (!studentList.hasClass("app-swiped-left")) {
+             studentList.removeClass("app-swiped");
+             }
+             }, 500);
+             studentList.removeClass("app-swiped-left");
+             studentList.find("img").addClass("hidden");
+             studentList.find("li a").removeClass('ui-icon-bars').addClass('ui-icon-carat-r');
+             studentList.sortable("disable");
+             }
+             return false;
+             });
 
-            // turn off swipe status when the page is hide
-            pageTeachRegs.on("pagehide", function () {
-                studentList.removeClass("app-swiped");
-                if (studentList.hasClass("app-swiped-left")) {
-                    studentList.trigger("swiperight");
-                }
-            });
-            */
+             // turn off swipe status when the page is hide
+             pageTeachRegs.on("pagehide", function () {
+             studentList.removeClass("app-swiped");
+             if (studentList.hasClass("app-swiped-left")) {
+             studentList.trigger("swiperight");
+             }
+             });
+             */
 
             // Set the second stamps container to off screen at start up
             pageStamps.eq(0).find(".stamps-container:eq(1)").css("left", "150%");
@@ -422,19 +427,52 @@
                 stampDoms.find("img.x-delete").addClass("hidden");
             });
 
+            // Handle transition to student details page
             $("#student-details-button").on("click", function () {
                 var li0 = pageStudentDetails.find(".ui-content li:eq(0)");
-                console.log(li0);
                 li0.find("h2").text(currentStudent.name);
                 li0.find("p").text("from " + currentStudent.ctime.split(" ")[0]);
 
                 $.mobile.changePage(pageStudentDetails, {
-                    transition: "slide",
-                    reverse: true
+                    transition: "flip"
                 });
                 return false;
             });
 
+            // handle student deletion
+            $("#student-delete-button").on("click", function () {
+                navigator.notification.confirm("The operation is not reversible!", function (btnIdx) {
+                    if (btnIdx == 1) {
+                        db.transaction(
+                            function (tx) {
+                                currentTeach.nregs -= 1;
+                                tx.executeSql(
+                                    "DELETE FROM TeachRegs WHERE id = ?;",
+                                    [currentStudent.reg_id]
+                                );
+                                tx.executeSql(
+                                    "UPDATE Teaches SET nregs = ? WHERE id = ?;",
+                                    [currentTeach.nregs, currentTeach.teach_id]
+                                );
+                                tx.executeSql(
+                                    "DELETE FROM TeachRegLogs WHERE reg_id = ?;",
+                                    [currentStudent.reg_id]
+                                );
+                            },
+                            app.dbError,
+                            function () {
+                                app.listStudentsForTeach(currentTeach.teach_id);
+                                $.mobile.changePage(pageTeachRegs, {
+                                    transition: "pop",
+                                    reverse: true
+                                });
+                                var idxTeachList = teaches.indexOf(currentTeach);
+                                homeContentDivs.eq(homeNavIdx).find("ul a span").eq(idxTeachList).empty().text(currentTeach.nregs);
+                            }
+                        );
+                    }
+                }, "Delete student?");
+            });
 
             // Handle OK button on Top up dialog
             $("#topup-dialog").find("a").on("click", function () {
@@ -562,14 +600,14 @@
                         }
                         // Sort alphabetically case insensitive
                         /*
-                        students.sort(function (x, y) {
-                            x = x.name.toUpperCase();
-                            y = y.name.toUpperCase();
-                            if (x < y) return -1;
-                            if (x > y) return 1;
-                            return 0;
-                        });
-                        */
+                         students.sort(function (x, y) {
+                         x = x.name.toUpperCase();
+                         y = y.name.toUpperCase();
+                         if (x < y) return -1;
+                         if (x > y) return 1;
+                         return 0;
+                         });
+                         */
                         $.each(students, function (idx, student) {
                             var a = $("<a>", {
                                 href: "#",
