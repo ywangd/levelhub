@@ -223,3 +223,10 @@ body {
     position: static !important;
     */
 }
+
+.ui-li-divider {
+    border: 1px solid #456F9A;
+    background: linear-gradient(#6FACD5, #497BAE) repeat scroll 0% 0% #5E87B0;
+    color: white !important;
+    text-shadow: 0px 1px 1px #3E6790 !important;
+}

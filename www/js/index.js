@@ -99,10 +99,10 @@
                 var fields = [];
                 var form = $("#new-student-form");
                 $.each(form.serializeArray(), function (idx, field) {
-                    fields.push(field.value);
+                    fields.push($.trim(field.value));
                 });
 
-                if (fields.toString() == ",") {
+                if (fields.indexOf("") >= 0) {
                     alert("More information required");
                     console.log("More information required");
                 } else {
@@ -139,7 +139,7 @@
                     return false;
                 }
                 var $this = $(this);
-                currentStudent = students[$this.parent().prevAll().length];
+                currentStudent = students[$this.parent().prevAll(":not(.ui-li-divider)").length];
                 // Save the start values in case the operations are cancelled
                 currentStudent.saved_total = currentStudent.total;
                 currentStudent.saved_unused = currentStudent.unused;
@@ -194,6 +194,7 @@
                 return false;
             });
 
+            /*
             studentList.on("sortstop", function (event, ui) {
                 console.log("SORT STOP");
                 studentList.listview("refresh");
@@ -232,6 +233,7 @@
                     studentList.trigger("swiperight");
                 }
             });
+            */
 
             // Set the second stamps container to off screen at start up
             pageStamps.eq(0).find(".stamps-container:eq(1)").css("left", "150%");
@@ -531,7 +533,7 @@
         listStudentsForTeach: function (teach_id) {
             db.transaction(function (tx) {
                 tx.executeSql(
-                    "SELECT * FROM TeachRegs WHERE teach_id = ? ORDER BY id;",
+                    "SELECT * FROM TeachRegs WHERE teach_id = ? ORDER BY upper(user_fname || user_lname);",
                     [teach_id],
                     function (tx, result) {
                         var ul = $("#student-list");
@@ -541,24 +543,38 @@
                             var row = result.rows.item(i);
                             var student = app.populateStudent(row);
                             students.push(student);
+                        }
+                        // Sort alphabetically case insensitive
+                        /*
+                        students.sort(function (x, y) {
+                            x = x.name.toUpperCase();
+                            y = y.name.toUpperCase();
+                            if (x < y) return -1;
+                            if (x > y) return 1;
+                            return 0;
+                        });
+                        */
+                        $.each(students, function (idx, student) {
                             var a = $("<a>", {
                                 href: "#",
                                 text: student.name
                             });
-                            var img = $("<img>", {
-                                src: "img/bar-delete.svg",
-                                "class": "bar-delete ui-li-icon hidden"
-                            });
-                            a.prepend(img);
+                            /*
+                             var img = $("<img>", {
+                             src: "img/bar-delete.svg",
+                             "class": "bar-delete ui-li-icon hidden"
+                             });
+                             a.prepend(img);
+                             */
                             a.append($("<span>", {
                                 "class": "ui-li-count ui-btn-up-c ui-btn-corner-all",
-                                text: row.unused
+                                text: student.unused
                             }));
                             ul.append($("<li>").append(a));
-                        }
+                        });
                         ul.listview("refresh");
-                        ul.sortable();
-                        ul.sortable("disable");
+                        //ul.sortable();
+                        //ul.sortable("disable");
                     },
                     app.dbError
                 );
