@@ -18,6 +18,8 @@
 <section id="home" data-role="page">
     <header data-role="header" data-position="fixed" id="home-header">
         <h1></h1>
+        <a id="popdb" href="#" class="ui-btn ui-btn-right ui-icon-refresh ui-btn-icon-notext ui-corner-all">Populate
+            DB</a>
     </header>
 
     <div role="main" class="ui-content" id="news">
@@ -59,9 +61,20 @@
         </ul>
     </div>
     <footer data-role="footer" data-position="fixed">
-        <h1>Footer</h1>
-        <a id="popdb" href="#" data-role="button" data-icon="refresh" data-iconpos="notext" class="ui-btn-right">Populate
-            DB</a>
+        <div class="ui-grid-b">
+            <div class="ui-block-a" style="width: 15%; text-align: left;">
+                <a href="#" id="teach-details-button"
+                   class="ui-btn ui-shadow ui-icon-info ui-btn-icon-notext ui-corner-all">Details</a>
+            </div>
+            <div class="ui-block-b" style="width: 70%; text-align: center;">
+                <p>Footer</p>
+            </div>
+            <div class="ui-block-c" style="width: 15%; text-align: right;">
+                <a href="#" id="ann-button"
+                   class="ui-btn ui-icon-comment ui-btn-icon-notext ui-corner-all">Send Message</a>
+            </div>
+        </div>
+
     </footer>
 </section>
 
@@ -71,7 +84,8 @@
         <h1></h1>
 
         <div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-left">
-            <a id="student-details-button" class="ui-btn ui-icon-bars ui-btn-icon-notext ui-corner-all ui-btn-d icon-btn-in-ctrlgrp">Details</a>
+            <a href="#" id="student-details-button"
+               class="ui-btn ui-icon-info ui-btn-icon-notext ui-corner-all ui-btn-d icon-btn-in-ctrlgrp">Details</a>
             <a href="#" class="ui-btn pageCount"></a>
         </div>
 
@@ -200,7 +214,7 @@
         <div class="ui-grid-a">
             <div class="ui-block-a">
                 <a href="#teach-regs-page" data-transition="slide" data-direction="reverse"
-                   data-role="button" data-theme="d" data-icon="delete" style="display: block;">Cancel</a>
+                   data-role="button" data-icon="delete" style="display: block;">Cancel</a>
             </div>
             <div class="ui-block-b">
                 <a href="#" data-role="button"
@@ -236,7 +250,9 @@
         <ul id="student-details-list" data-role="listview" data-inset="true">
             <li data-icon="false">
                 <img src="img/smiley.svg" style="width: 80px;">
+
                 <h2></h2>
+
                 <p></p>
             </li>
         </ul>
@@ -244,8 +260,10 @@
             <li style="border: 0;">
                 <fieldset class="ui-grid-solo">
                     <div class="ui-block-a">
-                        <button id="student-delete-button" class="ui-btn ui-corner-all ui-btn-a" style="background-color: lightcoral;"
-                                >Delete</button>
+                        <button id="student-delete-button" class="ui-btn ui-corner-all ui-btn-a"
+                                style="background-color: lightcoral;"
+                                >Delete
+                        </button>
                     </div>
                 </fieldset>
             </li>
