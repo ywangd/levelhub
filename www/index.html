@@ -18,8 +18,10 @@
 <section id="home" data-role="page">
     <header data-role="header" data-position="fixed" id="home-header">
         <h1></h1>
-        <a id="popdb" href="#" class="ui-btn ui-btn-right ui-icon-refresh ui-btn-icon-notext ui-corner-all">Populate
+        <a id="popdb" href="#" class="ui-btn ui-btn-left ui-icon-refresh ui-btn-icon-notext ui-corner-all">Populate
             DB</a>
+        <a href="#" id="home-btn-right"
+           class="ui-btn ui-btn-right ui-btn-icon-notext ui-corner-all ui-icon-refresh"></a>
     </header>
 
     <div role="main" class="ui-content" id="news">
@@ -44,6 +46,38 @@
                 <li><a href="#" id="icon-setup" data-icon="custom">Setup</a></li>
             </ul>
         </div>
+    </footer>
+</section>
+
+<section id="new-teach" data-role="page">
+    <header data-role="header">
+        <h1 class="wide-header">New Class to Teach</h1>
+    </header>
+    <div role="main" class="ui-content">
+
+        <form>
+            <div class="ui-field-contain">
+                <label for="newTeachName">Name</label>
+                <input name="newTeachName" id="newTeachName" value="" type="text">
+            </div>
+            <div class="ui-field-contain">
+                <label for="newTeachDesc">Description</label>
+                <textarea cols="40" rows="6" name="newTeachDesc" id="newTeachDesc" data-autogrow="false"
+                          style="resize: none;"></textarea>
+            </div>
+        </form>
+
+    </div>
+    <footer data-role="footer" data-position="fixed">
+        <fieldset class="ui-grid-a">
+            <div class="ui-block-a">
+                <a href="#home" data-transition="slideup"
+                   data-role="button" data-icon="delete" style="display: block;">Cancel</a>
+            </div>
+            <div class="ui-block-b">
+                <a href="#" data-role="button" data-theme="b" data-icon="check" style="display: block;">OK</a>
+            </div>
+        </fieldset>
     </footer>
 </section>
 
@@ -95,13 +129,14 @@
     <div role="main" class="ui-content">
         <ul data-role="listview" data-inset="true">
             <li data-icon="edit">
-                <a href="#teach-edit-popup-0" data-rel="popup" data-transition="pop">
+                <a href="#">
                     <h2></h2>
 
                     <p style="white-space: normal;"></p>
 
                     <p class="ui-li-aside"></p>
                 </a>
+                <a href="#teach-edit-popup-0" data-rel="popup" data-transition="pop" data-position-to="window">Edit</a>
             </li>
         </ul>
         <ul data-role="listview" data-inset="true" class="delete-solo-btn">
@@ -124,7 +159,8 @@
                 <label for="className">Name:</label>
                 <input name="className" id="className" value="" type="text">
                 <label for="classDesc">Description:</label>
-                <textarea cols="40" rows="8" name="classDesc" id="classDesc"></textarea>
+                <textarea cols="40" rows="6" name="classDesc" id="classDesc" data-autogrow="false"
+                          style="resize: none;"></textarea>
                 <fieldset class="ui-grid-a">
                     <div class="ui-block-a">
                         <a href="#" class="ui-btn ui-corner-all ui-btn-a ui-shadow ui-mini"
@@ -300,7 +336,7 @@
                     </div>
                     <div class="ui-block-b">
                         <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-mini"
-                           data-rel="back">Ok</a>
+                           data-rel="back">OK</a>
                     </div>
                 </fieldset>
             </form>
@@ -360,16 +396,16 @@
             </div>
         </div>
     </div>
-    <footer data-role="footer" data-position="fixed" style="text-align: center;">
-        <div class="ui-grid-a">
+    <footer data-role="footer" data-position="fixed">
+        <fieldset class="ui-grid-a">
             <div class="ui-block-a">
                 <a href="#teach-regs-page" data-transition="slideup"
-                   data-role="button" data-theme="d" data-icon="delete" style="display: block;">Cancel</a>
+                   data-role="button" data-icon="delete" style="display: block;">Cancel</a>
             </div>
             <div class="ui-block-b">
-                <a href="#" data-role="button" data-theme="b" data-icon="check" style="display: block;">Save</a>
+                <a href="#" data-role="button" data-theme="b" data-icon="check" style="display: block;">OK</a>
             </div>
-        </div>
+        </fieldset>
     </footer>
 </section>
 

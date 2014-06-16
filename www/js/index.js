@@ -37,10 +37,12 @@
             // All pages
             var pageHome = $("#home"),
                 homeHeader = pageHome.find("#home-header"),
-                homeContentDivs = pageHome.find(".ui-content");
+                homeContentDivs = pageHome.find(".ui-content"),
+                homeBtnRight = $("#home-btn-right");
 
-            var pageTeachRegs = $("#teach-regs-page"),
-                pageNewstudent = $("#new-student"),
+            var pageNewTeach = $("#new-teach"),
+                pageTeachRegs = $("#teach-regs-page"),
+                pageNewStudent = $("#new-student"),
                 pageStamps = $("#stamps-page");
 
             var pageTeachRegsDetails = $("#teach-regs-details-page");
@@ -65,18 +67,29 @@
                     switch (homeContentDivs.eq(idx).attr("id")) {
                         case "news":
                             homeHeader.find("h1").text("Recent News");
+                            homeBtnRight.removeClass("ui-icon-plus")
+                                .addClass("ui-icon-refresh").show();
                             app.finishHomeNav();
                             break;
                         case "teach":
                             homeHeader.find("h1").text("My Teachings");
+                            homeBtnRight.removeClass("ui-icon-refresh")
+                                .addClass("ui-icon-plus").attr({
+                                    "href": "#new-teach",
+                                    "data-transition": "slidedown"
+                                }).show();
+
                             app.prepareTeaches();
                             break;
                         case "study":
                             homeHeader.find("h1").text("My Learnings");
+                            homeBtnRight.removeClass("ui-icon-refresh")
+                                .addClass("ui-icon-plus").show();
                             app.finishHomeNav();
                             break;
                         case "setup":
                             homeHeader.find("h1").text("Settings");
+                            homeBtnRight.hide();
                             app.finishHomeNav();
                             break;
                     }
@@ -85,7 +98,61 @@
             });
 
             // The first page to show
-            $("#icon-news").trigger("click");
+            $("#icon-teach").trigger("click");
+
+            // Handle home page upper right button, note this button reacts
+            // different based on different active home section
+            homeBtnRight.on("click", function () {
+                switch (homeContentDivs.eq(homeNavIdx).attr("id")) {
+                    case "news":
+                        break;
+                    case "teach":
+                        break;
+                    case "study":
+                        break;
+                    case "setup":
+                        break;
+                }
+            });
+
+            // Save button on new teach page
+            pageNewTeach.find("footer a:eq(1)").on("click", function () {
+                console.log("HERE");
+                var form = $(this).closest("section").find("form"),
+                    fields = [];
+                $.each(form.serializeArray(), function (idx, field) {
+                    fields.push($.trim(field.value));
+                });
+                console.log(fields);
+                // Must have name for the new teach class
+                if (fields[0] == "") {
+                    navigator.notification.alert(
+                        "A class name is required.",
+                        undefined,
+                        "Invalid Input"
+                    );
+                    console.log("A class name is required.");
+                } else {
+                    db.transaction(
+                        function (tx) {
+                            tx.executeSql(
+                                "INSERT INTO Teaches (name, desc) VALUES (?, ?);",
+                                fields
+                            );
+                        },
+                        app.dbError,
+                        function () {
+                            form[0].reset();
+                            app.prepareTeaches();
+                            $.mobile.changePage(pageHome, {
+                                transition: "pop",
+                                reverse: true
+                            })
+                        }
+                    );
+                }
+
+            });
 
             // Handle click on teach list
             $("#teach-list").on("click", "a", function () {
@@ -109,6 +176,7 @@
                 return false;
             });
 
+            // fill the current teach details for popup
             pageTeachRegsDetails.on("pageshow", function () {
                 var popup0 = $("#teach-edit-popup-0");
                 popup0.find("input").val(currentTeach.name);
@@ -175,9 +243,9 @@
             });
 
             // Handle Save button for new student page
-            pageNewstudent.find("footer a:eq(1)").click(function () {
-                var fields = [];
-                var form = $("#new-student-form");
+            pageNewStudent.find("footer a:eq(1)").click(function () {
+                var form = $("#new-student-form"),
+                    fields = [];
                 $.each(form.serializeArray(), function (idx, field) {
                     fields.push($.trim(field.value));
                 });
@@ -512,29 +580,27 @@
             });
 
             // Handle OK button on Top up dialog
-            $("#topup-dialog").find("a").on("click", function () {
+            $("#topup-dialog").find("a:eq(1)").on("click", function () {
                 var $this = $(this);
                 var slider = $this.closest("form").find("input");
                 var value = parseInt(slider.val());
                 // Top up
-                if (this.textContent == "Ok") {
-                    for (var i = 0; i < value; i++) {
-                        stamps.push({
-                            updated: true,
-                            id: -1,
-                            reg_id: currentStudent.reg_id,
-                            use_time: null,
-                            ctime: app.getCurrentTimestamp()
-                        });
-                    }
-                    var page = $this.closest("section");
-                    currentStudent.unused += value;
-                    currentStudent.total += value;
-                    app.updateStampsCount(page);
-                    if (stampLastIdx - stampFirstIdx < 9) {
-                        stampLastIdx = Math.min(stampFirstIdx + 9, stamps.length);
-                        app.updateStampsContainer(page.find(".stamps-container:eq(0)"));
-                    }
+                for (var i = 0; i < value; i++) {
+                    stamps.push({
+                        updated: true,
+                        id: -1,
+                        reg_id: currentStudent.reg_id,
+                        use_time: null,
+                        ctime: app.getCurrentTimestamp()
+                    });
+                }
+                var page = $this.closest("section");
+                currentStudent.unused += value;
+                currentStudent.total += value;
+                app.updateStampsCount(page);
+                if (stampLastIdx - stampFirstIdx < 9) {
+                    stampLastIdx = Math.min(stampFirstIdx + 9, stamps.length);
+                    app.updateStampsContainer(page.find(".stamps-container:eq(0)"));
                 }
             });
 
@@ -562,7 +628,7 @@
         prepareTeaches: function () {
             db.transaction(
                 function (tx) {
-                    tx.executeSql("SELECT * FROM Teaches;",
+                    tx.executeSql("SELECT * FROM Teaches ORDER BY id;",
                         undefined,
                         function (tx, result) {
                             var ul = $("#teach-list");
