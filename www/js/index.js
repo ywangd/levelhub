@@ -43,6 +43,7 @@
                 pageNewstudent = $("#new-student"),
                 pageStamps = $("#stamps-page");
 
+            var pageTeachRegsDetails = $("#teach-regs-details-page");
             var pageStudentDetails = $("#student-details-page");
 
             var stampsContainers = pageStamps.find(".stamps-container"),
@@ -96,6 +97,83 @@
                 });
             });
 
+            // Handle details button on teach regs page
+            $("#teach-details-button").on("click", function () {
+                var li0 = pageTeachRegsDetails.find(".ui-content li:eq(0)");
+                li0.find("h2").text(currentTeach.name);
+                li0.find("p:eq(0)").text(currentTeach.desc);
+                li0.find("p:eq(1)").text("Created: " + currentTeach.ctime.split(" ")[0]);
+                $.mobile.changePage(pageTeachRegsDetails, {
+                    transition: "flip"
+                });
+                return false;
+            });
+
+            pageTeachRegsDetails.on("pageshow", function () {
+                var popup0 = $("#teach-edit-popup-0");
+                popup0.find("input").val(currentTeach.name);
+                popup0.find("textarea").val(currentTeach.desc);
+            });
+
+            // Handle save on teach regs details page
+            $("#teach-edit-popup-0").find("a:eq(1)").on("click", function () {
+                db.transaction(
+                    function (tx) {
+                        var popup0 = $("#teach-edit-popup-0");
+                        currentTeach.name = popup0.find("input").val();
+                        currentTeach.desc = popup0.find("textarea").val();
+                        tx.executeSql(
+                            "UPDATE Teaches SET name = ?, desc = ? WHERE id = ?;",
+                            [currentTeach.name, currentTeach.desc, currentTeach.teach_id]
+                        );
+                    },
+                    app.dbError,
+                    function () {
+                        var li0 = pageTeachRegsDetails.find(".ui-content li:eq(0)");
+                        li0.find("h2").text(currentTeach.name);
+                        li0.find("p:eq(0)").text(currentTeach.desc);
+                        pageTeachRegs.find("header h1").text(currentTeach.name);
+                        var idxTeachList = teaches.indexOf(currentTeach);
+                        homeContentDivs.eq(homeNavIdx).find("ul a").eq(idxTeachList)
+                            .get(0).firstChild.nodeValue = currentTeach.name;
+                    }
+                );
+            });
+
+            // Handle teach delete button
+            $("#teach-delete-button").on("click", function () {
+                navigator.notification.confirm("The operation is not reversible!", function (btnIdx) {
+                    if (btnIdx == 1) {
+                        db.transaction(
+                            function (tx) {
+                                tx.executeSql(
+                                    "DELETE FROM TeachRegLogs WHERE reg_id IN (SELECT reg_id FROM TeachRegs WHERE teach_id = ?);",
+                                    [currentTeach.teach_id]
+                                );
+                                tx.executeSql(
+                                    "DELETE FROM TeachRegs WHERE teach_id = ?;",
+                                    [currentTeach.teach_id]
+                                );
+                                tx.executeSql(
+                                    "DELETE FROM Teaches WHERE id = ?;",
+                                    [currentTeach.teach_id]
+                                );
+                            },
+                            app.dbError,
+                            function () {
+                                homeNavIdx = -1; // force reload on teach list page
+                                $("#icon-teach").trigger("click");
+                                $.mobile.changePage(pageHome, {
+                                    transition: "pop",
+                                    reverse: true
+                                });
+                            }
+                        );
+                    }
+                }, "Delete class?");
+                return false;
+            });
+
             // Handle Save button for new student page
             pageNewstudent.find("footer a:eq(1)").click(function () {
                 var fields = [];
@@ -117,7 +195,7 @@
                         function (tx) {
                             currentTeach.nregs += 1;
                             tx.executeSql(
-                                    "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
+                                "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
                                     "VALUES (?, ?, ?);",
                                 fields
                             );
@@ -200,47 +278,6 @@
                     });
                 return false;
             });
-
-            /*
-             studentList.on("sortstop", function (event, ui) {
-             console.log("SORT STOP");
-             studentList.listview("refresh");
-             });
-
-             // Handle swipe on student list
-             studentList.on("swipeleft swiperight", function (event) {
-             studentList.addClass("app-swiped");
-             if (event.type == "swipeleft") {
-             if (!studentList.hasClass("app-swiped-left")) {
-             studentList.addClass("app-swiped-left");
-             studentList.find("img").removeClass("hidden");
-             studentList.find("li a").removeClass('ui-icon-carat-r')
-             .addClass('ui-icon-bars');
-             studentList.sortable("enable");
-             studentList.disableSelection();
-             }
-             } else {
-             setTimeout(function () {
-             if (!studentList.hasClass("app-swiped-left")) {
-             studentList.removeClass("app-swiped");
-             }
-             }, 500);
-             studentList.removeClass("app-swiped-left");
-             studentList.find("img").addClass("hidden");
-             studentList.find("li a").removeClass('ui-icon-bars').addClass('ui-icon-carat-r');
-             studentList.sortable("disable");
-             }
-             return false;
-             });
-
-             // turn off swipe status when the page is hide
-             pageTeachRegs.on("pagehide", function () {
-             studentList.removeClass("app-swiped");
-             if (studentList.hasClass("app-swiped-left")) {
-             studentList.trigger("swiperight");
-             }
-             });
-             */
 
             // Set the second stamps container to off screen at start up
             pageStamps.eq(0).find(".stamps-container:eq(1)").css("left", "150%");
@@ -477,7 +514,7 @@
             // Handle OK button on Top up dialog
             $("#topup-dialog").find("a").on("click", function () {
                 var $this = $(this);
-                var slider = $this.closest("div").find("input");
+                var slider = $this.closest("form").find("input");
                 var value = parseInt(slider.val());
                 // Top up
                 if (this.textContent == "Ok") {
@@ -598,28 +635,13 @@
                             var student = app.populateStudent(row);
                             students.push(student);
                         }
-                        // Sort alphabetically case insensitive
-                        /*
-                         students.sort(function (x, y) {
-                         x = x.name.toUpperCase();
-                         y = y.name.toUpperCase();
-                         if (x < y) return -1;
-                         if (x > y) return 1;
-                         return 0;
-                         });
-                         */
+
                         $.each(students, function (idx, student) {
                             var a = $("<a>", {
                                 href: "#",
                                 text: student.name
                             });
-                            /*
-                             var img = $("<img>", {
-                             src: "img/bar-delete.svg",
-                             "class": "bar-delete ui-li-icon hidden"
-                             });
-                             a.prepend(img);
-                             */
+
                             a.append($("<span>", {
                                 "class": "ui-li-count ui-btn-up-c ui-btn-corner-all",
                                 text: student.unused
@@ -627,8 +649,6 @@
                             ul.append($("<li>").append(a));
                         });
                         ul.listview("refresh");
-                        //ul.sortable();
-                        //ul.sortable("disable");
                     },
                     app.dbError
                 );
@@ -671,7 +691,7 @@
 
         updateStampsCount: function (page) {
             page.find(".pageCount").empty().text(
-                    (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
+                (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
             page.find(".unusedCount").empty().text(currentStudent.unused);
         },
 
@@ -778,15 +798,15 @@
             db.transaction(
                 function (tx) {
                     tx.executeSql(
-                            "INSERT INTO Teaches (name, desc, nregs) " +
+                        "INSERT INTO Teaches (name, desc, nregs) " +
                             "VALUES ('Folk Guitar Basics', " +
                             "'An introductory lesson for people who want to pick up guitar fast with no previous experience', " +
                             "2);");
                     tx.executeSql(
-                            "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
+                        "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
                             "VALUES (1, 'Emma', 'Wang', 24, 14);");
                     tx.executeSql(
-                            "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
+                        "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
                             "VALUES (1, 'Tia', 'Wang', 5, 2);");
                     for (var i = 0; i < 24; i++) {
                         tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(1);");
@@ -812,6 +832,8 @@
         app.prepareDatabase();
         app.mockData();
         app.listStudentsForTeach(1);
+        homeNavIdx = -1; // force reload on teach list page
+        $("#icon-teach").trigger("click");
     });
 
 

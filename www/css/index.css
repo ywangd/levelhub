@@ -230,3 +230,23 @@ body {
     color: white !important;
     text-shadow: 0px 1px 1px #3E6790 !important;
 }
+
+.wide-header {
+    margin-left: 10%;
+    margin-right: 10%;
+}
+
+ul.delete-solo-btn {
+    border: 0 !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+}
+
+ul.delete-solo-btn li {
+    border: 0 !important;
+    background-color: transparent !important;
+}
+
+ul.delete-solo-btn li a {
+    background-color: darkred !important;
+}
