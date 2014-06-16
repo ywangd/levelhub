@@ -2,10 +2,10 @@
 
 ## Server Side
 * Users
-    * ID
+    * auto-id
+    * **user-id**
     * fname
     * lname
-    * dname (display name)
     * desc
     * email
     * phone
@@ -15,46 +15,52 @@
     * data (any extra info store as json?)
 
 * Classes
-    * ID
-    * teacher (FK using user ID)
+    * auto-id
+    * **teacher-id**
+    * **teach-id**
     * name
     * desc
-    * is_active
+    * is-active
     * ctime
     * data
 
 * ClassRegs (Class student registrations)
-    * ID
-    * class (FK using Classes ID)
-    * user (FK using Users ID)
+    * auto-id
+    * **teacher-id**
+    * **teach-id**
+    * **reg-id**
+    * **user-id**
     * total
     * unused
-    * is_active
+    * is-active
     * ctime
     * data
 
 * ClassRegLogs
-    * ID 
-    * reg (FK using ClassRegs ID)
+    * auto-id
+    * **teacher-id**
+    * **teach-id**
+    * **reg-id**
+    * **user-id**
+    * **log-id**
     * ctime
     * data
 
 * ClassMsgs (messages to a class group)
-    * ID
-    * class (FK using Classes ID) (the group to post messages)
-    * user (FK using Users ID) (message author)
+    * **msg-id** (auto increment integer)
+    * **teacher-id**
+    * **teach-id**
+    * **sender-id**
     * title
     * body
-    * is_teacher_post (whether the message is posted by the teacher)
     * ctime
     * data
 
 ## Client Side
 * Me (Key/Value table, so following items are rows instead of columns)
-    * ID (this local ID is equal to server side user ID)
+    * **user-id**
     * fname
     * lname
-    * dname
     * desc
     * email
     * phone
@@ -64,51 +70,51 @@
     * data
 
 * Teaches
-    * ID
+    * **teach-id** (auto increment integer)
     * name
     * desc
-    * is_active
+    * is-active
     * ctime
     * data
-    * SRV_ID (server side Classes ID)
-
-* Learns (always refresh from server)
-    * ID
-    * SRV_class_id (server side class ID)
-    * ctime
-    * SRV_ID (server side ClassRegs ID)
 
 * TeachRegs
-    * ID
-    * teach_id (local teach ID)
-    * user_fname
-    * user_lname
-    * user_dname
-    * SRV_user_id (server side Users ID)
+    * **teach-id** 
+    * **reg-id** (auto increment integer. reg-id is needed because user-id may not be available)
+    * **user-id** (this can be null, reg-id is always available)
+    * user-fname
+    * user-lname
     * total
     * unused
+    * is-active
     * ctime
     * data
-    * SRV_ID (server side ClassRegs ID)
 
 * TeachRegLogs
-    * ID
-    * reg_id (FK using local TeachRegs ID)
-    * use_time (null if unused)
+    * **reg-id**
+    * **log-id** (auto increment integer)
+    * use-time (null if unused)
     * ctime
     * data
-    * SRV_ID
 
-* ClassMsgs 
-    * ID
-    * SRV_class_id (server side Classes ID)
-    * SRV_user_id (server side Users ID)
-    * SRV_user_dname
+* Learns (always refresh from server)
+    * **teacher-id**
+    * **teach-id**
+    * teach-name
+    * teach-desc
+    * teacher-fname
+    * teacher-lname
+    * is-active
+    * ctime
+
+* ClassMsgs (always refresh from server)
+    * **msg-id**
+    * **teacher-id**
+    * **teach-id**
+    * **sender-id** (user-id of the message owner)
+    * sender-fname
+    * sender-lname
     * title
     * body
-    * is_teacher_post
     * ctime
     * data
-    * is_author (whether the local user is the author of the message)
-    * SRV_ID
 
