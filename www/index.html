@@ -52,8 +52,8 @@
         <h1 style="margin-left: 10%; margin-right: 10%;"></h1>
         <a href="#home" data-transition="slide" data-direction="reverse"
            class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-left ui-btn-icon-notext">Back</a>
-        <a href="#new-student" data-transition="slidedown"
-           class="ui-btn ui-btn-corner-all ui-btn-right ui-icon-plus ui-btn-icon-notext">Enroll</a>
+        <a href="#teach-regs-popup-menu" data-rel="popup"
+           class="ui-btn ui-btn-right ui-icon-bars ui-btn-icon-notext ui-btn-corner-all">More...</a>
     </header>
     <div role="main" class="ui-content" style="padding-top: 0;">
         <ul id="student-list" data-role="listview" data-autodividers="true"
@@ -63,19 +63,26 @@
     <footer data-role="footer" data-position="fixed">
         <div class="ui-grid-b">
             <div class="ui-block-a" style="width: 15%; text-align: left;">
-                <a href="#" id="teach-details-button"
-                   class="ui-btn ui-shadow ui-icon-info ui-btn-icon-notext ui-corner-all">Details</a>
             </div>
             <div class="ui-block-b" style="width: 70%; text-align: center;">
                 <p>Footer</p>
             </div>
             <div class="ui-block-c" style="width: 15%; text-align: right;">
-                <a href="#" id="ann-button"
-                   class="ui-btn ui-icon-comment ui-btn-icon-notext ui-corner-all">Send Message</a>
             </div>
         </div>
-
     </footer>
+    <div data-role="popup" id="teach-regs-popup-menu">
+        <ul data-role="listview" data-inset="true">
+            <li>
+                <a href="#new-student" data-transition="slidedown"
+                   class="ui-btn ui-icon-plus ui-btn-icon-left">Enroll</a>
+            </li>
+            <li>
+                <a href="#" id="teach-details-button"
+                   class="ui-btn ui-icon-info ui-btn-icon-left">Details</a>
+            </li>
+        </ul>
+    </div>
 </section>
 
 
