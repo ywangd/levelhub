@@ -34,26 +34,26 @@
             }
             app.prepareDatabase();
 
-            // All pages
-            var pageHome = $("#home"),
-                homeHeader = pageHome.find("#home-header"),
-                homeContentDivs = pageHome.find(".ui-content"),
-                homeBtnRight = $("#home-btn-right");
-
-            var pageNewTeach = $("#new-teach"),
-                pageTeachRegs = $("#teach-regs-page"),
-                pageNewStudent = $("#new-student"),
-                pageStamps = $("#stamps-page");
-
-            var pageTeachRegsDetails = $("#teach-regs-details-page");
-            var pageStudentDetails = $("#student-details-page");
-
-            var stampsContainers = pageStamps.find(".stamps-container"),
-                studentList = $("#student-list");
+            // All pages and parts
+            app.doms = {
+                pageHome: $("#home"),
+                pageNewTeach: $("#new-teach"),
+                pageTeachRegs: $("#teach-regs-page"),
+                pageNewStudent: $("#new-student"),
+                pageStamps: $("#stamps-page"),
+                pageTeachRegsDetails: $("#teach-regs-details-page"),
+                pageStudentDetails: $("#student-details-page"),
+                headerHome: $("#home-header"),
+                btnHomeUR: $("#home-btn-right"),
+                listStudents: $("#student-list"),
+                listTeaches: $("#teach-list")
+            };
+            app.doms.divsHomeContent = app.doms.pageHome.find(".ui-content");
+            app.doms.containersStamps = app.doms.pageStamps.find(".stamps-container");
 
             // home page init
             // Handle home nav icon press
-            pageHome.on("click", "#icon-news, #icon-teach, #icon-study, #icon-setup", function () {
+            app.doms.pageHome.on("click", "#icon-news, #icon-teach, #icon-study, #icon-setup", function () {
                 var $this = $(this);
                 var idx = $this.parent().prevAll().length;
                 // Do nothing if the nav button is already the current active one
@@ -64,16 +64,16 @@
                     $this.parent().siblings().find("a").removeClass("ui-btn-active ui-state-persist");
                     $this.addClass("ui-btn-active ui-state-persist");
 
-                    switch (homeContentDivs.eq(idx).attr("id")) {
+                    switch (app.doms.divsHomeContent.eq(idx).attr("id")) {
                         case "news":
-                            homeHeader.find("h1").text("Recent News");
-                            homeBtnRight.removeClass("ui-icon-plus")
+                            app.doms.headerHome.find("h1").text("Recent News");
+                            app.doms.btnHomeUR.removeClass("ui-icon-plus")
                                 .addClass("ui-icon-refresh").show();
                             app.finishHomeNav();
                             break;
                         case "teach":
-                            homeHeader.find("h1").text("My Teachings");
-                            homeBtnRight.removeClass("ui-icon-refresh")
+                            app.doms.headerHome.find("h1").text("My Teachings");
+                            app.doms.btnHomeUR.removeClass("ui-icon-refresh")
                                 .addClass("ui-icon-plus").attr({
                                     "href": "#new-teach",
                                     "data-transition": "slidedown"
@@ -82,14 +82,14 @@
                             app.prepareTeaches();
                             break;
                         case "study":
-                            homeHeader.find("h1").text("My Learnings");
-                            homeBtnRight.removeClass("ui-icon-refresh")
+                            app.doms.headerHome.find("h1").text("My Learnings");
+                            app.doms.btnHomeUR.removeClass("ui-icon-refresh")
                                 .addClass("ui-icon-plus").show();
                             app.finishHomeNav();
                             break;
                         case "setup":
-                            homeHeader.find("h1").text("Settings");
-                            homeBtnRight.hide();
+                            app.doms.headerHome.find("h1").text("Settings");
+                            app.doms.btnHomeUR.hide();
                             app.finishHomeNav();
                             break;
                     }
@@ -102,8 +102,8 @@
 
             // Handle home page upper right button, note this button reacts
             // different based on different active home section
-            homeBtnRight.on("click", function () {
-                switch (homeContentDivs.eq(homeNavIdx).attr("id")) {
+            app.doms.btnHomeUR.on("click", function () {
+                switch (app.doms.divsHomeContent.eq(homeNavIdx).attr("id")) {
                     case "news":
                         break;
                     case "teach":
@@ -116,7 +116,7 @@
             });
 
             // Save button on new teach page
-            pageNewTeach.find("footer a:eq(1)").on("click", function () {
+            app.doms.pageNewTeach.find("footer a:eq(1)").on("click", function () {
                 var form = $(this).closest("section").find("form"),
                     fields = [];
                 $.each(form.serializeArray(), function (idx, field) {
@@ -142,7 +142,7 @@
                         function () {
                             form[0].reset();
                             app.prepareTeaches();
-                            $.mobile.changePage(pageHome, {
+                            $.mobile.changePage(app.doms.pageHome, {
                                 transition: "pop",
                                 reverse: true
                             })
@@ -153,29 +153,29 @@
             });
 
             // Handle click on teach list
-            $("#teach-list").on("click", "a", function () {
+            app.doms.listTeaches.on("click", "a", function () {
                 var $this = $(this);
                 currentTeach = teaches[$this.parent().prevAll().length];
                 app.prepareTeachRegs(currentTeach.teach_id);
-                $.mobile.changePage(pageTeachRegs, {
+                $.mobile.changePage(app.doms.pageTeachRegs, {
                     transition: "slide"
                 });
             });
 
             // Handle details button on teach regs page
             $("#teach-details-button").on("click", function () {
-                var li0 = pageTeachRegsDetails.find(".ui-content li:eq(0)");
+                var li0 = app.doms.pageTeachRegsDetails.find(".ui-content li:eq(0)");
                 li0.find("h2").text(currentTeach.name);
                 li0.find("p:eq(0)").text(currentTeach.desc);
                 li0.find("p:eq(1)").text("Created: " + currentTeach.ctime.split(" ")[0]);
-                $.mobile.changePage(pageTeachRegsDetails, {
+                $.mobile.changePage(app.doms.pageTeachRegsDetails, {
                     transition: "flip"
                 });
                 return false;
             });
 
             // fill the current teach details for popup
-            pageTeachRegsDetails.on("pageshow", function () {
+            app.doms.pageTeachRegsDetails.on("pageshow", function () {
                 var popup0 = $("#teach-edit-popup-0");
                 popup0.find("input").val(currentTeach.name);
                 popup0.find("textarea").val(currentTeach.desc);
@@ -195,12 +195,12 @@
                     },
                     app.dbError,
                     function () {
-                        var li0 = pageTeachRegsDetails.find(".ui-content li:eq(0)");
+                        var li0 = app.doms.pageTeachRegsDetails.find(".ui-content li:eq(0)");
                         li0.find("h2").text(currentTeach.name);
                         li0.find("p:eq(0)").text(currentTeach.desc);
-                        pageTeachRegs.find("header h1").text(currentTeach.name);
+                        app.doms.pageTeachRegs.find("header h1").text(currentTeach.name);
                         var idxTeachList = teaches.indexOf(currentTeach);
-                        homeContentDivs.eq(homeNavIdx).find("ul a").eq(idxTeachList)
+                        app.doms.divsHomeContent.eq(homeNavIdx).find("ul a").eq(idxTeachList)
                             .get(0).firstChild.nodeValue = currentTeach.name;
                     }
                 );
@@ -229,7 +229,7 @@
                             function () {
                                 homeNavIdx = -1; // force reload on teach list page
                                 $("#icon-teach").trigger("click");
-                                $.mobile.changePage(pageHome, {
+                                $.mobile.changePage(app.doms.pageHome, {
                                     transition: "pop",
                                     reverse: true
                                 });
@@ -241,7 +241,7 @@
             });
 
             // Handle Save button for new student page
-            pageNewStudent.find("footer a:eq(1)").click(function () {
+            app.doms.pageNewStudent.find("footer a:eq(1)").click(function () {
                 var form = $("#new-student-form"),
                     fields = [];
                 $.each(form.serializeArray(), function (idx, field) {
@@ -273,32 +273,28 @@
                         app.dbError,
                         function () {
                             app.listStudentsForTeach(currentTeach.teach_id);
-                            $.mobile.changePage(pageTeachRegs, {
+                            $.mobile.changePage(app.doms.pageTeachRegs, {
                                 transition: "slideup"
                             });
                             form.get(0).reset();
                             var idxTeachList = teaches.indexOf(currentTeach);
-                            homeContentDivs.eq(homeNavIdx).find("ul a span").eq(idxTeachList).empty().text(currentTeach.nregs);
+                            app.doms.divsHomeContent.eq(homeNavIdx).find("ul a span").eq(idxTeachList).empty().text(currentTeach.nregs);
                         });
                 }
             });
 
             // Handle the transition from teach regs page to stamps page
-            studentList.on("click", "a", function () {
-                // Do not process tap is a swipe event is in process
-                if (studentList.hasClass("app-swiped")) {
-                    return false;
-                }
+            app.doms.listStudents.on("click", "a", function () {
                 var $this = $(this);
                 currentStudent = students[$this.parent().prevAll(":not(.ui-li-divider)").length];
                 // Save the start values in case the operations are cancelled
                 currentStudent.saved_total = currentStudent.total;
                 currentStudent.saved_unused = currentStudent.unused;
-                pageStamps.find("header h1").text(currentStudent.name);
+                app.doms.pageStamps.find("header h1").text(currentStudent.name);
 
                 // No wobbly or delete badge when the stamps page is transitioned
                 // from teach regs page
-                var stampDoms = stampsContainers.find(".stamp");
+                var stampDoms = app.doms.containersStamps.find(".stamp");
                 stampDoms.removeClass("wobbly");
                 stampDoms.find("img.x-delete").addClass("hidden");
 
@@ -334,9 +330,9 @@
                                     });
                                 }
                                 // Prepare the stamps display
-                                app.updateStampsContainer(pageStamps.find(".stamps-container:eq(0)"));
+                                app.updateStampsContainer(app.doms.pageStamps.find(".stamps-container:eq(0)"));
                                 // transition
-                                $.mobile.changePage(pageStamps, {
+                                $.mobile.changePage(app.doms.pageStamps, {
                                     transition: "slide"
                                 });
                             });
@@ -345,10 +341,10 @@
             });
 
             // Set the second stamps container to off screen at start up
-            pageStamps.eq(0).find(".stamps-container:eq(1)").css("left", "150%");
+            app.doms.pageStamps.eq(0).find(".stamps-container:eq(1)").css("left", "150%");
 
             // Handle swipe transitions between stamps container divs
-            pageStamps.find(".stampspage-content").on("swipeleft swiperight", function (event) {
+            app.doms.pageStamps.find(".stampspage-content").on("swipeleft swiperight", function (event) {
                 var $this = $(this);
 
                 var divs = $this.find(".stamps-container"),
@@ -395,7 +391,7 @@
             });
 
             // Handle stamps deletion and checkmark
-            stampsContainers.on("tap", ".stamp", function (event) {
+            app.doms.containersStamps.on("tap", ".stamp", function (event) {
                 var $this = $(this); // this is stamp
                 var idxWithinPage = $this.parent().prevAll().length;
                 var stampIdx = stampFirstIdx + idxWithinPage;
@@ -461,20 +457,20 @@
             });
 
             // Handle taphold for stamps deletion
-            stampsContainers.on("taphold", ".stamp", function () {
-                var stampDoms = stampsContainers.find(".stamp");
+            app.doms.containersStamps.on("taphold", ".stamp", function () {
+                var stampDoms = app.doms.containersStamps.find(".stamp");
                 stampDoms.toggleClass("wobbly");
                 stampDoms.find("> img.x-delete").toggleClass("hidden");
             });
 
             // Handle cancel button on stamps page
-            pageStamps.find("footer a:eq(0)").on("click", function () {
+            app.doms.pageStamps.find("footer a:eq(0)").on("click", function () {
                 currentStudent.total = currentStudent.saved_total;
                 currentStudent.unused = currentStudent.saved_unused;
             });
 
             // Handle save button on stamps page
-            pageStamps.find("footer a:eq(1)").on("click", function () {
+            app.doms.pageStamps.find("footer a:eq(1)").on("click", function () {
                 $.mobile.loading("show");
                 var sqlParms = [];
                 $.each(stamps, function (idx, stamp) {
@@ -513,9 +509,9 @@
                     app.dbError,
                     function () {
                         var idxStudentList = students.indexOf(currentStudent);
-                        pageTeachRegs.find("ul a span").eq(idxStudentList).empty().text(currentStudent.unused);
+                        app.doms.pageTeachRegs.find("ul a span").eq(idxStudentList).empty().text(currentStudent.unused);
 
-                        $.mobile.changePage(pageTeachRegs, {
+                        $.mobile.changePage(app.doms.pageTeachRegs, {
                             transition: "pop",
                             reverse: true
                         });
@@ -524,19 +520,19 @@
             });
 
             // Cancel wobbly when top up is about to show
-            pageStamps.find("header a[href='#topup-dialog']").on("click", function () {
-                var stampDoms = stampsContainers.find(".stamp");
+            app.doms.pageStamps.find("header a[href='#topup-dialog']").on("click", function () {
+                var stampDoms = app.doms.containersStamps.find(".stamp");
                 stampDoms.removeClass("wobbly");
                 stampDoms.find("img.x-delete").addClass("hidden");
             });
 
             // Handle transition to student details page
             $("#student-details-button").on("click", function () {
-                var li0 = pageStudentDetails.find(".ui-content li:eq(0)");
+                var li0 = app.doms.pageStudentDetails.find(".ui-content li:eq(0)");
                 li0.find("h2").text(currentStudent.name);
                 li0.find("p").text("from " + currentStudent.ctime.split(" ")[0]);
 
-                $.mobile.changePage(pageStudentDetails, {
+                $.mobile.changePage(app.doms.pageStudentDetails, {
                     transition: "flip"
                 });
                 return false;
@@ -565,12 +561,12 @@
                             app.dbError,
                             function () {
                                 app.listStudentsForTeach(currentTeach.teach_id);
-                                $.mobile.changePage(pageTeachRegs, {
+                                $.mobile.changePage(app.doms.pageTeachRegs, {
                                     transition: "pop",
                                     reverse: true
                                 });
                                 var idxTeachList = teaches.indexOf(currentTeach);
-                                homeContentDivs.eq(homeNavIdx).find("ul a span").eq(idxTeachList).empty().text(currentTeach.nregs);
+                                app.doms.divsHomeContent.eq(homeNavIdx).find("ul a span").eq(idxTeachList).empty().text(currentTeach.nregs);
                             }
                         );
                     }
@@ -616,9 +612,8 @@
         },
 
         finishHomeNav: function () {
-            var homeContentDivs = $("#home").find(".ui-content");
-            var activeContentDiv = homeContentDivs.eq(homeNavIdx);
-            homeContentDivs.hide();
+            var activeContentDiv = app.doms.divsHomeContent.eq(homeNavIdx);
+            app.doms.divsHomeContent.hide();
             activeContentDiv.show();
             $.mobile.loading("hide");
         },
@@ -642,8 +637,7 @@
                                     data: row.data
                                 });
                             }
-                            var ul = $("#teach-list");
-                            ul.empty();
+                            app.doms.listTeaches.empty();
                             $.each(teaches, function (idx, teach) {
                                 var a = $("<a>", {
                                     "href": "#",
@@ -653,9 +647,9 @@
                                     class: "ui-li-count ui-btn-up-c ui-btn-corner-all",
                                     text: teach.nregs
                                 }));
-                                ul.append($("<li>").append(a));
+                                app.doms.listTeaches.append($("<li>").append(a));
                             });
-                            ul.listview("refresh");
+                            app.doms.listTeaches.listview("refresh");
                             app.finishHomeNav();
                         },
                         app.dbError)
@@ -670,10 +664,9 @@
                         [teach_id],
                         function (tx, result) {
                             var row = result.rows.item(0);
-                            var pageTeachRegs = $("#teach-regs-page");
-                            pageTeachRegs.data("teach_id", teach_id);
-                            pageTeachRegs.data("desc", row.desc);
-                            pageTeachRegs.find("header h1").text(row.name);
+                            app.doms.pageTeachRegs.data("teach_id", teach_id);
+                            app.doms.pageTeachRegs.data("desc", row.desc);
+                            app.doms.pageTeachRegs.find("header h1").text(row.name);
                             app.listStudentsForTeach(teach_id);
                         })
                 }
