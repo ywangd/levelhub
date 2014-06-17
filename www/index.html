@@ -394,37 +394,10 @@
                     <input type="text" name="addlname" id="addlname" value="" data-theme="a" placeholder="Last Name"/>
                 </div>
                 <ul data-role="listview" data-inset="true">
-                    <li>
-                        <h4>Set Class Time</h4>
-
-                        <div>
-                            <select data-role="none" id="class-day" name="class-day">
-                                <option value="0">Monday</option>
-                                <option selected="selected" value="1">Tuesday</option>
-                                <option value="2">Wednesday</option>
-                                <option value="3">Thursday</option>
-                                <option value="4">Friday</option>
-                                <option value="5">Saturday</option>
-                                <option value="6">Sunday</option>
-                            </select>
-                        </div>
-                        <div>
-                            <select data-role="none" id="class-hour" name="class-hour">
-                            </select>
-                        </div>
-                        <div>
-                            <select data-role="none" id="class-min" name="class-min">
-                            </select>
-                        </div>
-                        <div>
-                            <select data-role="none" id="class-ampm" name="class-ampm">
-                                <option value="0">AM</option>
-                                <option value="1" selected="selected">PM</option>
-                            </select>
-                        </div>
-                    </li>
                 </ul>
-
+                <a href="#new-student-add-daytime-dialog" data-rel="popup" data-position-to="window"
+                   data-transition="slideup"
+                   class="ui-btn ui-icon-plus ui-btn-icon-left">Add Class Time...</a>
             </form>
         </div>
     </div>
@@ -439,6 +412,47 @@
             </div>
         </fieldset>
     </footer>
+    <div data-role="popup" id="new-student-add-daytime-dialog" style="width: 200px;">
+        <div style="text-align: center;">
+            <div>
+                <select data-role="none" id="class-day" name="class-day">
+                    <option value="0">Monday</option>
+                    <option selected="selected" value="1">Tuesday</option>
+                    <option value="2">Wednesday</option>
+                    <option value="3">Thursday</option>
+                    <option value="4">Friday</option>
+                    <option value="5">Saturday</option>
+                    <option value="6">Sunday</option>
+                </select>
+            </div>
+            <div>
+                <select data-role="none" id="class-hour" name="class-hour">
+                </select>
+            </div>
+            <div>
+                <select data-role="none" id="class-min" name="class-min">
+                </select>
+            </div>
+            <div>
+                <select data-role="none" id="class-ampm" name="class-ampm">
+                    <option value="0">AM</option>
+                    <option value="1" selected="selected">PM</option>
+                </select>
+            </div>
+        </div>
+        <form style="clear: left;">
+            <fieldset class="ui-grid-a">
+                <div class="ui-block-a">
+                    <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-mini"
+                       data-rel="back">Cancel</a>
+                </div>
+                <div class="ui-block-b">
+                    <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-mini"
+                       data-rel="back">OK</a>
+                </div>
+            </fieldset>
+        </form>
+    </div>
 </section>
 
 

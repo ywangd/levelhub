@@ -243,7 +243,7 @@
             });
 
             app.doms.pageNewStudent.on("pageshow", function () {
-                $("#class-day").iPhonePicker({ imgRoot: 'jq/images/' });
+                $("#class-day").iPhonePicker({ width: "80px", imgRoot: 'jq/images/' });
                 var classHour = $("#class-hour");
                 for (var i = 1; i < 13; i++) {
                     $("<option>", {value: i, text: i < 10 ? '0' + i : i}).appendTo(classHour);
