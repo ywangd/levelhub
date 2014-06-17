@@ -48,7 +48,9 @@
                 headerHome: $("#home-header"),
                 btnHomeUR: $("#home-btn-right"),
                 listStudents: $("#student-list"),
-                listTeaches: $("#teach-list")
+                listTeaches: $("#teach-list"),
+                popNewStudentDaytime: $("#new-student-daytime-dialog"),
+                listNewStudentDaytime: $("#new-student-daytime-list")
             };
             app.doms.divsHomeContent = app.doms.pageHome.find(".ui-content");
             app.doms.containersStamps = app.doms.pageStamps.find(".stamps-container");
@@ -242,20 +244,69 @@
                 return false;
             });
 
+            // prepare the daytime picker controls when the new student page is first shown
             app.doms.pageNewStudent.on("pageshow", function () {
-                $("#class-day").iPhonePicker({ width: "80px", imgRoot: 'jq/images/' });
-                var classHour = $("#class-hour");
-                for (var i = 1; i < 13; i++) {
-                    $("<option>", {value: i, text: i < 10 ? '0' + i : i}).appendTo(classHour);
+                if ($("#uipv_main_class-day").length == 0) {
+                    var $content = app.doms.pageNewStudent.find(".ui-content:eq(0)");
+                    var fontSize = $content.css("font-size");
+                    var width = $content.width() / 5;
+                    app.doms.popNewStudentDaytime.css("width", width * 5 + "px");
+                    $("#class-day").iPhonePicker({
+                        width: width * 2 + "px",
+                        imgRoot: "jq/images/",
+                        fontSize: fontSize});
+                    // Populate the controls
+                    var classHour = $("#class-hour");
+                    for (var i = 1; i < 13; i++) {
+                        $("<option>", {text: i < 10 ? '0' + i : i}).appendTo(classHour);
+                    }
+                    classHour.find("option:eq(0)").attr("selected", "selected");
+                    var classMin = $("#class-min");
+                    for (i = 0; i < 60; i++) {
+                        $("<option>", {text: i < 10 ? '0' + i : i}).appendTo(classMin);
+                    }
+                    classMin.find("option:eq(0)").attr("selected", "selected");
+                    classHour.iPhonePicker({
+                        width: width + "px",
+                        imgRoot: "jq/images/",
+                        fontSize: fontSize});
+                    classMin.iPhonePicker({
+                        width: width + "px",
+                        imgRoot: "jq/images/",
+                        fontSize: fontSize});
+                    $("#class-ampm").iPhonePicker({
+                        width: width + "px",
+                        imgRoot: "jq/images/",
+                        fontSize: fontSize });
                 }
-                var classMin = $("#class-min");
-                for (i = 0; i < 60; i++) {
-                    $("<option>", {value: i, text: i < 10 ? '0' + i : i}).appendTo(classMin);
-                }
-                classHour.iPhonePicker({ width: '40px', imgRoot: 'jq/images/' });
-                classMin.iPhonePicker({ width: '40px', imgRoot: 'jq/images/' });
-                $("#class-ampm").iPhonePicker({ width: '40px', imgRoot: 'jq/images/' });
             });
+
+            // Handle add class time button
+            app.doms.popNewStudentDaytime.on("click", "a", function () {
+                console.log(document.referrer);
+                var $selected = app.doms.popNewStudentDaytime.find("select option:selected");
+                var daytime = $selected.eq(0).text() + " "
+                    + $selected.eq(1).text() + ":"
+                    + $selected.eq(2).text() + " "
+                    + $selected.eq(3).text()
+                if ($.mobile.activeClickedLink.hasClass("ui-icon-plus")) {
+                    $("<li>").append($("<a>", {href: "#", text: daytime})).
+                        append($("<a>", {href: "#", text: "delete"})).
+                        appendTo(app.doms.listNewStudentDaytime);
+                    app.doms.listNewStudentDaytime.listview("refresh");
+                }
+            });
+
+            // Handle modify and delete class time buttons
+            app.doms.listNewStudentDaytime.on("click", "a", function () {
+                var $this = $(this);
+                if ($this.attr("title") == "delete") {
+                    $this.closest("li").remove();
+                    app.doms.listNewStudentDaytime.listview("refresh");
+                }
+
+            })
+
 
             // Handle Save button for new student page
             app.doms.pageNewStudent.find("footer a:eq(1)").click(function () {
@@ -270,18 +321,18 @@
 
                 if (fields.indexOf("") >= 0) {
                     navigator.notification.alert(
-                        "More information is required.",
+                        "Name is required.",
                         undefined,
                         "Invalid Input"
                     );
-                    console.log("More information is required");
+                    console.log("Name is required");
                 } else {
                     fields.unshift(currentTeach.teach_id);
                     db.transaction(
                         function (tx) {
                             currentTeach.nregs += 1;
                             tx.executeSql(
-                                "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
+                                    "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
                                     "VALUES (?, ?, ?);",
                                 fields
                             );
@@ -297,6 +348,7 @@
                                 transition: "slideup"
                             });
                             form.get(0).reset();
+                            app.doms.listNewStudentDaytime.empty();
                             var idxTeachList = teaches.indexOf(currentTeach);
                             app.doms.divsHomeContent.eq(homeNavIdx).find("ul a span").eq(idxTeachList).empty().text(currentTeach.nregs);
                         });
@@ -751,7 +803,7 @@
 
         updateStampsCount: function (page) {
             page.find(".pageCount").empty().text(
-                (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
+                    (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
             page.find(".unusedCount").empty().text(currentStudent.unused);
         },
 
@@ -861,15 +913,15 @@
             db.transaction(
                 function (tx) {
                     tx.executeSql(
-                        "INSERT INTO Teaches (name, desc, nregs) " +
+                            "INSERT INTO Teaches (name, desc, nregs) " +
                             "VALUES ('Folk Guitar Basics', " +
                             "'An introductory lesson for people who want to pick up guitar fast with no previous experience', " +
                             "2);");
                     tx.executeSql(
-                        "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
+                            "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
                             "VALUES (1, 'Emma', 'Wang', 24, 14);");
                     tx.executeSql(
-                        "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
+                            "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
                             "VALUES (1, 'Tia', 'Wang', 5, 2);");
                     for (var i = 0; i < 24; i++) {
                         tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(1);");

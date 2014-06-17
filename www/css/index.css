@@ -75,9 +75,18 @@ body {
 }
 
 #topup-dialog-popup {
+
     width: 80%;
     left: 10%;
     right: 10%;
+}
+
+#new-student-daytime-dialog-popup {
+    /*
+    left: 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
+    */
 }
 
 .hidden {

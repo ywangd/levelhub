@@ -92,7 +92,8 @@ var ITEM_OFFSET = parseInt(37);
 
 			options = $.extend({
 				width: '',
-				imgRoot: 'http://www.marinovanderheijden.nl/Images/UIPickerView'
+				imgRoot: 'jq/images/',
+                fontSize: "11px"
 			}, options);
 
 			var data = {};
@@ -135,27 +136,27 @@ var ITEM_OFFSET = parseInt(37);
 			$('<div/>', {id: 'uipv_bar_'+targetId}).appendTo('#'+mainId);
 
 			var controlWidth = (data.options.width == '') 
-				? o.stripSizePostFix($('#'+targetId).css('width')) + 12 // Apparently 12 is substracted from the original width. Don't know why?!
+				? o.stripSizePostFix(targetObj.css('width')) + 12 // Apparently 12 is substracted from the original width. Don't know why?!
 				: o.stripSizePostFix(data.options.width);
 			if (!(controlWidth >= 20 && controlWidth <= 2000)) {
 				controlWidth = 80; // Default value
 			} 
-			var classAttr = $('#'+targetId).attr('class');
+			var classAttr = targetObj.attr('class');
 			if (classAttr && classAttr != '') {
-				$('#'+mainId).attr('class', classAttr);
+                $("#"+mainId).attr('class', classAttr);
 			}
-			$('#'+mainId).css({
+            $("#"+mainId).css({
 				'width': controlWidth + 'px',
 				'height': '160px',
 				'position': 'relative',
 				'float': 'left'
 			});
-			$('#'+contentId).css({
+            $("#"+contentId).css({
 				'width': controlWidth-8 + 'px',
 				'height': '152px',
 				'font-family': 'Arial',
 				'font-weight': 'bold',
-				'font-size': '11px',
+				'font-size': data.options.fontSize,
 				'z-index': '13',
 				'position': 'absolute',
 				'float': 'left',
@@ -236,7 +237,7 @@ var ITEM_OFFSET = parseInt(37);
 			});
 
 			// Deny selecting text in options
-			o.selectable($('#'+contentId)[0], false);
+			o.selectable($("#"+contentId)[0], false);
 
 			if (data.target[0].options.length > 0) {
 				for(var i=0;i<data.target[0].options.length;i++) {
@@ -252,7 +253,7 @@ var ITEM_OFFSET = parseInt(37);
 					});
 				}
 
-				$('#'+contentId).iPhonePickerOverscroll({
+                $("#"+contentId).iPhonePickerOverscroll({
 					selectedIndex: data.target[0].options.selectedIndex, 
 					parentId: targetId, 
 					itemCount: data.target[0].options.length});
