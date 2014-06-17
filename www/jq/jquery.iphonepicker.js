@@ -62,11 +62,14 @@ var ITEM_OFFSET = parseInt(37);
 			var targetId = target[0].id;
 			var selectedIndex = target[0].options.selectedIndex;
 
-			if ($('#uipv_main_' + targetId)[0] != undefined && selectedIndex > 0) {
+			if ($('#uipv_main_' + targetId)[0] != undefined && selectedIndex >= 0) {
 
 				var contentId = 'uipv_content_' + targetId;
-				var topHeight = m.round(selectedIndex * ITEM_OFFSET)
-				$('#'+contentId).scrollTo(topHeight)
+				var topHeight = m.round(selectedIndex * ITEM_OFFSET);
+				$('#'+contentId).scrollTo(topHeight);
+                // sync the raw control
+                target.find("option[selected]").removeAttr("selected");
+                target.find("option").eq(selectedIndex).attr("selected", "selected");
 			}
 		}
 	})
