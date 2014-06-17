@@ -802,8 +802,6 @@
                         "user_lname VARCHAR, " +
                         "total INTEGER NOT NULL DEFAULT 0, " +
                         "unused INTEGER NOT NULL DEFAULT 0, " +
-                        "day INTEGER, " +
-                        "time VARCHAR, " +
                         "is_active BOOL NOT NULL DEFAULT 1, " +
                         "ctime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
                         "data TEXT);");
