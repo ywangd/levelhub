@@ -22,6 +22,7 @@
                 StatusBar.overlaysWebView(false);
             } catch (err) {
                 // Just ignore it on android
+                console.log(err.message);
             }
 
             // Database init
@@ -30,6 +31,7 @@
             } catch (err) {
                 // If database cannot be opened, do not proceed further
                 alert(err.message);
+                console.log(err.message);
                 return false;
             }
             app.prepareDatabase();
@@ -307,19 +309,13 @@
                                 var length = result.rows.length;
                                 // pre-set to last idx in case no unused slot is available
                                 var firstUnusedIdx = length == 0 ? 0 : length - 1;
-                                for (var i = 0; i < length; i++) {
-                                    if (!result.rows.item(i).use_time) {
-                                        firstUnusedIdx = i;
-                                        break;
-                                    }
-                                }
-                                var currentPageIdx = Math.floor(firstUnusedIdx / 9);
-                                stampFirstIdx = currentPageIdx * 9;
-                                stampLastIdx = Math.min(stampFirstIdx + 9, length);
                                 stamps = [];
                                 stampsDeleted = [];
                                 for (var i = 0; i < length; i++) {
                                     var row = result.rows.item(i);
+                                    if (!row.use_time && i < firstUnusedIdx) {
+                                        firstUnusedIdx = i;
+                                    }
                                     stamps.push({
                                         updated: false,
                                         log_id: row.log_id,
@@ -329,6 +325,9 @@
                                         data: row.data
                                     });
                                 }
+                                var currentPageIdx = Math.floor(firstUnusedIdx / 9);
+                                stampFirstIdx = currentPageIdx * 9;
+                                stampLastIdx = Math.min(stampFirstIdx + 9, length);
                                 // Prepare the stamps display
                                 app.updateStampsContainer(app.doms.pageStamps.find(".stamps-container:eq(0)"));
                                 // transition
@@ -752,8 +751,7 @@
             if (min < 10) min = '0' + min;
             if (sec < 10) sec = '0' + sec;
 
-            var ret = now.getFullYear() + '-' + mon + '-' + date + ' ' + hour + ':' + min + ':' + sec;
-            return ret;
+            return now.getFullYear() + '-' + mon + '-' + date + ' ' + hour + ':' + min + ':' + sec;
         },
 
         dbError: function (tx, err) {
@@ -859,7 +857,7 @@
                         tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(1);");
                     }
                     tx.executeSql("UPDATE TeachRegLogs SET use_time = '2014-06-05' WHERE log_id < 11;");
-                    for (var i = 0; i < 5; i++) {
+                    for (i = 0; i < 5; i++) {
                         tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(2);");
                     }
                     tx.executeSql("UPDATE TeachRegLogs SET use_time = '2014-06-05' WHERE log_id IN (25, 26, 27);");
