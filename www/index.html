@@ -133,6 +133,7 @@
                     <h2></h2>
 
                     <p style="white-space: normal;"></p>
+
                     <p></p>
                 </a>
                 <a href="#teach-edit-popup-0" data-rel="popup" data-transition="pop" data-position-to="window">Edit</a>
@@ -381,18 +382,50 @@
     </header>
     <div role="main" class="ui-content">
         <div>
-            <div class="new-avatar">
-                <img src="img/smiley.svg"/>
-            </div>
-            <div class="new-form">
-                <form id="new-student-form">
+            <form id="new-student-form">
+                <div class="new-avatar">
+                    <img src="img/smiley.svg"/>
+                </div>
+                <div class="new-form">
                     <label for="addfname" class="ui-hidden-accessible">First Name</label>
                     <input type="text" name="addfname" id="addfname" value="" data-theme="a" placeholder="First Name"/>
 
                     <label for="addlname" class="ui-hidden-accessible">Last Name</label>
                     <input type="text" name="addlname" id="addlname" value="" data-theme="a" placeholder="Last Name"/>
-                </form>
-            </div>
+                </div>
+                <ul data-role="listview" data-inset="true">
+                    <li>
+                        <h4>Set Class Time</h4>
+
+                        <div>
+                            <select data-role="none" id="class-day" name="class-day">
+                                <option value="0">Monday</option>
+                                <option selected="selected" value="1">Tuesday</option>
+                                <option value="2">Wednesday</option>
+                                <option value="3">Thursday</option>
+                                <option value="4">Friday</option>
+                                <option value="5">Saturday</option>
+                                <option value="6">Sunday</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select data-role="none" id="class-hour" name="class-hour">
+                            </select>
+                        </div>
+                        <div>
+                            <select data-role="none" id="class-min" name="class-min">
+                            </select>
+                        </div>
+                        <div>
+                            <select data-role="none" id="class-ampm" name="class-ampm">
+                                <option value="0">AM</option>
+                                <option value="1" selected="selected">PM</option>
+                            </select>
+                        </div>
+                    </li>
+                </ul>
+
+            </form>
         </div>
     </div>
     <footer data-role="footer" data-position="fixed">
@@ -410,6 +443,7 @@
 
 
 <script type="text/javascript" src="jq/jquery-2.1.1.js"></script>
+<script type="text/javascript" src="jq/jquery.iphonepicker.js"></script>
 <script type="text/javascript" src="jq/jquery-ui-1.10.4.js"></script>
 <script type="text/javascript" src="jq/jquery.ui.touch-punch.min.js"></script>
 <script type="text/javascript" src="jq/jquery.mobile-1.4.2.js"></script>

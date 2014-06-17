@@ -242,6 +242,21 @@
                 return false;
             });
 
+            app.doms.pageNewStudent.on("pageshow", function () {
+                $("#class-day").iPhonePicker({ imgRoot: 'jq/images/' });
+                var classHour = $("#class-hour");
+                for (var i = 1; i < 13; i++) {
+                    $("<option>", {value: i, text: i < 10 ? '0' + i : i}).appendTo(classHour);
+                }
+                var classMin = $("#class-min");
+                for (i = 0; i < 60; i++) {
+                    $("<option>", {value: i, text: i < 10 ? '0' + i : i}).appendTo(classMin);
+                }
+                classHour.iPhonePicker({ width: '40px', imgRoot: 'jq/images/' });
+                classMin.iPhonePicker({ width: '40px', imgRoot: 'jq/images/' });
+                $("#class-ampm").iPhonePicker({ width: '40px', imgRoot: 'jq/images/' });
+            });
+
             // Handle Save button for new student page
             app.doms.pageNewStudent.find("footer a:eq(1)").click(function () {
                 var form = $("#new-student-form"),
@@ -249,6 +264,9 @@
                 $.each(form.serializeArray(), function (idx, field) {
                     fields.push($.trim(field.value));
                 });
+
+                console.log($("#class-day option:selected").text());
+                console.log(fields);
 
                 if (fields.indexOf("") >= 0) {
                     navigator.notification.alert(
@@ -263,7 +281,7 @@
                         function (tx) {
                             currentTeach.nregs += 1;
                             tx.executeSql(
-                                    "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
+                                "INSERT INTO TeachRegs (teach_id, user_fname, user_lname) " +
                                     "VALUES (?, ?, ?);",
                                 fields
                             );
@@ -733,7 +751,7 @@
 
         updateStampsCount: function (page) {
             page.find(".pageCount").empty().text(
-                    (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
+                (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
             page.find(".unusedCount").empty().text(currentStudent.unused);
         },
 
@@ -784,6 +802,8 @@
                         "user_lname VARCHAR, " +
                         "total INTEGER NOT NULL DEFAULT 0, " +
                         "unused INTEGER NOT NULL DEFAULT 0, " +
+                        "day INTEGER, " +
+                        "time VARCHAR, " +
                         "is_active BOOL NOT NULL DEFAULT 1, " +
                         "ctime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
                         "data TEXT);");
@@ -843,15 +863,15 @@
             db.transaction(
                 function (tx) {
                     tx.executeSql(
-                            "INSERT INTO Teaches (name, desc, nregs) " +
+                        "INSERT INTO Teaches (name, desc, nregs) " +
                             "VALUES ('Folk Guitar Basics', " +
                             "'An introductory lesson for people who want to pick up guitar fast with no previous experience', " +
                             "2);");
                     tx.executeSql(
-                            "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
+                        "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
                             "VALUES (1, 'Emma', 'Wang', 24, 14);");
                     tx.executeSql(
-                            "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
+                        "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused) " +
                             "VALUES (1, 'Tia', 'Wang', 5, 2);");
                     for (var i = 0; i < 24; i++) {
                         tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(1);");
