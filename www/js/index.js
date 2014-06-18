@@ -63,9 +63,11 @@
                 pickClassDay: $("#class-day"),
                 pickClassHour: $("#class-hour"),
                 pickClassMin: $("#class-min"),
-                pickClassAmpm: $("#class-ampm")
-
+                pickClassAmpm: $("#class-ampm"),
+                listStudentHistory: $("#student-history"),
+                listStudentDaytime: $("#student-daytime-list")
             };
+
             app.doms.divsHomeContent = app.doms.pageHome.find(".ui-content");
             app.doms.containersStamps = app.doms.pageStamps.find(".stamps-container");
 
@@ -647,6 +649,31 @@
                 li0.find("h2").text(currentStudent.name);
                 li0.find("p").text("from " + currentStudent.ctime.split(" ")[0]);
 
+                app.doms.listStudentHistory.empty();
+                $("<li>").append($("<a>",
+                    {href: "#", text: "Taken: " + (currentStudent.total - currentStudent.unused)})).
+                    appendTo(app.doms.listStudentHistory);
+                $("<li>", {"data-icon": "false"}).
+                    append($("<a>", {href: "#", text: "Unused: " + currentStudent.unused})).
+                    appendTo(app.doms.listStudentHistory);
+                if (app.doms.listStudentHistory.data("mobile-listview")) {
+                    app.doms.listStudentHistory.listview("refresh");
+                } else {
+                    app.doms.listStudentHistory.listview();
+                }
+
+                app.doms.listStudentDaytime.empty();
+                $.each(currentStudent.data["daytime"], function (idx, daytime) {
+                    $("<li>").append($("<a>", {href: "#", text: daytime})).
+                        append($("<a>", {href: "#", text: "delete"})).
+                        appendTo(app.doms.listStudentDaytime);
+                });
+                if (app.doms.listStudentDaytime.data("mobile-listview")) {
+                    app.doms.listStudentDaytime.listview("refresh");
+                } else {
+                    app.doms.listStudentDaytime.listview();
+                }
+
                 $.mobile.changePage(app.doms.pageStudentDetails, {
                     transition: "flip"
                 });
@@ -808,7 +835,7 @@
                                 unused: row.unused,
                                 is_active: row.is_active,
                                 ctime: row.ctime,
-                                data: row.data
+                                data: JSON.parse(row.data)
                             });
                         }
                         var ul = $("#student-list");
