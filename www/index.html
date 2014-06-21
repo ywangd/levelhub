@@ -367,7 +367,7 @@
         </ul>
 
         <ul data-role="listview" data-inset="true" id="student-daytime-list"
-            class="ui-mini" data-split-icon="delete" data-split-theme="b">
+            class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="b">
         </ul>
         <a href="#student-daytime-dialog" data-rel="popup" data-position-to="window"
            data-transition="slideup"
@@ -384,6 +384,43 @@
                 </div>
             </li>
         </ul>
+    </div>
+    <div data-role="popup" id="student-daytime-dialog" class="daytime-dialog">
+        <div style="text-align: center;">
+            <div>
+                <select data-role="none" name="class-day">
+                    <option selected="selected">Sunday</option>
+                    <option>Monday</option>
+                    <option>Tuesday</option>
+                    <option>Wednesday</option>
+                    <option>Thursday</option>
+                    <option>Friday</option>
+                    <option>Saturday</option>
+                </select>
+            </div>
+            <div>
+                <select data-role="none" name="class-hour">
+                </select>
+            </div>
+            <div>
+                <select data-role="none" name="class-min">
+                </select>
+            </div>
+            <div>
+                <select data-role="none" name="class-ampm">
+                    <option selected="selected">AM</option>
+                    <option>PM</option>
+                </select>
+            </div>
+        </div>
+        <form style="clear: left;">
+            <fieldset class="ui-grid-solo">
+                <div class="ui-block-a">
+                    <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-mini"
+                       data-rel="back">Done</a>
+                </div>
+            </fieldset>
+        </form>
     </div>
 </section>
 
@@ -406,7 +443,7 @@
                     <input type="text" name="addlname" id="addlname" value="" data-theme="a" placeholder="Last Name"/>
                 </div>
                 <ul data-role="listview" data-inset="true" id="new-student-daytime-list"
-                    class="ui-mini" data-split-icon="delete" data-split-theme="b">
+                    class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="b">
                 </ul>
                 <a href="#new-student-daytime-dialog" data-rel="popup" data-position-to="window"
                    data-transition="slideup"
@@ -425,10 +462,10 @@
             </div>
         </fieldset>
     </footer>
-    <div data-role="popup" id="new-student-daytime-dialog">
+    <div data-role="popup" id="new-student-daytime-dialog" class="daytime-dialog">
         <div style="text-align: center;">
             <div>
-                <select data-role="none" id="class-day" name="class-day">
+                <select data-role="none" name="class-day">
                     <option selected="selected">Sunday</option>
                     <option>Monday</option>
                     <option>Tuesday</option>
@@ -439,15 +476,15 @@
                 </select>
             </div>
             <div>
-                <select data-role="none" id="class-hour" name="class-hour">
+                <select data-role="none" name="class-hour">
                 </select>
             </div>
             <div>
-                <select data-role="none" id="class-min" name="class-min">
+                <select data-role="none" name="class-min">
                 </select>
             </div>
             <div>
-                <select data-role="none" id="class-ampm" name="class-ampm">
+                <select data-role="none" name="class-ampm">
                     <option selected="selected">AM</option>
                     <option>PM</option>
                 </select>

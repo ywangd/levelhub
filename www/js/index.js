@@ -60,10 +60,6 @@
                 listTeaches: $("#teach-list"),
                 popNewStudentDaytime: $("#new-student-daytime-dialog"),
                 listNewStudentDaytime: $("#new-student-daytime-list"),
-                pickClassDay: $("#class-day"),
-                pickClassHour: $("#class-hour"),
-                pickClassMin: $("#class-min"),
-                pickClassAmpm: $("#class-ampm"),
                 listStudentHistory: $("#student-history"),
                 listStudentDaytime: $("#student-daytime-list")
             };
@@ -260,95 +256,106 @@
                 return false;
             });
 
-            // prepare the daytime picker controls when the new student page is first shown
-            app.doms.pageNewStudent.on("pageshow", function () {
-                if ($("#uipv_main_class-day").length == 0) {
-                    var $content = app.doms.pageNewStudent.find(".ui-content:eq(0)");
-                    var fontSize = $content.css("font-size");
-                    var width = $content.width() / 5;
-                    app.doms.popNewStudentDaytime.css("width", width * 5 + "px");
-                    app.doms.pickClassDay.iPhonePicker({
+            // prepare daytime picker when the containing page is first shown
+            app.doms.pageStudentDetails.add(app.doms.pageNewStudent).on("pageshow", function () {
+                var page = $(this),
+                    popup = page.find(".daytime-dialog"),
+                    idPrefix = page.attr("id");
+
+                // Pickerize the control only if they have not been pickerized
+                if ($("#uipv_main_" + idPrefix + "-day").length == 0) {
+                    var selects = popup.find("select");
+                    // dynamically assign the id for each control and namespace
+                    // them with the page id.
+                    // id attribute is required by pickerization
+                    $.each(["day", "hour", "min", "ampm"], function (idx, val) {
+                        selects.eq(idx).attr("id", idPrefix + "-" + val);
+                    });
+                    // Set proper dimension of the popup
+                    var content = page.find(".ui-content:eq(0)"),
+                        fontSize = content.css("font-size"),
+                        width = content.width() / 5;
+                    popup.css("width", width * 5 + "px");
+                    // day
+                    selects.eq(0).iPhonePicker({
                         width: width * 2 + "px",
-                        imgRoot: "jq/images/",
-                        fontSize: fontSize});
-                    // Populate the controls
-                    var classHour = app.doms.pickClassHour;
+                        fontSize: fontSize
+                    });
+                    // populate hours
                     for (var i = 1; i < 13; i++) {
-                        $("<option>", {text: i < 10 ? '0' + i : i}).appendTo(classHour);
+                        $("<option>", {text: i < 10 ? "0" + i : i})
+                            .attr(i == 1 ? {"selected": "selected"} : {})
+                            .appendTo(selects.eq(1));
                     }
-                    classHour.find("option:eq(0)").attr("selected", "selected");
-                    var classMin = app.doms.pickClassMin;
+                    // populate miniutes
                     for (i = 0; i < 60; i++) {
-                        $("<option>", {text: i < 10 ? '0' + i : i}).appendTo(classMin);
+                        $("<option>", {text: i < 10 ? "0" + i : i})
+                            .attr(i == 0 ? {"selected": "selected"} : {})
+                            .appendTo(selects.eq(2));
                     }
-                    classMin.find("option:eq(0)").attr("selected", "selected");
-                    classHour.iPhonePicker({
+                    // hour, min, ampm
+                    selects.slice(1).iPhonePicker({
                         width: width + "px",
-                        imgRoot: "jq/images/",
-                        fontSize: fontSize});
-                    classMin.iPhonePicker({
-                        width: width + "px",
-                        imgRoot: "jq/images/",
-                        fontSize: fontSize});
-                    app.doms.pickClassAmpm.iPhonePicker({
-                        width: width + "px",
-                        imgRoot: "jq/images/",
-                        fontSize: fontSize });
+                        fontSize: fontSize
+                    });
                 }
             });
 
-            // Handle done button on class daytime popup
-            app.doms.popNewStudentDaytime.on("click", "a", function () {
-                var daytime = app.doms.pickClassDay.find("option[selected]").text() + " "
-                    + app.doms.pickClassHour.find("option[selected]").text() + ":"
-                    + app.doms.pickClassMin.find("option[selected]").text() + " "
-                    + app.doms.pickClassAmpm.find("option[selected]").text();
-                // If the target is set, the daytime is to be set on the target
-                // i.e. a modify operation. Otherwise, it is for a new daytime
-                if (app.doms.popNewStudentDaytime.data("target")) {
-                    var $target = app.doms.popNewStudentDaytime.data("target");
-                    $target.text(daytime);
+            // Modify the DOM accordingly based on which element invoke
+            // the daytime dialog. Also sets the initial value of daytime
+            // dialog accordingly as well.
+            $(".daytime-dialog").on("click", "a", function () {
+                var popup = $(this).closest(".daytime-dialog"),
+                    selecteds = popup.find("option[selected]");
+                var daytime = selecteds.eq(0).text() + " "
+                    + selecteds.eq(1).text() + ":"
+                    + selecteds.eq(2).text() + " "
+                    + selecteds.eq(3).text();
+                if (popup.data("target")) {
+                    popup.data("target").text(daytime);
                 } else {
-                    $("<li>").append($("<a>", {href: "#", text: daytime})).
-                        append($("<a>", {href: "#", text: "delete"})).
-                        appendTo(app.doms.listNewStudentDaytime);
-                    app.doms.listNewStudentDaytime.listview("refresh");
+                    popup.closest("section").find(".daytime-list")
+                        .append($("<li>").append($("<a>", {href: "#", text: daytime}))
+                            .append($("<a>", {href: "#", text: "delete"})))
+                        .listview("refresh");
                 }
+            }).on("popupafterclose", function () {
+                $(this).removeData("target");
             });
 
-            // Always remove the target when the popup is closed so not to
-            // confuse the next operation.
-            app.doms.popNewStudentDaytime.on("popupafterclose", function () {
-                app.doms.popNewStudentDaytime.removeData("target");
-            });
-
-            // Handle modify and delete class time buttons
-            app.doms.listNewStudentDaytime.on("click", "a", function () {
-                var $this = $(this);
+            // handle the click on daytime list, either delete or modify
+            $(".daytime-list").on("click", "a", function () {
+                var $this = $(this),
+                    list = $this.closest("ul");
                 if ($this.attr("title") == "delete") {
                     $this.closest("li").remove();
-                    app.doms.listNewStudentDaytime.listview("refresh");
+                    list.listview("refresh");
                 } else {
                     var fields = app.parseClassDaytime($this.text());
-                    // Preset the pickers to show the existing value
-
-                    app.doms.pickClassDay[0].selectedIndex = fields[0];
-                    app.doms.pickClassHour[0].selectedIndex = fields[1];
-                    app.doms.pickClassMin[0].selectedIndex = fields[2];
-                    app.doms.pickClassAmpm[0].selectedIndex = fields[3];
-
-                    app.doms.pickClassDay.iPhonePickerRefresh();
-                    app.doms.pickClassHour.iPhonePickerRefresh();
-                    app.doms.pickClassMin.iPhonePickerRefresh();
-                    app.doms.pickClassAmpm.iPhonePickerRefresh();
-
-                    // Set the target, so when the done button on pickers knows
-                    // where to set the pickers' values.
-                    app.doms.popNewStudentDaytime.data("target", $this);
-                    // Manually open up the dialog
-                    app.doms.popNewStudentDaytime.popup("open", {
+                    var popup = list.closest("section").find(".daytime-dialog"),
+                        selects = popup.find("select");
+                    $.each(selects, function (idx, select) {
+                        select.selectedIndex = fields[idx];
+                        selects.eq(idx).iPhonePickerRefresh();
+                    });
+                    popup.data("target", $this).popup("open", {
                         transition: "slideup"
                     });
+                }
+            });
+
+            // Handle done button on student details page
+            // It modifies the currentStudent object if data is changed
+            // the object is later persistent into the database if save button
+            // is clicked on the stamps page.
+            app.doms.pageStudentDetails.find("header a").on("click", function () {
+                var daytime = [];
+                $.each($(this).closest("section").find(".daytime-list li a:not([title='delete'])"),
+                    function (idx, dom) {
+                        daytime.push(dom.innerHTML);
+                    });
+                if (!app.vectorIsIdentical(currentStudent.data.daytime, daytime)) {
+                    currentStudent.data.daytime = daytime;
                 }
             });
 
@@ -410,6 +417,7 @@
                 // Save the start values in case the operations are cancelled
                 currentStudent.saved_total = currentStudent.total;
                 currentStudent.saved_unused = currentStudent.unused;
+                currentStudent.saved_data = JSON.stringify(currentStudent.data);
                 app.doms.pageStamps.find("header h1").text(currentStudent.name);
 
                 // No wobbly or delete badge when the stamps page is transitioned
@@ -584,30 +592,25 @@
             app.doms.pageStamps.find("footer a:eq(0)").on("click", function () {
                 currentStudent.total = currentStudent.saved_total;
                 currentStudent.unused = currentStudent.saved_unused;
+                currentStudent.data = JSON.parse(currentStudent.saved_data);
             });
 
             // Handle save button on stamps page
             app.doms.pageStamps.find("footer a:eq(1)").on("click", function () {
                 $.mobile.loading("show");
-                var sqlParms = [];
-                $.each(stamps, function (idx, stamp) {
-                    if (stamp.updated) {
-                        if (stamp.log_id == -1) { // new stamp
-                            sqlParms.push([
-                                "INSERT INTO TeachRegLogs (reg_id, use_time) VALUES (?, ?);",
-                                [stamp.reg_id, stamp.use_time]]);
-                        } else {
-                            sqlParms.push([
-                                "UPDATE TeachRegLogs SET use_time = ? WHERE log_id = ?;",
-                                [stamp.use_time, stamp.log_id]]);
-                        }
-                    }
-                });
                 db.transaction(
                     function (tx) {
                         // update TeachRegLogs
-                        $.each(sqlParms, function (idx, sqlParm) {
-                            tx.executeSql(sqlParm[0], sqlParm[1]);
+                        $.each(stamps, function (idx, stamp) {
+                            if (stamp.updated) {
+                                if (stamp.log_id == -1) { // new stamp
+                                    tx.executeSql("INSERT INTO TeachRegLogs (reg_id, use_time) VALUES (?, ?);",
+                                        [stamp.reg_id, stamp.use_time]);
+                                } else { // updated stamp
+                                    tx.executeSql("UPDATE TeachRegLogs SET use_time = ? WHERE log_id = ?;",
+                                        [stamp.use_time, stamp.log_id]);
+                                }
+                            }
                         });
 
                         // Delete any deleted logs
@@ -619,8 +622,8 @@
 
                         // Update total, unused summary
                         tx.executeSql(
-                            "UPDATE TeachRegs SET total = ?, unused = ? WHERE reg_id = ?;",
-                            [currentStudent.total, currentStudent.unused, currentStudent.reg_id]
+                            "UPDATE TeachRegs SET total = ?, unused = ?, data = ? WHERE reg_id = ?;",
+                            [currentStudent.total, currentStudent.unused, JSON.stringify(currentStudent.data), currentStudent.reg_id]
                         );
                     },
                     app.dbError,
@@ -663,6 +666,7 @@
                 }
 
                 app.doms.listStudentDaytime.empty();
+                console.log(currentStudent.data.daytime);
                 $.each(currentStudent.data["daytime"], function (idx, daytime) {
                     $("<li>").append($("<a>", {href: "#", text: daytime})).
                         append($("<a>", {href: "#", text: "delete"})).
@@ -905,6 +909,15 @@
                 min = hourmin[1],
                 ampm = fields[2];
             return [days.indexOf(day), parseInt(hour) - 1, parseInt(min), periods.indexOf(ampm)];
+        },
+
+        vectorIsIdentical: function (a, b) {
+            var i = a.length;
+            if (i != b.length) return false;
+            while (i--) {
+                if (a[i] !== b[i]) return false;
+            }
+            return true;
         },
 
         dbError: function (tx, err) {
