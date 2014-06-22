@@ -17,9 +17,55 @@
 
 <section id="login" data-role="page">
     <div role="main" class="ui-content">
-        <a href="#" class="ui-btn" id="login-btn">Login</a>
-        <a href="#" class="ui-btn" id="home-btn">Home</a>
-        <div id="output"></div>
+        <div class="app-title">
+            <h1>LevelHub</h1>
+        </div>
+        <div id="login-panel">
+            <form>
+                <input type="text" name="username" value="" placeholder="username, i.e. email"/>
+                <input type="password" name="password" value="" placeholder="password"/>
+                <br/>
+                <a href="#" class="ui-btn ui-mini ui-corner-all" id="login-btn">Login</a>
+            </form>
+        </div>
+        <div style="text-align: center;">
+            <a href="#register" data-transition="fade">Create an account</a>
+        </div>
+
+
+    </div>
+</section>
+
+<section id="register" data-role="page">
+    <div role="main" class="ui-content">
+        <div class="app-title">
+            <h1>LevelHub</h1>
+        </div>
+        <div id="register-panel">
+            <form>
+                <label class="ui-mini">Name</label>
+                <div class="ui-grid-a">
+                    <div class="ui-block-a">
+                        <input class="ui-mini" type="text" name="fname" placeholder="First"/>
+                    </div>
+                    <div class="ui-block-b">
+                        <input class="ui-mini" type="text" name="lname" placeholder="Last"/>
+                    </div>
+                </div>
+                <label class="ui-mini" >Email</label>
+                <input class="ui-mini" type="text" name="email" placeholder="This will be your username"/>
+                <label class="ui-mini" >Create a password</label>
+                <input class="ui-mini" type="password" name="password" />
+                <label class="ui-mini" >Confirm your password</label>
+                <input class="ui-mini" type="password" name="passwordConfirm" />
+                <br/>
+                <a href="#" class="ui-btn ui-mini ui-corner-all" id="register-btn">Create</a>
+            </form>
+        </div>
+        <div style="text-align: center;">
+            <a href="#login" data-transition="fade">Sign in</a>
+        </div>
+
     </div>
 </section>
 
@@ -66,7 +112,7 @@
         <form>
             <div class="ui-field-contain">
                 <label for="newTeachName">Name</label>
-                <input name="newTeachName" id="newTeachName" value="" type="text">
+                <input name="newTeachName" id="newTeachName" value="" type="text"/>
             </div>
             <div class="ui-field-contain">
                 <label for="newTeachDesc">Description</label>

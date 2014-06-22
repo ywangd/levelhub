@@ -8,6 +8,65 @@ body {
     -webkit-user-select: none; /* prevent copy paste, to allow, change 'none' to 'text' */
 }
 
+
+#login {
+    background: linear-gradient(#497BAE, #6FACD5);
+}
+
+.app-title {
+    text-align: center;
+}
+.app-title h1 {
+    color: #ffffff;
+    font-family: 'HelveticaNeue-Light', 'HelveticaNeue', Helvetica, Arial, sans-serif;
+    font-weight: bolder;
+}
+
+#login-panel {
+    margin: 0 10%;
+    padding: 5% 10%;
+}
+
+#login-panel + div a {
+    font-weight: normal;
+    text-decoration: none;
+    text-shadow: none;
+    color: white;
+    font-size: smaller;
+}
+
+#register {
+    background: linear-gradient(#497BAE, #6FACD5);
+}
+
+#register-panel {
+    margin: 0 10%;
+    padding: 0;
+}
+
+#register-panel label {
+    text-shadow: none;
+    color: white;
+    margin: 0;
+    font-size: smaller;
+}
+
+#register-panel .ui-grid-a .ui-block-a {
+    padding-right: 2%;
+}
+
+#register-panel .ui-grid-a .ui-block-b {
+    padding-left: 2%;
+}
+
+#register-panel + div a {
+    font-weight: normal;
+    text-decoration: none;
+    text-shadow: none;
+    color: white;
+    font-size: smaller;
+}
+
 #news, #teach, #study, #setup {
     display: none;
 }
