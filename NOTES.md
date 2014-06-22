@@ -22,6 +22,22 @@
     * Note that this only works with Chrome as Firefox does not support WebSQL
         - To emulate the app without seeing ripple UI, do not append enable ripple at URL.
         - For any pop up message, just click cancel.
+        - The Chrome Web Developer Tools can be used to debug the program
+
+# Client-Server communication
+* By default, Ajax cannot issue cross-domain requests
+* We need to enable Cross Origin Resource Sharing (CORS) on both client and server to allow cross-domain Ajax
+* Also turn off crsf protection in django to ease things up
+## Server side
+    * Need to add at least three headers: 
+        - Access-Control-Allow-Origin
+        - Access-Control-Allow-Methods
+        - Access-Control-Allow-Credentials
+            * This is needed for sending any cookies from server response back to the server, which in turns enables session management.
+            * The cookies are saved under the domain of the remote server.
+## Client side
+    * jQuery ajax call 
+        - Need to provide `xhrFields: {withCredentials: true}` and `crossDomain: true`
 
 # ToDo
 * Clear history stack when back to the home page to avoid memory hog?

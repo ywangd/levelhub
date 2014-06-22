@@ -114,7 +114,51 @@
             });
 
             // The first page to show
-            $("#icon-teach").trigger("click");
+            //$("#icon-teach").trigger("click");
+
+            $("#login-btn").on("click", function () {
+                $.ajax({
+                    type: 'POST',
+                    url: "http://levelhub-ywangd.rhcloud.com/login/",
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    crossDomain: true,
+                    data: {username: "test", password: "test"},
+                    success: function(data, textStatus, jqXHR) {
+                        console.log(data);
+                        $("#output").empty().html(data);
+                    },
+                    error: function (data, textStatus, errorThrown) {
+                        console.log(data);
+                        console.log(textStatus);
+                        console.log(errorThrown);
+                        console.log("FAILED");
+                    }
+                });
+            });
+
+            $("#home-btn").on("click", function () {
+                $.ajax({
+                    type: 'GET',
+                    url: "http://levelhub-ywangd.rhcloud.com/",
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    crossDomain: true,
+                    //headers: {"Cookie": "sessionid=6376m4cf23tr2lq8x5o4r36hztrjm925"},
+                    success: function(data, textStatus, jqXHR) {
+                        console.log(data);
+                        $("#output").empty().html(data);
+                    },
+                    error: function (data, textStatus, errorThrown) {
+                        console.log(data);
+                        console.log(textStatus);
+                        console.log(errorThrown);
+                        console.log("FAILED");
+                    }
+                });
+            });
 
             // Handle home page upper right button, note this button reacts
             // different based on different active home section
