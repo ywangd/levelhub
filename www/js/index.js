@@ -18,6 +18,8 @@
             "Saturday"],
         periods = ["AM", "PM"];
 
+    var server_url = "http://levelhub-ywangd.rhcloud.com/"
+
     var app = {
         initialize: function () {
             $(document).ready(function () {
@@ -119,15 +121,18 @@
             $("#login-btn").on("click", function () {
                 $.ajax({
                     type: 'POST',
-                    url: "http://levelhub-ywangd.rhcloud.com/login/",
+                    url: server_url + "login/",
                     xhrFields: {
                         withCredentials: true
                     },
                     crossDomain: true,
-                    data: {username: "test", password: "test"},
-                    success: function(data, textStatus, jqXHR) {
+                    data: {username: "test", password: "test", mobileapp: ""},
+                    success: function(data) {
                         console.log(data);
-                        $("#output").empty().html(data);
+                        $.mobile.changePage(app.doms.pageHome, {
+                            transition: "slideup"
+                        });
+                        $("#icon-teach").trigger("click");
                     },
                     error: function (data, textStatus, errorThrown) {
                         console.log(data);
@@ -141,7 +146,7 @@
             $("#home-btn").on("click", function () {
                 $.ajax({
                     type: 'GET',
-                    url: "http://levelhub-ywangd.rhcloud.com/",
+                    url: server_url,
                     xhrFields: {
                         withCredentials: true
                     },
