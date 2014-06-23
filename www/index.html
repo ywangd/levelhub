@@ -24,7 +24,7 @@
             <form>
                 <input type="text" name="username" value="" placeholder="username, i.e. email"/>
                 <input type="password" name="password" value="" placeholder="password"/>
-                <br/>
+                <div id="login-feedback"><span></span><br/></div>
                 <a href="#" class="ui-btn ui-mini ui-corner-all" id="login-btn">Login</a>
             </form>
         </div>
@@ -90,6 +90,16 @@
     </div>
     <div role="main" class="ui-content" id="setup">
         Setup
+        <ul data-role="listview" data-inset="true" class="delete-solo-btn">
+            <li class="ui-body">
+                <div class="ui-grid-solo">
+                    <div class="ui-block-a">
+                        <a id="logout-btn"
+                           class="ui-btn ui-mini ui-corner-all ui-btn-b">Sign Out</a>
+                    </div>
+                </div>
+            </li>
+        </ul>
     </div>
     <footer data-role="footer" data-position="fixed" data-theme="b" class="home-nav">
         <div data-role="navbar" data-grid="c" class="home-nav">

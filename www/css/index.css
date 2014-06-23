@@ -35,6 +35,17 @@ body {
     font-size: smaller;
 }
 
+#login-feedback {
+    text-align: center;
+}
+
+#login-feedback span {
+    text-shadow: none;
+    color: red;
+    font-size: smaller;
+    display: inline-block;
+}
+
 #register {
     background: linear-gradient(#497BAE, #6FACD5);
 }

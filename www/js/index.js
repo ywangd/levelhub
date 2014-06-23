@@ -18,6 +18,7 @@
             "Saturday"],
         periods = ["AM", "PM"];
 
+    var QERR = "err";
     var server_url = "http://levelhub-ywangd.rhcloud.com/";
     server_url = "http://localhost:8000/";
 
@@ -48,8 +49,19 @@
             }
             app.prepareDatabase();
 
+            $.ajaxSetup({
+                dataType: "json",
+                xhrFields: {
+                    withCredentials: true
+                },
+                crossDomain: true,
+                timeout: 9000
+            });
+
             // All pages and parts
             app.doms = {
+                pageLogin: $("#login"),
+                pageRegister: $("#register"),
                 pageHome: $("#home"),
                 pageNewTeach: $("#new-teach"),
                 pageTeachRegs: $("#teach-regs-page"),
@@ -120,30 +132,53 @@
             //$("#icon-teach").trigger("click");
 
             $("#login-btn").on("click", function () {
-                var formData = "mobileapp=&" + $("#login-panel form").serialize();
+                var form = $("#login-panel form");
+                var formData = "json=&" + form.serialize();
                 $.ajax({
-                    type: 'POST',
+                    type: "POST",
                     url: server_url + "login/",
-                    xhrFields: {
-                        withCredentials: true
-                    },
-                    crossDomain: true,
-                    data: formData,
-                    success: function(data) {
-                        console.log(data);
-
-                        $.mobile.changePage(app.doms.pageHome, {
-                            transition: "slideup"
-                        });
-                        $("#icon-teach").trigger("click");
-                    },
-                    error: function (data, textStatus, errorThrown) {
+                    data: formData
+                })
+                    .done(function (data) {
+                        if (QERR in data) {
+                            console.log(data[QERR]);
+                            $("#login-feedback span").empty().text(data[QERR]);
+                        } else {
+                            console.log(data);
+                            $.mobile.changePage(app.doms.pageHome, {
+                                transition: "slideup"
+                            });
+                            $("#icon-teach").trigger("click");
+                            $("#login-feedback span").empty();
+                            form[0].reset();
+                        }
+                    })
+                    .fail(function (data, textStatus, errorThrown) {
                         console.log(data);
                         console.log(textStatus);
                         console.log(errorThrown);
                         console.log("FAILED");
-                    }
-                });
+                        $("#login-feedback").empty().text("Server error. Please try again.");
+                    });
+            });
+
+            $("#logout-btn").on("touchstart click", function () {
+                $.ajax({
+                    type: "POST",
+                    url: server_url + "logout/",
+                    data: "json="
+                })
+                    .always(function (data) {
+                        $.mobile.changePage(app.doms.pageLogin, {
+                            transition: "slidedown"
+                        });
+                    })
+                    .fail(function (data, textStatus, errorThrown) {
+                        console.log(data);
+                        console.log(textStatus);
+                        console.log(errorThrown);
+                        console.log("FAILED");
+                    });
             });
 
             $("#home-btn").on("click", function () {
@@ -155,7 +190,7 @@
                     },
                     crossDomain: true,
                     //headers: {"Cookie": "sessionid=6376m4cf23tr2lq8x5o4r36hztrjm925"},
-                    success: function(data, textStatus, jqXHR) {
+                    success: function (data, textStatus, jqXHR) {
                         console.log(data);
                         $("#output").empty().html(data);
                     },
