@@ -18,7 +18,8 @@
             "Saturday"],
         periods = ["AM", "PM"];
 
-    var server_url = "http://levelhub-ywangd.rhcloud.com/"
+    var server_url = "http://levelhub-ywangd.rhcloud.com/";
+    server_url = "http://localhost:8000/";
 
     var app = {
         initialize: function () {
@@ -119,6 +120,7 @@
             //$("#icon-teach").trigger("click");
 
             $("#login-btn").on("click", function () {
+                var formData = "mobileapp=&" + $("#login-panel form").serialize();
                 $.ajax({
                     type: 'POST',
                     url: server_url + "login/",
@@ -126,9 +128,10 @@
                         withCredentials: true
                     },
                     crossDomain: true,
-                    data: {username: "test", password: "test", mobileapp: ""},
+                    data: formData,
                     success: function(data) {
                         console.log(data);
+
                         $.mobile.changePage(app.doms.pageHome, {
                             transition: "slideup"
                         });
