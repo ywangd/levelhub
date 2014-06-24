@@ -25,7 +25,7 @@
                 <input type="text" name="username" value="" placeholder="username, i.e. email"/>
                 <input type="password" name="password" value="" placeholder="password"/>
                 <div id="login-feedback"><span></span><br/></div>
-                <a href="#" class="ui-btn ui-mini ui-corner-all" id="login-btn">Login</a>
+                <a href="#" class="ui-btn ui-mini ui-corner-all" id="login-btn">Sign In</a>
             </form>
         </div>
         <div style="text-align: center;">
@@ -43,7 +43,7 @@
         </div>
         <div id="register-panel">
             <form>
-                <label class="ui-mini">Name</label>
+                <label class="ui-mini">Name <span class="input-warning"></span></label>
                 <div class="ui-grid-a">
                     <div class="ui-block-a">
                         <input class="ui-mini" type="text" name="fname" placeholder="First"/>
@@ -52,13 +52,13 @@
                         <input class="ui-mini" type="text" name="lname" placeholder="Last"/>
                     </div>
                 </div>
-                <label class="ui-mini" >Email</label>
-                <input class="ui-mini" type="text" name="email" placeholder="This will be your username"/>
-                <label class="ui-mini" >Create a password</label>
+                <label class="ui-mini" >Email <span class="input-warning"></span></label>
+                <input class="ui-mini" type="email" name="username" placeholder="This will be your username"/>
+                <label class="ui-mini" >Create a password <span class="input-warning"></span></label>
                 <input class="ui-mini" type="password" name="password" />
-                <label class="ui-mini" >Confirm your password</label>
+                <label class="ui-mini" >Confirm your password <span class="input-warning"></span></label>
                 <input class="ui-mini" type="password" name="passwordConfirm" />
-                <br/>
+                <div id="register-feedback"><span></span><br/></div>
                 <a href="#" class="ui-btn ui-mini ui-corner-all" id="register-btn">Create</a>
             </form>
         </div>

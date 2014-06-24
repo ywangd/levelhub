@@ -18,6 +18,8 @@
             "Saturday"],
         periods = ["AM", "PM"];
 
+    var re_email = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
     var QERR = "err";
     var server_url = "http://levelhub-ywangd.rhcloud.com/";
     server_url = "http://localhost:8000/";
@@ -140,11 +142,10 @@
                     data: formData
                 })
                     .done(function (data) {
+                        console.log(data);
                         if (QERR in data) {
-                            console.log(data[QERR]);
                             $("#login-feedback span").empty().text(data[QERR]);
                         } else {
-                            console.log(data);
                             $.mobile.changePage(app.doms.pageHome, {
                                 transition: "slideup"
                             });
@@ -179,6 +180,71 @@
                         console.log(errorThrown);
                         console.log("FAILED");
                     });
+            });
+
+            $("#register-btn").on("click", function () {
+                var form = $("#register-panel form"),
+                    formData = form.serializeArray();
+                var data = {};
+
+                form.find("label span").empty();
+
+                $.each(formData, function (idx, field) {
+                    data[field.name] = $.trim(field.value);
+                });
+
+                if (data["fname"] == "" || data["lname"] == "") {
+                    form.find("label:eq(0) span").text("This field is required");
+                }
+                if (data["username"] == "") {
+                    form.find("label:eq(1) span").text("This field is required");
+                } else if (!re_email.test(data["username"])) {
+                    form.find("label:eq(1) span").text("Invalid email");
+                }
+
+                if (data["password"] == "") {
+                    form.find("label:eq(2) span").text("This field is required");
+                } else if (data["password"].length < 4) {
+                    form.find("label:eq(2) span").text("Password is too short");
+                }
+
+                if (data["passwordConfirm"] != data["password"]) {
+                    form.find("label:eq(3) span").text("Password does not match");
+                }
+
+                // If any of the span has warning message, the form is not valid
+                if (form.find("label span").text() != "") {
+                    return false;
+                } else {
+                    $.ajax({
+                        type: "POST",
+                        url: server_url + "register/",
+                        data: $.extend(data, {"json": ""})
+                    })
+                        .done(function (data) {
+                            console.log(data);
+                            if (QERR in data) {
+                                if ("username" in data.err) {
+                                    form.find("label:eq(1) span").text(data.err["username"]);
+                                }
+                            } else {
+                                $.mobile.changePage(app.doms.pageHome, {
+                                    transition: "slideup"
+                                });
+                                $("#icon-teach").trigger("click");
+                                $("#register-feedback span").empty();
+                                form.find("label span").empty();
+                                form[0].reset();
+                            }
+                        })
+                        .fail(function (data, textStatus, errorThrown) {
+                            console.log(data);
+                            console.log(textStatus);
+                            console.log(errorThrown);
+                            console.log("FAILED");
+                            $("#register-feedback span").empty().text("Server error. Please try again.");
+                        });
+                }
             });
 
             $("#home-btn").on("click", function () {

@@ -39,9 +39,9 @@ body {
     text-align: center;
 }
 
-#login-feedback span {
+#login-feedback span, #register-feedback span {
     text-shadow: none;
-    color: red;
+    color: darkred;
     font-size: smaller;
     display: inline-block;
 }
@@ -77,6 +77,11 @@ body {
     color: white;
     font-size: smaller;
 }
+
+.input-warning {
+    color: darkred;
+}
+
 
 #news, #teach, #study, #setup {
     display: none;
