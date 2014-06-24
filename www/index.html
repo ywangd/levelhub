@@ -22,7 +22,7 @@
         </div>
         <div id="login-panel">
             <form>
-                <input type="text" name="username" value="" placeholder="username, i.e. email"/>
+                <input type="text" name="username" value="" placeholder="username"/>
                 <input type="password" name="password" value="" placeholder="password"/>
                 <div id="login-feedback"><span></span><br/></div>
                 <a href="#" class="ui-btn ui-mini ui-corner-all" id="login-btn">Sign In</a>
@@ -43,21 +43,31 @@
         </div>
         <div id="register-panel">
             <form>
+                <label class="ui-mini" >Username <span class="input-warning"></span></label>
+                <input class="ui-mini" type="text" name="username" />
                 <label class="ui-mini">Name <span class="input-warning"></span></label>
                 <div class="ui-grid-a">
                     <div class="ui-block-a">
-                        <input class="ui-mini" type="text" name="fname" placeholder="First"/>
+                        <input class="ui-mini" type="text" name="fname" placeholder="First (optional)"/>
                     </div>
                     <div class="ui-block-b">
-                        <input class="ui-mini" type="text" name="lname" placeholder="Last"/>
+                        <input class="ui-mini" type="text" name="lname" placeholder="Last (optional)"/>
                     </div>
                 </div>
                 <label class="ui-mini" >Email <span class="input-warning"></span></label>
-                <input class="ui-mini" type="email" name="username" placeholder="This will be your username"/>
-                <label class="ui-mini" >Create a password <span class="input-warning"></span></label>
-                <input class="ui-mini" type="password" name="password" />
-                <label class="ui-mini" >Confirm your password <span class="input-warning"></span></label>
-                <input class="ui-mini" type="password" name="passwordConfirm" />
+                <input class="ui-mini" type="email" name="email" placeholder="optional"/>
+
+                <div class="ui-grid-a">
+                    <div class="ui-block-a">
+                        <label class="ui-mini" >Password <span class="input-warning"></span></label>
+                        <input class="ui-mini" type="password" name="password1" />
+                    </div>
+                    <div class="ui-block-b">
+                        <label class="ui-mini">Confirm <span class="input-warning"></span></label>
+                        <input class="ui-mini" type="password" name="password2"/>
+                    </div>
+                </div>
+
                 <div id="register-feedback"><span></span><br/></div>
                 <a href="#" class="ui-btn ui-mini ui-corner-all" id="register-btn">Create</a>
             </form>

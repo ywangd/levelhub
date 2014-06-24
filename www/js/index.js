@@ -193,29 +193,29 @@
                     data[field.name] = $.trim(field.value);
                 });
 
-                if (data["fname"] == "" || data["lname"] == "") {
-                    form.find("label:eq(0) span").text("This field is required");
-                }
                 if (data["username"] == "") {
-                    form.find("label:eq(1) span").text("This field is required");
-                } else if (!re_email.test(data["username"])) {
-                    form.find("label:eq(1) span").text("Invalid email");
+                    form.find("label:eq(0) span").text("Required");
                 }
 
-                if (data["password"] == "") {
-                    form.find("label:eq(2) span").text("This field is required");
-                } else if (data["password"].length < 4) {
-                    form.find("label:eq(2) span").text("Password is too short");
+                if (data["email"] != "" && !re_email.test(data["username"])) {
+                    form.find("label:eq(2) span").text("Invalid email");
                 }
 
-                if (data["passwordConfirm"] != data["password"]) {
-                    form.find("label:eq(3) span").text("Password does not match");
+                if (data["password1"] == "") {
+                    form.find("label:eq(3) span").text("Required");
+                } else if (data["password1"].length < 4) {
+                    form.find("label:eq(3) span").text("Too short");
+                }
+
+                if (data["password2"] != data["password1"]) {
+                    form.find("label:eq(4) span").text("does not match");
                 }
 
                 // If any of the span has warning message, the form is not valid
                 if (form.find("label span").text() != "") {
                     return false;
                 } else {
+                    console.log(data);
                     $.ajax({
                         type: "POST",
                         url: server_url + "register/",
@@ -225,7 +225,7 @@
                             console.log(data);
                             if (QERR in data) {
                                 if ("username" in data.err) {
-                                    form.find("label:eq(1) span").text(data.err["username"]);
+                                    form.find("label:eq(0) span").text(data.err["username"]);
                                 }
                             } else {
                                 $.mobile.changePage(app.doms.pageHome, {
