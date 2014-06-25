@@ -5,6 +5,7 @@
     var db;
     var user = {};
     var teaches, currentTeach;
+    var registrations, currentReg;
     var students, currentStudent;
     var stamps, stampsDeleted;
     var stampFirstIdx, stampLastIdx;
@@ -55,10 +56,11 @@
 
             // This is always called when any ajax call is successfully return, unless
             // its global option is set to false
-            $(document).ajaxSuccess(function (event, xhr, settings) {
+            $(document).ajaxSuccess(function (event, jqXhr, settings, data) {
                 //console.log(event);
                 //console.log(xhr);
                 //console.log(settings);
+                console.log(data);
             });
 
             // Some always need ajax parameters
@@ -75,17 +77,10 @@
 
             // Always attach json as a parameter to request for json data
             $.ajaxPrefilter(function (options) {
-                console.log(options.data);
-                if (typeof options.data == "string") {
-                    options.data = "json=&" + options.data;
-                } else {
-                    options.data = $.extend(options.data, {json: ""});
-                    if (options.type == 'GET') {
-                        options.data = $.param(options.data);
-                    }
-                }
-                console.log(options.data);
+
             });
+
+
 
             // All pages and parts
             app.doms = {
@@ -171,11 +166,10 @@
                     loginFeedback = $("#login-feedback span");
                 $.ajax({
                     type: "POST",
-                    url: server_url + "login/",
+                    url: server_url + "j/login/",
                     data: form.serialize()
                 })
                     .done(function (data) {
-                        console.log(data);
                         if (QERR in data) {
                             loginFeedback.empty().text(data[QERR]);
                         } else {
@@ -189,16 +183,13 @@
                             form[0].reset();
                         }
                     })
-                    .fail(function (jqXHR, textStatus, errorThrown) {
-                        console.log("FAILED " + textStatus);
-                        $("#login-feedback").empty().text("Server error. Please try again.");
-                    });
+                    .fail(app.ajax_error_handler);
             });
 
             $("#logout-btn").on("touchstart click", function () {
                 $.ajax({
                     type: "POST",
-                    url: server_url + "logout/",
+                    url: server_url + "j/logout/",
                     data: ""
                 })
                     .always(function (data) {
@@ -208,16 +199,13 @@
                             transition: "slidedown"
                         });
                     })
-                    .fail(function (jqXHR, textStatus, errorThrown) {
-                        console.log("FAILED " + textStatus);
-                    });
+                    .fail(app.ajax_error_handler);
             });
 
             $("#register-btn").on("click", function () {
                 var registerPanel = $("#register-panel"),
                     form = registerPanel.find("form"),
                     formData = form.serializeArray(),
-                    registerFeedback = $("#register-feedback span"),
                     data = {};
 
                 form.find("label span").empty();
@@ -251,11 +239,10 @@
                     console.log(data);
                     $.ajax({
                         type: "POST",
-                        url: server_url + "register/",
+                        url: server_url + "j/register/",
                         data: data
                     })
                         .done(function (data) {
-                            console.log(data);
                             if (QERR in data) {
                                 if ("username" in data.err) {
                                     form.find("label:eq(0) span").text(data.err["username"]);
@@ -266,18 +253,11 @@
                                     transition: "slideup"
                                 });
                                 $("#icon-teach").trigger("click");
-                                registerFeedback.empty();
                                 form.find("label span").empty();
                                 form[0].reset();
                             }
                         })
-                        .fail(function (data, textStatus, errorThrown) {
-                            console.log(data);
-                            console.log(textStatus);
-                            console.log(errorThrown);
-                            console.log("FAILED");
-                            registerFeedback.empty().text("Server error. Please try again.");
-                        });
+                        .fail(app.ajax_error_handler);
                 }
             });
 
@@ -335,20 +315,39 @@
 
             // Handle click on teach list
             app.doms.listTeaches.on("click", "a", function () {
+                $.mobile.loading('show');
                 var $this = $(this);
                 currentTeach = teaches[$this.parent().prevAll().length];
-                app.prepareTeachRegs(currentTeach.teach_id);
-                $.mobile.changePage(app.doms.pageTeachRegs, {
-                    transition: "slide"
-                });
+                app.doms.pageTeachRegs.find("header h1").text(currentTeach.name);
+                $.ajax({
+                    url: server_url + 'j/get_lesson_regs/' + currentTeach.lesson_id + '/'
+                })
+                    .done(function (registrations) {
+                        app.doms.listStudents.empty();
+                        $.each(registrations, function (idx, registration) {
+                            var a = $("<a>", {
+                                href: "#",
+                                text: app.get_student_display_name(registration)
+                            });
+                            a.append($("<span>", {
+                                "class": "ui-li-count ui-btn-up-c ui-btn-corner-all",
+                                text: registration.unused
+                            }));
+                            app.doms.listStudents.append($("<li>").append(a));
+                        });
+                        app.refresh_listview(app.doms.listStudents);
+                        $.mobile.changePage(app.doms.pageTeachRegs, {
+                            transition: "slide"
+                        });
+                    });
             });
 
             // Handle details button on teach regs page
             $("#teach-details-button").on("click", function () {
                 var li0 = app.doms.pageTeachRegsDetails.find(".ui-content li:eq(0)");
                 li0.find("h2").text(currentTeach.name);
-                li0.find("p:eq(0)").text(currentTeach.desc);
-                li0.find("p:eq(1)").text("Created: " + currentTeach.ctime.split(" ")[0]);
+                li0.find("p:eq(0)").text(currentTeach.description);
+                li0.find("p:eq(1)").text("Created: " + currentTeach.creation_time.split(" ")[0]);
                 $.mobile.changePage(app.doms.pageTeachRegsDetails, {
                     transition: "flip"
                 });
@@ -824,11 +823,7 @@
                 $("<li>", {"data-icon": "false"}).
                     append($("<a>", {href: "#", text: "Unused: " + currentStudent.unused})).
                     appendTo(app.doms.listStudentHistory);
-                if (app.doms.listStudentHistory.data("mobile-listview")) {
-                    app.doms.listStudentHistory.listview("refresh");
-                } else {
-                    app.doms.listStudentHistory.listview();
-                }
+                app.refresh_listview(app.doms.listStudentHistory);
 
                 app.doms.listStudentDaytime.empty();
                 console.log(currentStudent.data.daytime);
@@ -837,11 +832,7 @@
                         append($("<a>", {href: "#", text: "delete"})).
                         appendTo(app.doms.listStudentDaytime);
                 });
-                if (app.doms.listStudentDaytime.data("mobile-listview")) {
-                    app.doms.listStudentDaytime.listview("refresh");
-                } else {
-                    app.doms.listStudentDaytime.listview();
-                }
+                app.refresh_listview(app.doms.listStudentDaytime);
 
                 $.mobile.changePage(app.doms.pageStudentDetails, {
                     transition: "flip"
@@ -931,7 +922,7 @@
 
         prepareTeaches: function () {
             $.ajax({
-                url: server_url + 'teaches/' + user.user_id + '/'
+                url: server_url + 'j/get_teach_lessons/' + user.user_id + '/'
             })
                 .done(function (data) {
                     teaches = data;
@@ -953,33 +944,19 @@
                 .fail(app.ajax_error_handler);
         },
 
-        prepareTeachRegs: function (teach_id) {
-            db.transaction(
-                function (tx) {
-                    tx.executeSql("SELECT * FROM Teaches WHERE teach_id = ?;",
-                        [teach_id],
-                        function (tx, result) {
-                            var row = result.rows.item(0);
-                            app.doms.pageTeachRegs.data("teach_id", teach_id);
-                            app.doms.pageTeachRegs.data("desc", row.desc);
-                            app.doms.pageTeachRegs.find("header h1").text(row.name);
-                            app.listStudentsForTeach(teach_id);
-                        })
-                }
-            );
-        },
 
-        listStudentsForTeach: function (teach_id) {
+
+        listStudentsForTeach: function (lesson_id) {
             db.transaction(function (tx) {
                 tx.executeSql(
                     "SELECT * FROM TeachRegs WHERE teach_id = ? ORDER BY upper(user_fname || user_lname);",
-                    [teach_id],
+                    [lesson_id],
                     function (tx, result) {
                         students = [];
                         for (var i = 0; i < result.rows.length; i++) {
                             var row = result.rows.item(i);
                             students.push({
-                                teach_id: row.teach_id,
+                                lesson_id: row.teach_id,
                                 reg_id: row.reg_id,
                                 user_id: row.user_id,
                                 fname: row.user_fname,
@@ -1069,6 +1046,26 @@
             }
             return true;
         },
+
+        get_student_display_name: function (registration) {
+            if (registration.student) {
+                var student = registration.student,
+                    name = [student.first_name, student.last_name].join(' ');
+
+                return name != '' ? name : student.username;
+            } else {
+                return [registration.student_first_name, registration.student_last_name].join(' ');
+            }
+        },
+
+        refresh_listview: function (ul) {
+            if (ul.data("mobile-listview")) {
+                ul.listview("refresh");
+            } else {
+                ul.listview();
+            }
+        },
+
 
         ajax_error_handler: function (jqXHR, textStatus, errorThrown) {
             console.log('AJAX call failed: ' + textStatus);
