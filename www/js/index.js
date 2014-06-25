@@ -3,11 +3,13 @@
     $.event.special.tap.emitTapOnTaphold = false;
 
     var db;
+    var user = {};
+    var teaches, currentTeach;
     var students, currentStudent;
     var stamps, stampsDeleted;
     var stampFirstIdx, stampLastIdx;
+
     var homeNavIdx = -1;
-    var teaches, currentTeach;
     var days = [
             "Sunday",
             "Monday",
@@ -61,6 +63,7 @@
 
             // Some always need ajax parameters
             $.ajaxSetup({
+                type: 'GET',
                 dataType: "json",
                 xhrFields: {
                     withCredentials: true
@@ -72,11 +75,16 @@
 
             // Always attach json as a parameter to request for json data
             $.ajaxPrefilter(function (options) {
+                console.log(options.data);
                 if (typeof options.data == "string") {
                     options.data = "json=&" + options.data;
                 } else {
                     options.data = $.extend(options.data, {json: ""});
+                    if (options.type == 'GET') {
+                        options.data = $.param(options.data);
+                    }
                 }
+                console.log(options.data);
             });
 
             // All pages and parts
@@ -150,7 +158,12 @@
             });
 
             // The first page to show
-            //$("#icon-teach").trigger("click");
+            var stored_user = localStorage.getItem('user');
+            if (stored_user) {
+                user = JSON.parse(stored_user);
+                $.mobile.changePage(app.doms.pageHome);
+                $("#icon-teach").trigger("click");
+            }
 
             $("#login-btn").on("click", function () {
                 var loginPanel = $("#login-panel"),
@@ -166,6 +179,8 @@
                         if (QERR in data) {
                             loginFeedback.empty().text(data[QERR]);
                         } else {
+                            user = data;
+                            localStorage.setItem('user', JSON.stringify(user));
                             $.mobile.changePage(app.doms.pageHome, {
                                 transition: "slideup"
                             });
@@ -174,11 +189,8 @@
                             form[0].reset();
                         }
                     })
-                    .fail(function (data, textStatus, errorThrown) {
-                        console.log(data);
-                        console.log(textStatus);
-                        console.log(errorThrown);
-                        console.log("FAILED");
+                    .fail(function (jqXHR, textStatus, errorThrown) {
+                        console.log("FAILED " + textStatus);
                         $("#login-feedback").empty().text("Server error. Please try again.");
                     });
             });
@@ -190,15 +202,14 @@
                     data: ""
                 })
                     .always(function (data) {
+                        user = {};
+                        localStorage.removeItem('user');
                         $.mobile.changePage(app.doms.pageLogin, {
                             transition: "slidedown"
                         });
                     })
-                    .fail(function (data, textStatus, errorThrown) {
-                        console.log(data);
-                        console.log(textStatus);
-                        console.log(errorThrown);
-                        console.log("FAILED");
+                    .fail(function (jqXHR, textStatus, errorThrown) {
+                        console.log("FAILED " + textStatus);
                     });
             });
 
@@ -250,6 +261,7 @@
                                     form.find("label:eq(0) span").text(data.err["username"]);
                                 }
                             } else {
+                                user = data;
                                 $.mobile.changePage(app.doms.pageHome, {
                                     transition: "slideup"
                                 });
@@ -918,42 +930,27 @@
         },
 
         prepareTeaches: function () {
-            db.transaction(
-                function (tx) {
-                    tx.executeSql("SELECT * FROM Teaches ORDER BY teach_id;",
-                        undefined,
-                        function (tx, result) {
-                            teaches = [];
-                            for (var i = 0; i < result.rows.length; i++) {
-                                var row = result.rows.item(i);
-                                teaches.push({
-                                    teach_id: row.teach_id,
-                                    name: row.name,
-                                    desc: row.desc,
-                                    nregs: row.nregs,
-                                    is_active: row.is_active,
-                                    ctime: row.ctime,
-                                    data: row.data
-                                });
-                            }
-                            app.doms.listTeaches.empty();
-                            $.each(teaches, function (idx, teach) {
-                                var a = $("<a>", {
-                                    "href": "#",
-                                    text: teach.name
-                                });
-                                a.append($("<span>", {
-                                    class: "ui-li-count ui-btn-up-c ui-btn-corner-all",
-                                    text: teach.nregs
-                                }));
-                                app.doms.listTeaches.append($("<li>").append(a));
-                            });
-                            app.doms.listTeaches.listview("refresh");
-                            app.finishHomeNav();
-                        },
-                        app.dbError)
-                }
-            );
+            $.ajax({
+                url: server_url + 'teaches/' + user.user_id + '/'
+            })
+                .done(function (data) {
+                    teaches = data;
+                    app.doms.listTeaches.empty();
+                    $.each(teaches, function (idx, teach) {
+                        var a = $("<a>", {
+                            "href": "#",
+                            text: teach.name
+                        });
+                        a.append($("<span>", {
+                            class: "ui-li-count ui-btn-up-c ui-btn-corner-all",
+                            text: teach.nregs
+                        }));
+                        app.doms.listTeaches.append($("<li>").append(a));
+                    });
+                    app.doms.listTeaches.listview("refresh");
+                    app.finishHomeNav();
+                })
+                .fail(app.ajax_error_handler);
         },
 
         prepareTeachRegs: function (teach_id) {
@@ -1071,6 +1068,11 @@
                 if (a[i] !== b[i]) return false;
             }
             return true;
+        },
+
+        ajax_error_handler: function (jqXHR, textStatus, errorThrown) {
+            console.log('AJAX call failed: ' + textStatus);
+            console.log(jqXHR);
         },
 
         dbError: function (tx, err) {
