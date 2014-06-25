@@ -43,3 +43,5 @@
 * Clear history stack when back to the home page to avoid memory hog?
 * Make page DOMs properties of the app variable? So they are global to all methods?
 * Clean up the code by reduce file (e.g. svg) sizes and remove testing codees.
+* Global throttle on ajax
+* ajax cache and invalidate caches

@@ -51,13 +51,32 @@
             }
             app.prepareDatabase();
 
+            // This is always called when any ajax call is successfully return, unless
+            // its global option is set to false
+            $(document).ajaxSuccess(function (event, xhr, settings) {
+                //console.log(event);
+                //console.log(xhr);
+                //console.log(settings);
+            });
+
+            // Some always need ajax parameters
             $.ajaxSetup({
                 dataType: "json",
                 xhrFields: {
                     withCredentials: true
                 },
                 crossDomain: true,
+                //headers: {"Cookie": "sessionid=6376m4cf23tr2lq8x5o4r36hztrjm925"},
                 timeout: 9000
+            });
+
+            // Always attach json as a parameter to request for json data
+            $.ajaxPrefilter(function (options) {
+                if (typeof options.data == "string") {
+                    options.data = "json=&" + options.data;
+                } else {
+                    options.data = $.extend(options.data, {json: ""});
+                }
             });
 
             // All pages and parts
@@ -134,23 +153,24 @@
             //$("#icon-teach").trigger("click");
 
             $("#login-btn").on("click", function () {
-                var form = $("#login-panel form");
-                var formData = "json=&" + form.serialize();
+                var loginPanel = $("#login-panel"),
+                    form = loginPanel.find("form"),
+                    loginFeedback = $("#login-feedback span");
                 $.ajax({
                     type: "POST",
                     url: server_url + "login/",
-                    data: formData
+                    data: form.serialize()
                 })
                     .done(function (data) {
                         console.log(data);
                         if (QERR in data) {
-                            $("#login-feedback span").empty().text(data[QERR]);
+                            loginFeedback.empty().text(data[QERR]);
                         } else {
                             $.mobile.changePage(app.doms.pageHome, {
                                 transition: "slideup"
                             });
                             $("#icon-teach").trigger("click");
-                            $("#login-feedback span").empty();
+                            loginFeedback.empty();
                             form[0].reset();
                         }
                     })
@@ -167,7 +187,7 @@
                 $.ajax({
                     type: "POST",
                     url: server_url + "logout/",
-                    data: "json="
+                    data: ""
                 })
                     .always(function (data) {
                         $.mobile.changePage(app.doms.pageLogin, {
@@ -183,9 +203,11 @@
             });
 
             $("#register-btn").on("click", function () {
-                var form = $("#register-panel form"),
-                    formData = form.serializeArray();
-                var data = {};
+                var registerPanel = $("#register-panel"),
+                    form = registerPanel.find("form"),
+                    formData = form.serializeArray(),
+                    registerFeedback = $("#register-feedback span"),
+                    data = {};
 
                 form.find("label span").empty();
 
@@ -219,7 +241,7 @@
                     $.ajax({
                         type: "POST",
                         url: server_url + "register/",
-                        data: $.extend(data, {"json": ""})
+                        data: data
                     })
                         .done(function (data) {
                             console.log(data);
@@ -232,7 +254,7 @@
                                     transition: "slideup"
                                 });
                                 $("#icon-teach").trigger("click");
-                                $("#register-feedback span").empty();
+                                registerFeedback.empty();
                                 form.find("label span").empty();
                                 form[0].reset();
                             }
@@ -242,31 +264,9 @@
                             console.log(textStatus);
                             console.log(errorThrown);
                             console.log("FAILED");
-                            $("#register-feedback span").empty().text("Server error. Please try again.");
+                            registerFeedback.empty().text("Server error. Please try again.");
                         });
                 }
-            });
-
-            $("#home-btn").on("click", function () {
-                $.ajax({
-                    type: 'GET',
-                    url: server_url,
-                    xhrFields: {
-                        withCredentials: true
-                    },
-                    crossDomain: true,
-                    //headers: {"Cookie": "sessionid=6376m4cf23tr2lq8x5o4r36hztrjm925"},
-                    success: function (data, textStatus, jqXHR) {
-                        console.log(data);
-                        $("#output").empty().html(data);
-                    },
-                    error: function (data, textStatus, errorThrown) {
-                        console.log(data);
-                        console.log(textStatus);
-                        console.log(errorThrown);
-                        console.log("FAILED");
-                    }
-                });
             });
 
             // Handle home page upper right button, note this button reacts
