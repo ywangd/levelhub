@@ -559,42 +559,32 @@
                 stampDoms.removeClass("wobbly");
                 stampDoms.find("img.x-delete").addClass("hidden");
 
-                db.transaction(
-                    function (tx) {
-                        tx.executeSql(
-                            "SELECT * FROM TeachRegLogs WHERE reg_id = ?;",
-                            [currentStudent.reg_id],
-                            function (tx, result) {
-                                var length = result.rows.length;
-                                // pre-set to last idx in case no unused slot is available
-                                var firstUnusedIdx = length == 0 ? 0 : length - 1;
-                                stamps = [];
-                                stampsDeleted = [];
-                                for (var i = 0; i < length; i++) {
-                                    var row = result.rows.item(i);
-                                    if (!row.use_time && i < firstUnusedIdx) {
-                                        firstUnusedIdx = i;
-                                    }
-                                    stamps.push({
-                                        updated: false,
-                                        log_id: row.log_id,
-                                        reg_id: row.reg_id,
-                                        use_time: row.use_time,
-                                        ctime: row.ctime,
-                                        data: row.data
-                                    });
-                                }
-                                var currentPageIdx = Math.floor(firstUnusedIdx / 9);
-                                stampFirstIdx = currentPageIdx * 9;
-                                stampLastIdx = Math.min(stampFirstIdx + 9, length);
-                                // Prepare the stamps display
-                                app.updateStampsContainer(app.doms.pageStamps.find(".stamps-container:eq(0)"));
-                                // transition
-                                $.mobile.changePage(app.doms.pageStamps, {
-                                    transition: "slide"
-                                });
-                            });
-                    });
+                $.ajax({
+                    url: server_url + 'j/get_lesson_reg_logs/' + currentStudent.reg_id + '/'
+                })
+                    .done(function (data) {
+                        stamps = data;
+                        var length = stamps.length;
+                        // pre-set to last idx in case no unused slot is available
+                        var firstUnusedIdx = length == 0 ? 0 : length - 1;
+                        stampsDeleted = [];
+                        for (var i = 0; i < length; i++) {
+                            if (!stamps[i].use_time && i < firstUnusedIdx) {
+                                firstUnusedIdx = i;
+                                break;
+                            }
+                        }
+                        var currentPageIdx = Math.floor(firstUnusedIdx / 9);
+                        stampFirstIdx = currentPageIdx * 9;
+                        stampLastIdx = Math.min(stampFirstIdx + 9, length);
+                        // Prepare the stamps display
+                        app.updateStampsContainer(app.doms.pageStamps.find(".stamps-container:eq(0)"));
+                        // transition
+                        $.mobile.changePage(app.doms.pageStamps, {
+                            transition: "slide"
+                        });
+                    })
+                    .fail(app.ajax_error_handler);
                 return false;
             });
 
@@ -918,6 +908,7 @@
                 url: server_url + 'j/get_lesson_regs/' + currentTeach.lesson_id + '/'
             })
                 .done(function (registrations) {
+                    students = registrations;
                     app.doms.listStudents.empty();
                     $.each(registrations, function (idx, registration) {
                         var a = $("<a>", {
