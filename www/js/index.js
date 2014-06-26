@@ -81,7 +81,6 @@
             });
 
 
-
             // All pages and parts
             app.doms = {
                 pageLogin: $("#login"),
@@ -134,7 +133,7 @@
                                     "data-transition": "slidedown"
                                 }).show();
 
-                            app.prepareTeaches();
+                            app.showTeachLessons();
                             break;
                         case "study":
                             app.doms.headerHome.find("h1").text("My Learnings");
@@ -153,9 +152,9 @@
             });
 
             // The first page to show
-            var stored_user = localStorage.getItem('user');
-            if (stored_user) {
-                user = JSON.parse(stored_user);
+            var savedUser = localStorage.getItem('user');
+            if (savedUser) {
+                user = JSON.parse(savedUser);
                 $.mobile.changePage(app.doms.pageHome);
                 $("#icon-teach").trigger("click");
             }
@@ -186,7 +185,7 @@
                     .fail(app.ajax_error_handler);
             });
 
-            $("#logout-btn").on("touchstart click", function () {
+            $("#logout-btn").on("click", function () {
                 $.ajax({
                     type: "POST",
                     url: server_url + "j/logout/",
@@ -279,38 +278,31 @@
             // Save button on new teach page
             app.doms.pageNewTeach.find("footer a:eq(1)").on("click", function () {
                 var form = $(this).closest("section").find("form"),
-                    fields = [];
+                    fields = {};
                 $.each(form.serializeArray(), function (idx, field) {
-                    fields.push($.trim(field.value));
+                    fields[field.name] = $.trim(field.value);
                 });
                 // Must have name for the new teach class
-                if (fields[0] == "") {
-                    navigator.notification.alert(
-                        "A class name is required.",
-                        undefined,
-                        "Invalid Input"
-                    );
-                    console.log("A class name is required.");
+                if (fields['name'] == '') {
+                    app.alert('Class name is required.', undefined, 'Invalid Input');
                 } else {
-                    db.transaction(
-                        function (tx) {
-                            tx.executeSql(
-                                "INSERT INTO Teaches (name, desc) VALUES (?, ?);",
-                                fields
-                            );
-                        },
-                        app.dbError,
-                        function () {
+                    $.ajax({
+                        type: 'POST',
+                        url: server_url + 'j/update_lesson/',
+                        // headers: {'mobile-app': ''},
+                        // do not set content-type so options request can be skipped
+                        data: JSON.stringify({'create': fields})
+                    })
+                        .done(function (data) {
                             form[0].reset();
-                            app.prepareTeaches();
+                            app.showTeachLessons();
                             $.mobile.changePage(app.doms.pageHome, {
                                 transition: "pop",
                                 reverse: true
-                            })
-                        }
-                    );
+                            });
+                        })
+                        .fail(app.ajax_error_handler);
                 }
-
             });
 
             // Handle click on teach list
@@ -319,27 +311,7 @@
                 var $this = $(this);
                 currentTeach = teaches[$this.parent().prevAll().length];
                 app.doms.pageTeachRegs.find("header h1").text(currentTeach.name);
-                $.ajax({
-                    url: server_url + 'j/get_lesson_regs/' + currentTeach.lesson_id + '/'
-                })
-                    .done(function (registrations) {
-                        app.doms.listStudents.empty();
-                        $.each(registrations, function (idx, registration) {
-                            var a = $("<a>", {
-                                href: "#",
-                                text: app.get_student_display_name(registration)
-                            });
-                            a.append($("<span>", {
-                                "class": "ui-li-count ui-btn-up-c ui-btn-corner-all",
-                                text: registration.unused
-                            }));
-                            app.doms.listStudents.append($("<li>").append(a));
-                        });
-                        app.refresh_listview(app.doms.listStudents);
-                        $.mobile.changePage(app.doms.pageTeachRegs, {
-                            transition: "slide"
-                        });
-                    });
+                app.showRegsForTeachLesson();
             });
 
             // Handle details button on teach regs page
@@ -358,65 +330,68 @@
             app.doms.pageTeachRegsDetails.on("pageshow", function () {
                 var popup0 = $("#teach-edit-popup-0");
                 popup0.find("input").val(currentTeach.name);
-                popup0.find("textarea").val(currentTeach.desc);
+                popup0.find("textarea").val(currentTeach.description);
             });
 
-            // Handle save on teach regs details page
+            // Handle save on popup window of the teach details page
             $("#teach-edit-popup-0").find("a:eq(1)").on("click", function () {
-                db.transaction(
-                    function (tx) {
-                        var popup0 = $("#teach-edit-popup-0");
-                        currentTeach.name = popup0.find("input").val();
-                        currentTeach.desc = popup0.find("textarea").val();
-                        tx.executeSql(
-                            "UPDATE Teaches SET name = ?, desc = ? WHERE teach_id = ?;",
-                            [currentTeach.name, currentTeach.desc, currentTeach.teach_id]
-                        );
-                    },
-                    app.dbError,
-                    function () {
-                        var li0 = app.doms.pageTeachRegsDetails.find(".ui-content li:eq(0)");
-                        li0.find("h2").text(currentTeach.name);
-                        li0.find("p:eq(0)").text(currentTeach.desc);
-                        app.doms.pageTeachRegs.find("header h1").text(currentTeach.name);
-                        var idxTeachList = teaches.indexOf(currentTeach);
-                        app.doms.divsHomeContent.eq(homeNavIdx).find("ul a").eq(idxTeachList)
-                            .get(0).firstChild.nodeValue = currentTeach.name;
-                    }
-                );
+                var popup0 = $("#teach-edit-popup-0"),
+                    name = popup0.find("input").val();
+                if (name == '') {
+                    app.alert('Class name is required.', undefined, 'Invalid Input');
+                } else {
+                    currentTeach.name = name;
+                    currentTeach.description = popup0.find("textarea").val();
+                    $.ajax({
+                        type: 'POST',
+                        url: server_url + 'j/update_lesson/',
+                        data: JSON.stringify({'update': {
+                            'name': currentTeach.name,
+                            'description': currentTeach.description,
+                            'lesson_id': currentTeach.lesson_id}})
+                    })
+                        .done(function (data) {
+                            if (QERR in data) {
+                                console.log(data[QERR]);
+                            } else {
+                                var li0 = app.doms.pageTeachRegsDetails.find(".ui-content li:eq(0)");
+                                li0.find("h2").text(currentTeach.name);
+                                li0.find("p:eq(0)").text(currentTeach.description);
+                                app.doms.pageTeachRegs.find("header h1").text(currentTeach.name);
+                                var idxTeachList = teaches.indexOf(currentTeach);
+                                app.doms.divsHomeContent.eq(homeNavIdx).find("ul a").eq(idxTeachList)
+                                    .get(0).firstChild.nodeValue = currentTeach.name;
+                            }
+                        })
+                        .fail(app.ajax_error_handler);
+                }
             });
 
             // Handle teach delete button
             $("#teach-delete-button").on("click", function () {
-                navigator.notification.confirm("The operation is not reversible!", function (btnIdx) {
-                    if (btnIdx == 1) {
-                        db.transaction(
-                            function (tx) {
-                                tx.executeSql(
-                                    "DELETE FROM TeachRegLogs WHERE reg_id IN (SELECT reg_id FROM TeachRegs WHERE teach_id = ?);",
-                                    [currentTeach.teach_id]
-                                );
-                                tx.executeSql(
-                                    "DELETE FROM TeachRegs WHERE teach_id = ?;",
-                                    [currentTeach.teach_id]
-                                );
-                                tx.executeSql(
-                                    "DELETE FROM Teaches WHERE teach_id = ?;",
-                                    [currentTeach.teach_id]
-                                );
-                            },
-                            app.dbError,
-                            function () {
-                                homeNavIdx = -1; // force reload on teach list page
-                                $("#icon-teach").trigger("click");
-                                $.mobile.changePage(app.doms.pageHome, {
-                                    transition: "pop",
-                                    reverse: true
-                                });
-                            }
-                        );
-                    }
-                }, "Delete class?");
+                app.confirm('The operation is not reversible!',
+                    function (btnIdx) {
+                        if (btnIdx == 1) {
+                            $.ajax({
+                                type: 'POST',
+                                url: server_url + 'j/update_lesson/',
+                                data: JSON.stringify({'delete': {'lesson_id': currentTeach.lesson_id}})
+                            })
+                                .done(function (data) {
+                                    if (QERR in data) {
+                                        console.log(data[QERR]);
+                                    } else {
+                                        homeNavIdx = -1; // force reload on teach list page
+                                        $("#icon-teach").trigger("click");
+                                        $.mobile.changePage(app.doms.pageHome, {
+                                            transition: "pop",
+                                            reverse: true
+                                        });
+                                    }
+                                })
+                                .fail(app.ajax_error_handler);
+                        }
+                    }, 'Delete class?');
                 return false;
             });
 
@@ -526,51 +501,45 @@
             // Handle Save button for new student page
             app.doms.pageNewStudent.find("footer a:eq(1)").click(function () {
                 var form = $("#new-student-form"),
-                    fields = [];
+                    fields = {};
                 $.each(form.serializeArray(), function (idx, field) {
-                    fields.push($.trim(field.value));
+                    fields[field.name] = $.trim(field.value);
                 });
 
-                if (fields.indexOf("") >= 0) {
-                    navigator.notification.alert(
-                        "Name is required.",
-                        undefined,
-                        "Invalid Input"
-                    );
-                    console.log("Name is required");
+                if (fields['first_name'] == '' || fields['last_name'] == '') {
+                    app.alert('Name is required', undefined, 'Invalid Input')
                 } else {
-                    fields.unshift(currentTeach.teach_id);
+                    fields['lesson_id'] = currentTeach.lesson_id;
                     // add any class daytime entries
                     var data = {daytime: []};
                     $.each(app.doms.listNewStudentDaytime.find("li a:not([title='delete'])"),
                         function (idx, dom) {
                             data.daytime.push(dom.innerHTML);
                         });
-                    fields.push(JSON.stringify(data));
-                    db.transaction(
-                        function (tx) {
-                            currentTeach.nregs += 1;
-                            tx.executeSql(
-                                    "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, data) " +
-                                    "VALUES (?, ?, ?, ?);",
-                                fields
-                            );
-                            tx.executeSql(
-                                "UPDATE Teaches SET nregs = ? WHERE teach_id = ?;",
-                                [currentTeach.nregs, currentTeach.teach_id]
-                            );
-                        },
-                        app.dbError,
-                        function () {
-                            app.listStudentsForTeach(currentTeach.teach_id);
-                            $.mobile.changePage(app.doms.pageTeachRegs, {
-                                transition: "slideup"
-                            });
-                            form.get(0).reset();
-                            app.doms.listNewStudentDaytime.empty();
-                            var idxTeachList = teaches.indexOf(currentTeach);
-                            app.doms.divsHomeContent.eq(homeNavIdx).find("ul a span").eq(idxTeachList).empty().text(currentTeach.nregs);
-                        });
+                    fields['data'] = (JSON.stringify(data));
+                    $.ajax({
+                        type: 'POST',
+                        url: server_url + 'j/update_lesson_reg/',
+                        data: JSON.stringify({'create': fields})
+                    })
+                        .done(function (data) {
+                            if (QERR in data) {
+                                console.log(data[QERR]);
+                            } else {
+                                app.showRegsForTeachLesson();
+                                $.mobile.changePage(app.doms.pageTeachRegs, {
+                                    transition: "slideup"
+                                });
+                                form[0].reset();
+                                app.doms.listNewStudentDaytime.empty();
+                                currentTeach.nregs += 1;
+                                var idxTeachList = teaches.indexOf(currentTeach);
+                                app.doms.divsHomeContent.eq(homeNavIdx).
+                                    find("ul a span").
+                                    eq(idxTeachList).empty().text(currentTeach.nregs);
+                            }
+                        })
+                        .fail(app.ajax_error_handler);
                 }
             });
 
@@ -862,7 +831,7 @@
                             },
                             app.dbError,
                             function () {
-                                app.listStudentsForTeach(currentTeach.teach_id);
+                                app.showRegsForTeachLesson();
                                 $.mobile.changePage(app.doms.pageTeachRegs, {
                                     transition: "pop",
                                     reverse: true
@@ -920,7 +889,7 @@
             $.mobile.loading("hide");
         },
 
-        prepareTeaches: function () {
+        showTeachLessons: function () {
             $.ajax({
                 url: server_url + 'j/get_teach_lessons/' + user.user_id + '/'
             })
@@ -944,50 +913,30 @@
                 .fail(app.ajax_error_handler);
         },
 
-
-
-        listStudentsForTeach: function (lesson_id) {
-            db.transaction(function (tx) {
-                tx.executeSql(
-                    "SELECT * FROM TeachRegs WHERE teach_id = ? ORDER BY upper(user_fname || user_lname);",
-                    [lesson_id],
-                    function (tx, result) {
-                        students = [];
-                        for (var i = 0; i < result.rows.length; i++) {
-                            var row = result.rows.item(i);
-                            students.push({
-                                lesson_id: row.teach_id,
-                                reg_id: row.reg_id,
-                                user_id: row.user_id,
-                                fname: row.user_fname,
-                                lname: row.user_lname,
-                                name: (row.user_lname != "") ? row.user_fname + " " + row.user_lname : row.user_fname,
-                                total: row.total,
-                                unused: row.unused,
-                                is_active: row.is_active,
-                                ctime: row.ctime,
-                                data: JSON.parse(row.data)
-                            });
-                        }
-                        var ul = $("#student-list");
-                        ul.empty();
-                        $.each(students, function (idx, student) {
-                            var a = $("<a>", {
-                                href: "#",
-                                text: student.name
-                            });
-
-                            a.append($("<span>", {
-                                "class": "ui-li-count ui-btn-up-c ui-btn-corner-all",
-                                text: student.unused
-                            }));
-                            ul.append($("<li>").append(a));
+        showRegsForTeachLesson: function () {
+            $.ajax({
+                url: server_url + 'j/get_lesson_regs/' + currentTeach.lesson_id + '/'
+            })
+                .done(function (registrations) {
+                    app.doms.listStudents.empty();
+                    $.each(registrations, function (idx, registration) {
+                        var a = $("<a>", {
+                            href: "#",
+                            text: app.get_student_display_name(registration)
                         });
-                        ul.listview("refresh");
-                    },
-                    app.dbError
-                );
-            });
+                        a.append($("<span>", {
+                            "class": "ui-li-count ui-btn-up-c ui-btn-corner-all",
+                            text: registration.unused
+                        }));
+                        app.doms.listStudents.append($("<li>").append(a));
+                    });
+                    app.refresh_listview(app.doms.listStudents);
+                    $.mobile.changePage(app.doms.pageTeachRegs, {
+                        transition: "slide"
+                    });
+                    $.mobile.loading('hide');
+                })
+                .fail(app.ajax_error_handler);
         },
 
         updateStampsContainer: function (div) {
@@ -1066,6 +1015,15 @@
             }
         },
 
+        alert: function (message, callback, title) {
+            navigator.notification.alert(message, callback, title);
+            console.log(message);
+        },
+
+        confirm: function (message, callback, title) {
+            console.log(navigator.notification);
+            navigator.notification.confirm(message, callback, title);
+        },
 
         ajax_error_handler: function (jqXHR, textStatus, errorThrown) {
             console.log('AJAX call failed: ' + textStatus);
