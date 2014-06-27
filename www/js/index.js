@@ -2,13 +2,15 @@
     // Tell jquery to not fire tap event when taphold is fired
     $.event.special.tap.emitTapOnTaphold = false;
 
-    var db;
     var user = {};
     var teaches, currentTeach;
     var registrations, currentReg;
-    var students, currentStudent;
     var stamps, stampsDeleted;
     var stampFirstIdx, stampLastIdx;
+
+    var NEW_STAMP = -1;
+
+    var lastAjaxCall;
 
     var homeNavIdx = -1;
     var days = [
@@ -43,29 +45,33 @@
                 console.log(err.message);
             }
 
-            // Database init
-            try {
-                db = window.openDatabase("levelhub", "1.0", "LevelHub", 65536);
-            } catch (err) {
-                // If database cannot be opened, do not proceed further
-                alert(err.message);
-                console.log(err.message);
-                return false;
-            }
-            app.prepareDatabase();
+            // This is to ensure the same ajax call does not fire twice
+            lastAjaxCall = {};
+
+            // Gets called before ajax call is sent
+            $(document).ajaxSend(function (event, jqXhr, options) {
+                $.mobile.loading('show');
+            });
+
+            // Always gets called when an ajax finishes regardless of success
+            $(document).ajaxComplete(function (event, jqXhr, options) {
+                if (lastAjaxCall.url == options.url && lastAjaxCall.type == options.type) {
+                    lastAjaxCall = {};
+                }
+            });
 
             // This is always called when any ajax call is successfully return, unless
             // its global option is set to false
-            $(document).ajaxSuccess(function (event, jqXhr, settings, data) {
+            $(document).ajaxSuccess(function (event, jqXhr, options, data) {
                 //console.log(event);
-                //console.log(xhr);
-                //console.log(settings);
+                //console.log(jqXhr);
+                //console.log(options);
                 console.log(data);
             });
 
             // Some always need ajax parameters
             $.ajaxSetup({
-                type: 'GET',
+                type: "GET",
                 dataType: "json",
                 xhrFields: {
                     withCredentials: true
@@ -76,10 +82,16 @@
             });
 
             // Always attach json as a parameter to request for json data
-            $.ajaxPrefilter(function (options) {
-
+            $.ajaxPrefilter(function (options, originalOptions, jqXhr) {
+                // Ensure the same ajax call does not fire twice in a row
+                if (lastAjaxCall.url == options.url && lastAjaxCall.type == options.type) {
+                    console.log('Aborting duplicate ajax call ...');
+                    jqXhr.abort();
+                } else {
+                    lastAjaxCall.url = options.url;
+                    lastAjaxCall.type = options.type;
+                }
             });
-
 
             // All pages and parts
             app.doms = {
@@ -112,7 +124,6 @@
                 var idx = $this.parent().prevAll().length;
                 // Do nothing if the nav button is already the current active one
                 if (idx != homeNavIdx) {
-                    $.mobile.loading("show");
                     homeNavIdx = idx;
                     // Still need to manually manage classes to make highlight button persistent
                     $this.parent().siblings().find("a").removeClass("ui-btn-active ui-state-persist");
@@ -132,7 +143,6 @@
                                     "href": "#new-teach",
                                     "data-transition": "slidedown"
                                 }).show();
-
                             app.showTeachLessons();
                             break;
                         case "study":
@@ -307,7 +317,6 @@
 
             // Handle click on teach list
             app.doms.listTeaches.on("click", "a", function () {
-                $.mobile.loading('show');
                 var $this = $(this);
                 currentTeach = teaches[$this.parent().prevAll().length];
                 app.doms.pageTeachRegs.find("header h1").text(currentTeach.name);
@@ -484,18 +493,18 @@
             });
 
             // Handle done button on student details page
-            // It modifies the currentStudent object if data is changed
+            // It modifies the currentReg object if data is changed
             // the object is later persistent into the database if save button
             // is clicked on the stamps page.
             app.doms.pageStudentDetails.find("header a").on("click", function () {
-                var daytime = [];
+                var daytimeList = [];
                 $.each($(this).closest("section").find(".daytime-list li a:not([title='delete'])"),
                     function (idx, dom) {
-                        daytime.push(dom.innerHTML);
+                        daytimeList.push(dom.innerHTML);
                     });
-                if (!app.vectorIsIdentical(currentStudent.data.daytime, daytime)) {
-                    currentStudent.data.daytime = daytime;
-                }
+                var data = JSON.parse(currentReg.data);
+                data.daytime = daytimeList;
+                currentReg.data = JSON.stringify(data);
             });
 
             // Handle Save button for new student page
@@ -519,7 +528,7 @@
                     fields['data'] = (JSON.stringify(data));
                     $.ajax({
                         type: 'POST',
-                        url: server_url + 'j/update_lesson_reg/',
+                        url: server_url + 'j/update_lesson_reg_and_logs/',
                         data: JSON.stringify({'create': fields})
                     })
                         .done(function (data) {
@@ -546,12 +555,12 @@
             // Handle the transition from teach regs page to stamps page
             app.doms.listStudents.on("click", "a", function () {
                 var $this = $(this);
-                currentStudent = students[$this.parent().prevAll(":not(.ui-li-divider)").length];
+                currentReg = registrations[$this.parent().prevAll(":not(.ui-li-divider)").length];
                 // Save the start values in case the operations are cancelled
-                currentStudent.saved_total = currentStudent.total;
-                currentStudent.saved_unused = currentStudent.unused;
-                currentStudent.saved_data = JSON.stringify(currentStudent.data);
-                app.doms.pageStamps.find("header h1").text(currentStudent.name);
+                currentReg.saved_total = currentReg.total;
+                currentReg.saved_unused = currentReg.unused;
+                currentReg.saved_data = currentReg.data;
+                app.doms.pageStamps.find("header h1").text(app.get_student_display_name(currentReg));
 
                 // No wobbly or delete badge when the stamps page is transitioned
                 // from teach regs page
@@ -560,7 +569,7 @@
                 stampDoms.find("img.x-delete").addClass("hidden");
 
                 $.ajax({
-                    url: server_url + 'j/get_lesson_reg_logs/' + currentStudent.reg_id + '/'
+                    url: server_url + 'j/get_lesson_reg_logs/' + currentReg.reg_id + '/'
                 })
                     .done(function (data) {
                         stamps = data;
@@ -569,10 +578,11 @@
                         var firstUnusedIdx = length == 0 ? 0 : length - 1;
                         stampsDeleted = [];
                         for (var i = 0; i < length; i++) {
-                            if (!stamps[i].use_time && i < firstUnusedIdx) {
+                            var stamp = stamps[i];
+                            if (!stamp.use_time && i < firstUnusedIdx) {
                                 firstUnusedIdx = i;
-                                break;
                             }
+                            stamp.updated = false;
                         }
                         var currentPageIdx = Math.floor(firstUnusedIdx / 9);
                         stampFirstIdx = currentPageIdx * 9;
@@ -657,9 +667,9 @@
                     //    just for the last inserted stamp box. Maybe it can be optimised
                     //    to only refresh the inserted stamp box dom.
                     $this.fadeOut("normal", function () {
-                        currentStudent.total -= 1;
+                        currentReg.total -= 1;
                         if (stamp.use_time == null) {
-                            currentStudent.unused -= 1;
+                            currentReg.unused -= 1;
                         }
                         stampsDeleted.push(stamps.splice(stampIdx, 1)[0]);
                         // When deleting last stamp
@@ -691,14 +701,13 @@
                         stamp.updated = true;
                         if (unchecked) {
                             stamp.use_time = null;
-                            currentStudent.unused += 1;
+                            currentReg.unused += 1;
                         } else {
-                            var t = app.getCurrentTimestamp();
-                            stamp.use_time = t;
-                            currentStudent.unused -= 1;
+                            stamp.use_time = app.getCurrentTimestamp();
+                            currentReg.unused -= 1;
                         }
                         // update the unused count display
-                        page.find(".unusedCount").empty().text(currentStudent.unused);
+                        page.find(".unusedCount").empty().text(currentReg.unused);
                     }
                     return false;
                 }
@@ -713,53 +722,51 @@
 
             // Handle cancel button on stamps page
             app.doms.pageStamps.find("footer a:eq(0)").on("click", function () {
-                currentStudent.total = currentStudent.saved_total;
-                currentStudent.unused = currentStudent.saved_unused;
-                currentStudent.data = JSON.parse(currentStudent.saved_data);
+                currentReg.total = currentReg.saved_total;
+                currentReg.unused = currentReg.saved_unused;
+                currentReg.data = currentReg.saved_data;
             });
 
             // Handle save button on stamps page
             app.doms.pageStamps.find("footer a:eq(1)").on("click", function () {
-                $.mobile.loading("show");
-                db.transaction(
-                    function (tx) {
-                        // update TeachRegLogs
-                        $.each(stamps, function (idx, stamp) {
-                            if (stamp.updated) {
-                                if (stamp.log_id == -1) { // new stamp
-                                    tx.executeSql("INSERT INTO TeachRegLogs (reg_id, use_time) VALUES (?, ?);",
-                                        [stamp.reg_id, stamp.use_time]);
-                                } else { // updated stamp
-                                    tx.executeSql("UPDATE TeachRegLogs SET use_time = ? WHERE log_id = ?;",
-                                        [stamp.use_time, stamp.log_id]);
-                                }
-                            }
-                        });
-
-                        // Delete any deleted logs
-                        $.each(stampsDeleted, function (idx, stamp) {
-                            if (stamp.log_id != -1) {
-                                tx.executeSql("DELETE FROM TeachRegLogs WHERE log_id = ?;", [stamp.log_id]);
-                            }
-                        });
-
-                        // Update total, unused summary
-                        tx.executeSql(
-                            "UPDATE TeachRegs SET total = ?, unused = ?, data = ? WHERE reg_id = ?;",
-                            [currentStudent.total, currentStudent.unused, JSON.stringify(currentStudent.data), currentStudent.reg_id]
-                        );
-                    },
-                    app.dbError,
-                    function () {
-                        var idxStudentList = students.indexOf(currentStudent);
-                        app.doms.pageTeachRegs.find("ul a span").eq(idxStudentList).empty().text(currentStudent.unused);
-
+                var rlogs = {create: [], update: [], delete: []};
+                $.each(stamps, function (idx, stamp) {
+                    if (stamp.updated) {
+                        var entry = {use_time: stamp.use_time, data: JSON.stringify(stamp.data)};
+                        console.log(entry);
+                        if (stamp.rlog_id == NEW_STAMP) {
+                            rlogs.create.push(entry);
+                            console.log(rlogs.create);
+                        } else {
+                            rlogs.update.push($.extend(entry, {rlog_id: stamp.rlog_id}));
+                        }
+                    }
+                });
+                $.each(stampsDeleted, function (idx, stamp) {
+                    if (stamp.rlog_id != NEW_STAMP) {
+                        rlogs.delete.push({rlog_id: stamp.rlog_id});
+                    }
+                });
+                $.ajax({
+                    type: 'POST',
+                    url: server_url + 'j/update_lesson_reg_and_logs/',
+                    data: JSON.stringify({
+                        'update': {
+                            reg_id: currentReg.reg_id,
+                            data: currentReg.data,
+                            'rlogs': rlogs
+                        }})
+                })
+                    .done(function () {
+                        var idxStudentList = registrations.indexOf(currentReg);
+                        app.doms.pageTeachRegs.find("ul a span").
+                            eq(idxStudentList).empty().text(currentReg.unused);
                         $.mobile.changePage(app.doms.pageTeachRegs, {
                             transition: "pop",
                             reverse: true
                         });
-                    }
-                );
+                    })
+                    .fail(app.ajax_error_handler);
             });
 
             // Cancel wobbly when top up is about to show
@@ -772,21 +779,22 @@
             // Handle transition to student details page
             $("#student-details-button").on("click", function () {
                 var li0 = app.doms.pageStudentDetails.find(".ui-content li:eq(0)");
-                li0.find("h2").text(currentStudent.name);
-                li0.find("p").text("from " + currentStudent.ctime.split(" ")[0]);
+                li0.find("h2").text(app.get_student_display_name(currentReg));
+                li0.find("p").text("from " + currentReg.creation_time.split(" ")[0]);
 
                 app.doms.listStudentHistory.empty();
                 $("<li>").append($("<a>",
-                    {href: "#", text: "Taken: " + (currentStudent.total - currentStudent.unused)})).
+                    {href: "#", text: "Taken: " + (currentReg.total - currentReg.unused)})).
                     appendTo(app.doms.listStudentHistory);
                 $("<li>", {"data-icon": "false"}).
-                    append($("<a>", {href: "#", text: "Unused: " + currentStudent.unused})).
+                    append($("<a>", {href: "#", text: "Unused: " + currentReg.unused})).
                     appendTo(app.doms.listStudentHistory);
                 app.refresh_listview(app.doms.listStudentHistory);
 
                 app.doms.listStudentDaytime.empty();
-                console.log(currentStudent.data.daytime);
-                $.each(currentStudent.data["daytime"], function (idx, daytime) {
+                console.log(currentReg);
+                var daytimeList = JSON.parse(currentReg.data).daytime || [];
+                $.each(daytimeList, function (idx, daytime) {
                     $("<li>").append($("<a>", {href: "#", text: daytime})).
                         append($("<a>", {href: "#", text: "delete"})).
                         appendTo(app.doms.listStudentDaytime);
@@ -801,40 +809,36 @@
 
             // handle student deletion
             $("#student-delete-button").on("click", function () {
-                navigator.notification.confirm("The operation is not reversible!", function (btnIdx) {
-                    if (btnIdx == 1) {
-                        db.transaction(
-                            function (tx) {
-                                currentTeach.nregs -= 1;
-                                tx.executeSql(
-                                    "DELETE FROM TeachRegs WHERE reg_id = ?;",
-                                    [currentStudent.reg_id]
-                                );
-                                tx.executeSql(
-                                    "UPDATE Teaches SET nregs = ? WHERE teach_id = ?;",
-                                    [currentTeach.nregs, currentTeach.teach_id]
-                                );
-                                tx.executeSql(
-                                    "DELETE FROM TeachRegLogs WHERE reg_id = ?;",
-                                    [currentStudent.reg_id]
-                                );
-                            },
-                            app.dbError,
-                            function () {
-                                app.showRegsForTeachLesson();
-                                $.mobile.changePage(app.doms.pageTeachRegs, {
-                                    transition: "pop",
-                                    reverse: true
-                                });
-                                var idxTeachList = teaches.indexOf(currentTeach);
-                                app.doms.divsHomeContent.eq(homeNavIdx).find("ul a span").eq(idxTeachList).empty().text(currentTeach.nregs);
-                            }
-                        );
-                    }
-                }, "Delete student?");
+                app.confirm('The operation is not reversible!',
+                    function (btnIdx) {
+                        if (btnIdx == 1) {
+                            $.ajax({
+                                type: 'POST',
+                                url: server_url + 'j/update_lesson_reg_and_logs/',
+                                data: JSON.stringify({delete: {reg_id: currentReg.reg_id}})
+                            })
+                                .done(function (data) {
+                                    if (QERR in data) {
+                                        console.log(data);
+                                    } else {
+                                        app.showRegsForTeachLesson();
+                                        $.mobile.changePage(app.doms.pageTeachRegs, {
+                                            transition: "pop",
+                                            reverse: true
+                                        });
+                                        var idxTeachList = teaches.indexOf(currentTeach);
+                                        currentTeach.nregs -= 1;
+                                        app.doms.divsHomeContent.eq(homeNavIdx).find("ul a span").
+                                            eq(idxTeachList).empty().text(currentTeach.nregs);
+                                    }
+                                })
+                                .fail(app.ajax_error_handler);
+                        }
+                    }, 'Delete student?');
+                return false;
             });
 
-            // Handle OK button on Top up dialog
+            // Handle OK button on Topup dialog
             $("#topup-dialog").find("a:eq(1)").on("click", function () {
                 var $this = $(this);
                 var slider = $this.closest("form").find("input");
@@ -843,15 +847,16 @@
                 for (var i = 0; i < value; i++) {
                     stamps.push({
                         updated: true,
-                        log_id: -1,
-                        reg_id: currentStudent.reg_id,
+                        rlog_id: NEW_STAMP,
+                        reg_id: currentReg.reg_id,
                         use_time: null,
-                        ctime: app.getCurrentTimestamp()
+                        creation_time: app.getCurrentTimestamp(),
+                        data: null
                     });
                 }
                 var page = $this.closest("section");
-                currentStudent.unused += value;
-                currentStudent.total += value;
+                currentReg.unused += value;
+                currentReg.total += value;
                 app.updateStampsCount(page);
                 if (stampLastIdx - stampFirstIdx < 9) {
                     stampLastIdx = Math.min(stampFirstIdx + 9, stamps.length);
@@ -907,8 +912,8 @@
             $.ajax({
                 url: server_url + 'j/get_lesson_regs/' + currentTeach.lesson_id + '/'
             })
-                .done(function (registrations) {
-                    students = registrations;
+                .done(function (data) {
+                    registrations = data;
                     app.doms.listStudents.empty();
                     $.each(registrations, function (idx, registration) {
                         var a = $("<a>", {
@@ -948,7 +953,7 @@
         updateStampsCount: function (page) {
             page.find(".pageCount").empty().text(
                     (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
-            page.find(".unusedCount").empty().text(currentStudent.unused);
+            page.find(".unusedCount").empty().text(currentReg.unused);
         },
 
         getCurrentTimestamp: function () {
@@ -978,20 +983,10 @@
             return [days.indexOf(day), parseInt(hour) - 1, parseInt(min), periods.indexOf(ampm)];
         },
 
-        vectorIsIdentical: function (a, b) {
-            var i = a.length;
-            if (i != b.length) return false;
-            while (i--) {
-                if (a[i] !== b[i]) return false;
-            }
-            return true;
-        },
-
         get_student_display_name: function (registration) {
             if (registration.student) {
                 var student = registration.student,
                     name = [student.first_name, student.last_name].join(' ');
-
                 return name != '' ? name : student.username;
             } else {
                 return [registration.student_first_name, registration.student_last_name].join(' ');
@@ -1017,134 +1012,29 @@
         },
 
         ajax_error_handler: function (jqXHR, textStatus, errorThrown) {
-            console.log('AJAX call failed: ' + textStatus);
-            console.log(jqXHR);
-        },
-
-        dbError: function (tx, err) {
-            alert("DB Error " + err.message);
-            console.log("DB error: " + err.message);
-            return false;
-        },
-
-        prepareDatabase: function () {
-            db.transaction(
-                function (tx) {
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS Me (" +
-                        "key VARCHAR PRIMARY KEY NOT NULL , " +
-                        "val TEXT);");
-
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS Teaches (" +
-                        "teach_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-                        "name VARCHAR NOT NULL, " +
-                        "desc TEXT, " +
-                        "nregs INTEGER NOT NULL DEFAULT 0, " + // number of registered students
-                        "is_active BOOL NOT NULL DEFAULT 1 ," +
-                        "ctime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ," +
-                        "data TEXT);");
-
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS TeachRegs (" +
-                        "teach_id INTEGER NOT NULL , " +
-                        "reg_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-                        "user_id INTEGER, " +
-                        "user_fname VARCHAR, " +
-                        "user_lname VARCHAR, " +
-                        "total INTEGER NOT NULL DEFAULT 0, " +
-                        "unused INTEGER NOT NULL DEFAULT 0, " +
-                        "is_active BOOL NOT NULL DEFAULT 1, " +
-                        "ctime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
-                        "data TEXT);");
-
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS TeachRegLogs (" +
-                        "reg_id INTEGER NOT NULL, " +
-                        "log_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , " +
-                        "use_time DATETIME, " +
-                        "ctime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
-                        "data TEXT);");
-
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS Learns (" +
-                        "teacher_id INTEGER NOT NULL, " +
-                        "teach_id INTEGER NOT NULL, " +
-                        "teach_name VARCHAR NOT NULL, " +
-                        "teach_desc TEXT, " +
-                        "teacher_fname VARCHAR, " +
-                        "teacher_lname VARCHAR, " +
-                        "is_active BOOL NOT NULL DEFAULT 1, " +
-                        "ctime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                        "PRIMARY KEY (teacher_id, teach_id));");
-
-                    tx.executeSql("CREATE TABLE IF NOT EXISTS ClassMsgs (" +
-                        "msg_id INTEGER PRIMARY KEY NOT NULL, " +
-                        "teacher_id INTEGER NOT NULL, " +
-                        "teach_id INTEGER NOT NULL, " +
-                        "sender_id INTEGER NOT NULL, " +
-                        "sender_fname VARCHAR, " +
-                        "sender_lname VARCHAR, " +
-                        "title VARCHAR NOT NULL, " +
-                        "body TEXT, " +
-                        "ctime DATETIME NOT NULL, " +
-                        "data TEXT);");
-
-                },
-                app.dbError,
-                function () {
-                    console.log("DB preparation completed.")
-                });
-        },
-
-        nukeDatabase: function () {
-            db.transaction(
-                function (tx) {
-                    tx.executeSql("DROP TABLE IF EXISTS TeachRegs;");
-                    tx.executeSql("DROP TABLE IF EXISTS Students;");
-                    tx.executeSql("DROP TABLE IF EXISTS Teaches;");
-                    tx.executeSql("DROP TABLE IF EXISTS TeachRegLogs;");
-                    tx.executeSql("DROP TABLE IF EXISTS ClassMsgs;");
-                    tx.executeSql("DROP TABLE IF EXISTS Learns;");
-                    tx.executeSql("DROP TABLE IF EXISTS Me;");
-                }
-            );
-        },
-
-        mockData: function () {
-            db.transaction(
-                function (tx) {
-                    tx.executeSql(
-                            "INSERT INTO Teaches (name, desc, nregs) " +
-                            "VALUES ('Folk Guitar Basics', " +
-                            "'An introductory lesson for people who want to pick up guitar fast with no previous experience', " +
-                            "2);");
-                    tx.executeSql(
-                            "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused, data) " +
-                            "VALUES (1, 'Emma', 'Wang', 24, 14, '{\"daytime\":[\"Sunday 01:00 PM\"]}');");
-                    tx.executeSql(
-                            "INSERT INTO TeachRegs (teach_id, user_fname, user_lname, total, unused, data) " +
-                            "VALUES (1, 'Tia', 'Wang', 5, 2, '{\"daytime\":[\"Monday 03:00 PM\"]}');");
-                    for (var i = 0; i < 24; i++) {
-                        tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(1);");
-                    }
-                    tx.executeSql("UPDATE TeachRegLogs SET use_time = '2014-06-05' WHERE log_id < 11;");
-                    for (i = 0; i < 5; i++) {
-                        tx.executeSql("INSERT INTO TeachRegLogs (reg_id) VALUES(2);");
-                    }
-                    tx.executeSql("UPDATE TeachRegLogs SET use_time = '2014-06-05' WHERE log_id IN (25, 26, 27);");
-                },
-                app.dbError,
-                function () {
-                    console.log("Mock data ready.");
-                });
+            // hide any possible still showing ajax loader
+            $.mobile.loading('hide');
+            if (textStatus != 'canceled') {
+                console.log('AJAX call failed: ' + textStatus);
+                console.log(jqXHR);
+            }
         }
     };
 
     app.initialize();
 
     $("#popdb").click(function () {
-        console.log("PopDB");
-        app.nukeDatabase();
-        app.prepareDatabase();
-        app.mockData();
-        homeNavIdx = -1; // force reload on teach list page
-        $("#icon-teach").trigger("click");
+        console.log("Reset DB");
+        $.ajax({
+            type: 'POST',
+            url: server_url + 'debug_reset_db/',
+            dataType: "text"
+        })
+            .done(function () {
+                homeNavIdx = -1;  // force reload on teach list page
+                $("#icon-teach").trigger("click");
+            })
+            .fail(app.ajax_error_handler);
     });
 
 })(jQuery);
