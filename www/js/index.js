@@ -10,7 +10,9 @@
 
     var NEW_STAMP = -1;
 
-    var lastAjaxCall;
+    // Throttle ajax request so request to same url is only fired once every
+    // throttle interval value
+    var ajaxThrottle, throttleInterval = 300; // ms
 
     var homeNavIdx = -1;
     var days = [
@@ -46,7 +48,7 @@
             }
 
             // This is to ensure the same ajax call does not fire twice
-            lastAjaxCall = {};
+            ajaxThrottle = {};
 
             // Gets called before ajax call is sent
             $(document).ajaxSend(function (event, jqXhr, options) {
@@ -55,9 +57,6 @@
 
             // Always gets called when an ajax finishes regardless of success
             $(document).ajaxComplete(function (event, jqXhr, options) {
-                if (lastAjaxCall.url == options.url && lastAjaxCall.type == options.type) {
-                    lastAjaxCall = {};
-                }
             });
 
             // This is always called when any ajax call is successfully return, unless
@@ -84,12 +83,11 @@
             // Always attach json as a parameter to request for json data
             $.ajaxPrefilter(function (options, originalOptions, jqXhr) {
                 // Ensure the same ajax call does not fire twice in a row
-                if (lastAjaxCall.url == options.url && lastAjaxCall.type == options.type) {
+                if (ajaxThrottle[options.url] && (Date.now() - ajaxThrottle[options.url]) < throttleInterval) {
                     console.log('Aborting duplicate ajax call ...');
                     jqXhr.abort();
                 } else {
-                    lastAjaxCall.url = options.url;
-                    lastAjaxCall.type = options.type;
+                    ajaxThrottle[options.url] = Date.now();
                 }
             });
 
