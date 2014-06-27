@@ -334,3 +334,15 @@ ul.delete-solo-btn li {
 ul.delete-solo-btn li a {
     background-color: darkred !important;
 }
+
+#ajax-error-alert {
+    position: fixed;
+    display: none;
+    opacity: 0;
+    background-color: lightgrey;
+    text-align: center;
+    color: darkred;
+    text-shadow: none;
+    padding-left: 1em;
+    padding-right: 1em;
+}

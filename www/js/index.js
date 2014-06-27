@@ -27,7 +27,6 @@
 
     var re_email = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
-    var QERR = "err";
     var server_url = "http://levelhub-ywangd.rhcloud.com/";
     server_url = "http://localhost:8000/";
 
@@ -170,27 +169,23 @@
             $("#login-btn").on("click", function () {
                 var loginPanel = $("#login-panel"),
                     form = loginPanel.find("form"),
-                    loginFeedback = $("#login-feedback span");
+                    data = form.serialize();
+
                 $.ajax({
                     type: "POST",
                     url: server_url + "j/login/",
-                    data: form.serialize()
+                    data: data
                 })
                     .done(function (data) {
-                        if (QERR in data) {
-                            loginFeedback.empty().text(data[QERR]);
-                        } else {
-                            user = data;
-                            localStorage.setItem('user', JSON.stringify(user));
-                            $.mobile.changePage(app.doms.pageHome, {
-                                transition: "slideup"
-                            });
-                            $("#icon-teach").trigger("click");
-                            loginFeedback.empty();
-                            form[0].reset();
-                        }
+                        user = data;
+                        localStorage.setItem('user', JSON.stringify(user));
+                        $.mobile.changePage(app.doms.pageHome, {
+                            transition: "slideup"
+                        });
+                        $("#icon-teach").trigger("click");
+                        form[0].reset();
                     })
-                    .fail(app.ajax_error_handler);
+                    .fail(app.ajaxErrorHandler);
             });
 
             $("#logout-btn").on("click", function () {
@@ -206,7 +201,7 @@
                             transition: "slidedown"
                         });
                     })
-                    .fail(app.ajax_error_handler);
+                    .fail(app.ajaxErrorHandler);
             });
 
             $("#register-btn").on("click", function () {
@@ -250,21 +245,15 @@
                         data: data
                     })
                         .done(function (data) {
-                            if (QERR in data) {
-                                if ("username" in data.err) {
-                                    form.find("label:eq(0) span").text(data.err["username"]);
-                                }
-                            } else {
-                                user = data;
-                                $.mobile.changePage(app.doms.pageHome, {
-                                    transition: "slideup"
-                                });
-                                $("#icon-teach").trigger("click");
-                                form.find("label span").empty();
-                                form[0].reset();
-                            }
+                            user = data;
+                            $.mobile.changePage(app.doms.pageHome, {
+                                transition: "slideup"
+                            });
+                            $("#icon-teach").trigger("click");
+                            form.find("label span").empty();
+                            form[0].reset();
                         })
-                        .fail(app.ajax_error_handler);
+                        .fail(app.ajaxErrorHandler);
                 }
             });
 
@@ -309,7 +298,7 @@
                                 reverse: true
                             });
                         })
-                        .fail(app.ajax_error_handler);
+                        .fail(app.ajaxErrorHandler);
                 }
             });
 
@@ -358,19 +347,15 @@
                             'lesson_id': currentTeach.lesson_id}})
                     })
                         .done(function (data) {
-                            if (QERR in data) {
-                                console.log(data[QERR]);
-                            } else {
-                                var li0 = app.doms.pageTeachRegsDetails.find(".ui-content li:eq(0)");
-                                li0.find("h2").text(currentTeach.name);
-                                li0.find("p:eq(0)").text(currentTeach.description);
-                                app.doms.pageTeachRegs.find("header h1").text(currentTeach.name);
-                                var idxTeachList = teaches.indexOf(currentTeach);
-                                app.doms.divsHomeContent.eq(homeNavIdx).find("ul a").eq(idxTeachList)
-                                    .get(0).firstChild.nodeValue = currentTeach.name;
-                            }
+                            var li0 = app.doms.pageTeachRegsDetails.find(".ui-content li:eq(0)");
+                            li0.find("h2").text(currentTeach.name);
+                            li0.find("p:eq(0)").text(currentTeach.description);
+                            app.doms.pageTeachRegs.find("header h1").text(currentTeach.name);
+                            var idxTeachList = teaches.indexOf(currentTeach);
+                            app.doms.divsHomeContent.eq(homeNavIdx).find("ul a").eq(idxTeachList)
+                                .get(0).firstChild.nodeValue = currentTeach.name;
                         })
-                        .fail(app.ajax_error_handler);
+                        .fail(app.ajaxErrorHandler);
                 }
             });
 
@@ -385,18 +370,14 @@
                                 data: JSON.stringify({'delete': {'lesson_id': currentTeach.lesson_id}})
                             })
                                 .done(function (data) {
-                                    if (QERR in data) {
-                                        console.log(data[QERR]);
-                                    } else {
-                                        homeNavIdx = -1; // force reload on teach list page
-                                        $("#icon-teach").trigger("click");
-                                        $.mobile.changePage(app.doms.pageHome, {
-                                            transition: "pop",
-                                            reverse: true
-                                        });
-                                    }
+                                    homeNavIdx = -1; // force reload on teach list page
+                                    $("#icon-teach").trigger("click");
+                                    $.mobile.changePage(app.doms.pageHome, {
+                                        transition: "pop",
+                                        reverse: true
+                                    });
                                 })
-                                .fail(app.ajax_error_handler);
+                                .fail(app.ajaxErrorHandler);
                         }
                     }, 'Delete class?');
                 return false;
@@ -530,23 +511,19 @@
                         data: JSON.stringify({'create': fields})
                     })
                         .done(function (data) {
-                            if (QERR in data) {
-                                console.log(data[QERR]);
-                            } else {
-                                app.showRegsForTeachLesson();
-                                $.mobile.changePage(app.doms.pageTeachRegs, {
-                                    transition: "slideup"
-                                });
-                                form[0].reset();
-                                app.doms.listNewStudentDaytime.empty();
-                                currentTeach.nregs += 1;
-                                var idxTeachList = teaches.indexOf(currentTeach);
-                                app.doms.divsHomeContent.eq(homeNavIdx).
-                                    find("ul a span").
-                                    eq(idxTeachList).empty().text(currentTeach.nregs);
-                            }
+                            app.showRegsForTeachLesson();
+                            $.mobile.changePage(app.doms.pageTeachRegs, {
+                                transition: "slideup"
+                            });
+                            form[0].reset();
+                            app.doms.listNewStudentDaytime.empty();
+                            currentTeach.nregs += 1;
+                            var idxTeachList = teaches.indexOf(currentTeach);
+                            app.doms.divsHomeContent.eq(homeNavIdx).
+                                find("ul a span").
+                                eq(idxTeachList).empty().text(currentTeach.nregs);
                         })
-                        .fail(app.ajax_error_handler);
+                        .fail(app.ajaxErrorHandler);
                 }
             });
 
@@ -592,7 +569,7 @@
                             transition: "slide"
                         });
                     })
-                    .fail(app.ajax_error_handler);
+                    .fail(app.ajaxErrorHandler);
                 return false;
             });
 
@@ -764,7 +741,7 @@
                             reverse: true
                         });
                     })
-                    .fail(app.ajax_error_handler);
+                    .fail(app.ajaxErrorHandler);
             });
 
             // Cancel wobbly when top up is about to show
@@ -816,21 +793,17 @@
                                 data: JSON.stringify({delete: {reg_id: currentReg.reg_id}})
                             })
                                 .done(function (data) {
-                                    if (QERR in data) {
-                                        console.log(data);
-                                    } else {
-                                        app.showRegsForTeachLesson();
-                                        $.mobile.changePage(app.doms.pageTeachRegs, {
-                                            transition: "pop",
-                                            reverse: true
-                                        });
-                                        var idxTeachList = teaches.indexOf(currentTeach);
-                                        currentTeach.nregs -= 1;
-                                        app.doms.divsHomeContent.eq(homeNavIdx).find("ul a span").
-                                            eq(idxTeachList).empty().text(currentTeach.nregs);
-                                    }
+                                    app.showRegsForTeachLesson();
+                                    $.mobile.changePage(app.doms.pageTeachRegs, {
+                                        transition: "pop",
+                                        reverse: true
+                                    });
+                                    var idxTeachList = teaches.indexOf(currentTeach);
+                                    currentTeach.nregs -= 1;
+                                    app.doms.divsHomeContent.eq(homeNavIdx).find("ul a span").
+                                        eq(idxTeachList).empty().text(currentTeach.nregs);
                                 })
-                                .fail(app.ajax_error_handler);
+                                .fail(app.ajaxErrorHandler);
                         }
                     }, 'Delete student?');
                 return false;
@@ -903,7 +876,7 @@
                     app.doms.listTeaches.listview("refresh");
                     app.finishHomeNav();
                 })
-                .fail(app.ajax_error_handler);
+                .fail(app.ajaxErrorHandler);
         },
 
         showRegsForTeachLesson: function () {
@@ -930,7 +903,7 @@
                     });
                     $.mobile.loading('hide');
                 })
-                .fail(app.ajax_error_handler);
+                .fail(app.ajaxErrorHandler);
         },
 
         updateStampsContainer: function (div) {
@@ -1009,13 +982,31 @@
             navigator.notification.confirm(message, callback, title);
         },
 
-        ajax_error_handler: function (jqXHR, textStatus, errorThrown) {
+        ajaxErrorHandler: function (jqXHR, textStatus, errorThrown) {
             // hide any possible still showing ajax loader
-            $.mobile.loading('hide');
-            if (textStatus != 'canceled') {
+            $.mobile.loading("hide");
+            if (textStatus != "canceled") {
                 console.log('AJAX call failed: ' + textStatus);
                 console.log(jqXHR);
+                app.ajaxErrorAlert(jqXHR.responseText);
             }
+        },
+
+        ajaxErrorAlert: function (message) {
+            var page = $.mobile.activePage,
+                pageWidth = page.outerWidth(),
+                pageHeight = page.outerHeight(),
+                alertDom = $("#ajax-error-alert");
+
+            alertDom.text(message);
+            alertDom.css({
+                'margin-left': -0.5 * alertDom.outerWidth() + 'px',
+                'left': 0.5 * pageWidth + 'px',
+                'top': 0.125 * pageHeight + 'px',
+                'display': 'block',
+                'opacity': 1
+            })
+                .stop().fadeOut(4000);
         }
     };
 
@@ -1032,7 +1023,7 @@
                 homeNavIdx = -1;  // force reload on teach list page
                 $("#icon-teach").trigger("click");
             })
-            .fail(app.ajax_error_handler);
+            .fail(app.ajaxErrorHandler);
     });
 
 })(jQuery);
