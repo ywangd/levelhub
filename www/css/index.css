@@ -107,6 +107,21 @@ body {
     background-size: contain;
 }
 
+#message-list li h2 {
+    white-space: normal;
+    font-weight: normal;
+}
+
+#message-list li h2 + p {
+    color: #3388cc !important;
+}
+
+#message-list .ui-li-aside {
+    top: auto !important;
+    bottom: 1em;
+}
+
+
 .pageCount {
     background-color: transparent !important;
     border: 0 !important;

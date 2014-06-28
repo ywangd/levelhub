@@ -3,6 +3,7 @@
     $.event.special.tap.emitTapOnTaphold = false;
 
     var user = {};
+    var messages;
     var teaches, currentTeach;
     var registrations, currentReg;
     var stamps, stampsDeleted;
@@ -130,7 +131,11 @@
                         case "news":
                             app.doms.headerHome.find("h1").text("Recent News");
                             app.doms.btnHomeUR.removeClass("ui-icon-plus")
-                                .addClass("ui-icon-refresh").show();
+                                .addClass("ui-icon-refresh").attr({
+                                    "href": "#",
+                                    "data-transition": "slidedown"
+                                }).show();
+                            app.showMessages();
                             app.finishHomeNav();
                             break;
                         case "teach":
@@ -535,7 +540,7 @@
                 currentReg.saved_total = currentReg.total;
                 currentReg.saved_unused = currentReg.unused;
                 currentReg.saved_data = currentReg.data;
-                app.doms.pageStamps.find("header h1").text(app.get_student_display_name(currentReg));
+                app.doms.pageStamps.find("header h1").text(app.getRegStudentDisplayName(currentReg));
 
                 // No wobbly or delete badge when the stamps page is transitioned
                 // from teach regs page
@@ -754,7 +759,7 @@
             // Handle transition to student details page
             $("#student-details-button").on("click", function () {
                 var li0 = app.doms.pageStudentDetails.find(".ui-content li:eq(0)");
-                li0.find("h2").text(app.get_student_display_name(currentReg));
+                li0.find("h2").text(app.getRegStudentDisplayName(currentReg));
                 li0.find("p").text("from " + currentReg.creation_time.split(" ")[0]);
 
                 app.doms.listStudentHistory.empty();
@@ -855,6 +860,48 @@
             $.mobile.loading("hide");
         },
 
+        showMessages: function () {
+            $.ajax({
+                url: server_url + 'j/lesson_messages/'
+            })
+                .done(function (data) {
+                    messages = data;
+                    var messageList = $("#message-list");
+                    messageList.empty();
+                    var lastDateString = "",
+                        today = app.getCurrentTimestamp(true);
+                    $.each(messages, function (idx, message) {
+                        var fields = message.creation_time.split(" "),
+                            dateString = fields[0],
+                            timeString = fields[1];
+
+                        // list divider for showing the dates
+                        if (dateString != lastDateString) {
+                            lastDateString = dateString;
+                            if (dateString == today) {
+                                var headingValue = 'Today, ' + dateString;
+                            } else {
+                                var date = app.parseDate(dateString),
+                                    headingValue = days[date.getDay()] + ', ' + dateString;
+                            }
+                            messageList.append(
+                                $('<li data-role="list-divider"></li>').text(headingValue));
+                        }
+
+                        var li = $('<li><h2></h2><p class="sender"></p><p class="ui-li-aside"></p>');
+                        li.find("h2").text(message.body).css({
+                            "font-weight": message.sender.user_id == message.lesson.teacher_id ? "bold" : "normal"
+                        });
+                        li.find("p:eq(0)").text(app.getStudentDisplayName(message.sender));
+                        li.find("p:eq(1)").text(app.formatTime(timeString));
+                        messageList.append(li);
+                    });
+                    app.refresh_listview(messageList);
+                    app.finishHomeNav();
+                })
+                .fail(app.ajaxErrorHandler);
+        },
+
         showTeachLessons: function () {
             $.ajax({
                 url: server_url + 'j/get_teach_lessons/' + user.user_id + '/'
@@ -889,7 +936,7 @@
                     $.each(registrations, function (idx, registration) {
                         var a = $("<a>", {
                             href: "#",
-                            text: app.get_student_display_name(registration)
+                            text: app.getRegStudentDisplayName(registration)
                         });
                         a.append($("<span>", {
                             "class": "ui-li-count ui-btn-up-c ui-btn-corner-all",
@@ -927,21 +974,53 @@
             page.find(".unusedCount").empty().text(currentReg.unused);
         },
 
-        getCurrentTimestamp: function () {
+        getCurrentTimestamp: function (dateOnly) {
+            dateOnly = typeof dateOnly == 'undefined' ? false : dateOnly;
+
             var now = new Date();
             var mon = now.getMonth() + 1;
             var date = now.getDate();
-            var hour = now.getHours();
-            var min = now.getMinutes();
-            var sec = now.getSeconds();
 
             if (mon < 10) mon = '0' + mon;
             if (date < 10) date = '0' + date;
-            if (hour < 10) hour = '0' + hour;
-            if (min < 10) min = '0' + min;
-            if (sec < 10) sec = '0' + sec;
 
-            return now.getFullYear() + '-' + mon + '-' + date + ' ' + hour + ':' + min + ':' + sec;
+            var dateString = now.getFullYear() + '-' + mon + '-' + date;
+            if (dateOnly) {
+                return dateString;
+            } else {
+                var hour = now.getHours();
+                var min = now.getMinutes();
+                var sec = now.getSeconds();
+                if (hour < 10) hour = '0' + hour;
+                if (min < 10) min = '0' + min;
+                if (sec < 10) sec = '0' + sec;
+                return dateString + ' ' + hour + ':' + min + ':' + sec;
+            }
+        },
+
+        parseDate: function (dateString) {
+            // dateString is of format YYYY-MM-DD
+            var fields = dateString.split("-"),
+                date = new Date(parseInt(fields[0]), parseInt(fields[1]) - 1, parseInt(fields[2]));
+            return date;
+        },
+
+        formatTime: function (timeString) {
+            // timeString is of format HH:MM:SS
+            var fields = timeString.split(":"),
+                hour = parseInt(fields[0]),
+                min = fields[1];
+
+            if (hour == 12) {
+                return hour + ':' + min + ' PM';
+            } else if (hour == 0) {
+                return '12:' + min + ' AM';
+            } else if (hour < 12) {
+                return (hour < 10 ? '0' + hour : hour) + ":" + min + " AM";
+            } else {
+                hour -= 12;
+                return (hour < 10 ? '0' + hour : hour) + ":" + min + " PM";
+            }
         },
 
         parseClassDaytime: function (daytime) {
@@ -954,11 +1033,14 @@
             return [days.indexOf(day), parseInt(hour) - 1, parseInt(min), periods.indexOf(ampm)];
         },
 
-        get_student_display_name: function (registration) {
+        getStudentDisplayName: function (student) {
+            var name = [student.first_name, student.last_name].join(" ");
+            return name != "" ? name : student.username;
+        },
+
+        getRegStudentDisplayName: function (registration) {
             if (registration.student) {
-                var student = registration.student,
-                    name = [student.first_name, student.last_name].join(' ');
-                return name != '' ? name : student.username;
+                return app.getStudentDisplayName(registration.student);
             } else {
                 return [registration.student_first_name, registration.student_last_name].join(' ');
             }
@@ -988,7 +1070,14 @@
             if (textStatus != "canceled") {
                 console.log('AJAX call failed: ' + textStatus);
                 console.log(jqXHR);
-                app.ajaxErrorAlert(jqXHR.responseText);
+                if (textStatus == "timeout") {
+                    app.ajaxErrorAlert("Connection timeout. Please try again.");
+                } else if (jqXHR.status == 500) {
+                    app.ajaxErrorAlert("Server error. Please try again.");
+                }
+                else {
+                    app.ajaxErrorAlert(jqXHR.responseText);
+                }
             }
         },
 
