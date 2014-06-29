@@ -90,7 +90,6 @@
 
     <div role="main" class="ui-content" id="news">
         <ul id="message-list" data-role="listview">
-
         </ul>
     </div>
     <div role="main" class="ui-content" id="teach">
@@ -98,10 +97,10 @@
         </ul>
     </div>
     <div role="main" class="ui-content" id="study">
-        Study
+        <ul id="study-list" data-role="listview">
+        </ul>
     </div>
     <div role="main" class="ui-content" id="setup">
-        Setup
         <ul data-role="listview" data-inset="true" class="delete-solo-btn">
             <li class="ui-body">
                 <div class="ui-grid-solo">
@@ -125,12 +124,33 @@
     </footer>
 </section>
 
-<section id="new-teach" data-role="page">
+<section id="new-message" data-role="page">
     <header data-role="header">
-        <h1 class="wide-header">New Class to Teach</h1>
+        <h1 class="wide-header">New Message</h1>
     </header>
     <div role="main" class="ui-content">
+        <form>
 
+        </form>
+    </div>
+    <footer data-role="footer" data-position="fixed">
+        <fieldset class="ui-grid-a">
+            <div class="ui-block-a">
+                <a href="#home" data-transition="slideup"
+                   data-role="button" data-icon="delete" style="display: block;">Cancel</a>
+            </div>
+            <div class="ui-block-b">
+                <a href="#" data-role="button" data-theme="b" data-icon="check" style="display: block;">OK</a>
+            </div>
+        </fieldset>
+    </footer>
+</section>
+
+<section id="new-teach" data-role="page">
+    <header data-role="header">
+        <h1 class="wide-header">New Lesson</h1>
+    </header>
+    <div role="main" class="ui-content">
         <form>
             <div class="ui-field-contain">
                 <label for="newTeachName">Name</label>

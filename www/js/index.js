@@ -5,6 +5,7 @@
     var user = {};
     var messages;
     var teaches, currentTeach;
+    var studies, currentStudy;
     var registrations, currentReg;
     var stamps, stampsDeleted;
     var stampFirstIdx, stampLastIdx;
@@ -106,6 +107,7 @@
                 btnHomeUR: $("#home-btn-right"),
                 listStudents: $("#student-list"),
                 listTeaches: $("#teach-list"),
+                listStudies: $("#study-list"),
                 popNewStudentDaytime: $("#new-student-daytime-dialog"),
                 listNewStudentDaytime: $("#new-student-daytime-list"),
                 listStudentHistory: $("#student-history"),
@@ -130,9 +132,8 @@
                     switch (app.doms.divsHomeContent.eq(idx).attr("id")) {
                         case "news":
                             app.doms.headerHome.find("h1").text("Recent News");
-                            app.doms.btnHomeUR.removeClass("ui-icon-plus")
-                                .addClass("ui-icon-refresh").attr({
-                                    "href": "#",
+                            app.doms.btnHomeUR.addClass("ui-icon-plus").attr({
+                                    "href": "#new-message",
                                     "data-transition": "slidedown"
                                 }).show();
                             app.showMessages();
@@ -151,7 +152,7 @@
                             app.doms.headerHome.find("h1").text("My Learnings");
                             app.doms.btnHomeUR.removeClass("ui-icon-refresh")
                                 .addClass("ui-icon-plus").show();
-                            app.finishHomeNav();
+                            app.showStudyLessons();
                             break;
                         case "setup":
                             app.doms.headerHome.find("h1").text("Settings");
@@ -888,12 +889,13 @@
                                 $('<li data-role="list-divider"></li>').text(headingValue));
                         }
 
-                        var li = $('<li><h2></h2><p class="sender"></p><p class="ui-li-aside"></p>');
+                        var li = $('<li><h2></h2><div><p class="sender"></p><p>&nbsp;To&nbsp;</p><p class="lesson"></p><p class="time"></p></div>');
                         li.find("h2").text(message.body).css({
                             "font-weight": message.sender.user_id == message.lesson.teacher_id ? "bold" : "normal"
                         });
-                        li.find("p:eq(0)").text(app.getStudentDisplayName(message.sender));
-                        li.find("p:eq(1)").text(app.formatTime(timeString));
+                        li.find(".sender").text(app.getUserDisplayName(message.sender));
+                        li.find(".lesson").text(message.lesson.name);
+                        li.find(".time").text(app.formatTime(timeString));
                         messageList.append(li);
                     });
                     app.refresh_listview(messageList);
@@ -920,7 +922,7 @@
                         }));
                         app.doms.listTeaches.append($("<li>").append(a));
                     });
-                    app.doms.listTeaches.listview("refresh");
+                    app.refresh_listview(app.doms.listTeaches);
                     app.finishHomeNav();
                 })
                 .fail(app.ajaxErrorHandler);
@@ -972,6 +974,27 @@
             page.find(".pageCount").empty().text(
                     (Math.floor(stampFirstIdx / 9) + 1) + "/" + Math.max(Math.ceil(stamps.length / 9), 1));
             page.find(".unusedCount").empty().text(currentReg.unused);
+        },
+
+        showStudyLessons: function () {
+            $.ajax({
+                url: server_url + 'j/get_study_lessons/' + user.user_id + '/'
+
+            })
+                .done(function (data) {
+                    studies = data;
+                    app.doms.listStudies.empty();
+                    $.each(studies, function (idx, study) {
+                        var a = $('<a href="#" />').append($("<h2></h2><p><strong></strong></p><p></p>"));
+                        a.find("h2").text(study.name);
+                        a.find("strong").text(app.getUserDisplayName(study.teacher));
+                        a.find("p:last-child").text(study.description);
+                        app.doms.listStudies.append($("<li>").append(a));
+                    });
+                    app.refresh_listview(app.doms.listStudies);
+                    app.finishHomeNav();
+                })
+                .fail(app.ajaxErrorHandler);
         },
 
         getCurrentTimestamp: function (dateOnly) {
@@ -1033,14 +1056,14 @@
             return [days.indexOf(day), parseInt(hour) - 1, parseInt(min), periods.indexOf(ampm)];
         },
 
-        getStudentDisplayName: function (student) {
+        getUserDisplayName: function (student) {
             var name = [student.first_name, student.last_name].join(" ");
-            return name != "" ? name : student.username;
+            return name != " " ? name : student.username;
         },
 
         getRegStudentDisplayName: function (registration) {
             if (registration.student) {
-                return app.getStudentDisplayName(registration.student);
+                return app.getUserDisplayName(registration.student);
             } else {
                 return [registration.student_first_name, registration.student_last_name].join(' ');
             }

@@ -112,13 +112,16 @@ body {
     font-weight: normal;
 }
 
-#message-list li h2 + p {
+#message-list p {
+    display: inline-block;
+}
+
+#message-list .sender, #message-list .lesson {
     color: #3388cc !important;
 }
 
-#message-list .ui-li-aside {
-    top: auto !important;
-    bottom: 1em;
+#message-list .time {
+    padding-left: 1em;
 }
 
 
