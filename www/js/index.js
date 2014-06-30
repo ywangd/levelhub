@@ -35,7 +35,7 @@
     var app = {
         initialize: function () {
             $(document).ready(function () {
-                $(document).bind("deviceready", app.onDeviceReady);
+                $(document).on("deviceready", app.onDeviceReady);
             });
         },
 
@@ -97,6 +97,7 @@
                 pageLogin: $("#login"),
                 pageRegister: $("#register"),
                 pageHome: $("#home"),
+                pageNewMessage: $("#new-message"),
                 pageNewTeach: $("#new-teach"),
                 pageTeachRegs: $("#teach-regs-page"),
                 pageNewStudent: $("#new-student"),
@@ -132,7 +133,8 @@
                     switch (app.doms.divsHomeContent.eq(idx).attr("id")) {
                         case "news":
                             app.doms.headerHome.find("h1").text("Recent News");
-                            app.doms.btnHomeUR.addClass("ui-icon-plus").attr({
+                            app.doms.btnHomeUR.removeClass("ui-icon-refresh")
+                                .addClass("ui-icon-plus").attr({
                                     "href": "#new-message",
                                     "data-transition": "slidedown"
                                 }).show();
@@ -164,13 +166,26 @@
                 return false;
             });
 
+            // make sure the settings are displayed correctly based on their values
+            if (localStorage.getItem("homeContent")) {
+                $("#home-content-selection").val(localStorage.getItem("homeContent")).selectmenu().selectmenu("refresh");
+            }
+
             // The first page to show
             var savedUser = localStorage.getItem('user');
             if (savedUser) {
                 user = JSON.parse(savedUser);
                 $.mobile.changePage(app.doms.pageHome);
-                $("#icon-teach").trigger("click");
+                // first home page content to show
+                if (!localStorage.getItem("homeContent")) {
+                    localStorage.setItem("homeContent", $("#home-content-selection").val());
+                }
+                $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
             }
+
+            $("#home-content-selection").on("change", function () {
+                localStorage.setItem("homeContent", $(this).val());
+            });
 
             $("#login-btn").on("click", function () {
                 var loginPanel = $("#login-panel"),
@@ -276,6 +291,22 @@
                     case "setup":
                         break;
                 }
+            });
+
+            // populate recipient list
+            app.doms.pageNewMessage.on("pagebeforeshow", function () {
+                var selector = $(this).find("#message-recipients");
+                selector.empty();
+                selector.append($("<option>Choose message recipients</option>"));
+                selector.append($('<option select="selected">All lessons</option>'));
+                selector.append($("<option>All teachings</option>"));
+                var tGroups = $('<optgroup label="Teachings"></optgroup>');
+                tGroups.append($("<option>Guitar</option>"));
+
+                var lGroups = $('<optgroup label="Learnings"></optgroup>');
+                selector.append(tGroups);
+                selector.append(lGroups);
+                selector.selectmenu("refresh");
             });
 
             // Save button on new teach page
@@ -891,7 +922,7 @@
 
                         var li = $('<li><h2></h2><div><p class="sender"></p><p>&nbsp;To&nbsp;</p><p class="lesson"></p><p class="time"></p></div>');
                         li.find("h2").text(message.body).css({
-                            "font-weight": message.sender.user_id == message.lesson.teacher_id ? "bold" : "normal"
+                            "font-weight": message.sender.user_id == message.lesson.teacher.user_id ? "bold" : "normal"
                         });
                         li.find(".sender").text(app.getUserDisplayName(message.sender));
                         li.find(".lesson").text(message.lesson.name);
@@ -978,7 +1009,7 @@
 
         showStudyLessons: function () {
             $.ajax({
-                url: server_url + 'j/get_study_lessons/' + user.user_id + '/'
+                url: server_url + 'j/get_study_lessons/'
 
             })
                 .done(function (data) {

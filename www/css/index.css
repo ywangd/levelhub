@@ -124,6 +124,22 @@ body {
     padding-left: 1em;
 }
 
+#message-recipients-listbox {
+    font-size: small !important;
+}
+
+#message-recipients-listbox #message-recipients-menu {
+    font-size: small !important;
+}
+
+#message-recipients-listbox li {
+    font-size: small !important;
+}
+
+#message-recipients-listbox a {
+    font-size: small !important;
+}
+
 
 .pageCount {
     background-color: transparent !important;
