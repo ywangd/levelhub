@@ -175,12 +175,14 @@
             var savedUser = localStorage.getItem('user');
             if (savedUser) {
                 user = JSON.parse(savedUser);
-                $.mobile.changePage(app.doms.pageHome);
-                // first home page content to show
-                if (!localStorage.getItem("homeContent")) {
-                    localStorage.setItem("homeContent", $("#home-content-selection").val());
-                }
-                $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
+                app.get_user_lesssons(function () {
+                    $.mobile.changePage(app.doms.pageHome);
+                    // first home page content to show
+                    if (!localStorage.getItem("homeContent")) {
+                        localStorage.setItem("homeContent", $("#home-content-selection").val());
+                    }
+                    $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
+                });
             }
 
             $("#home-content-selection").on("change", function () {
@@ -200,11 +202,13 @@
                     .done(function (data) {
                         user = data;
                         localStorage.setItem('user', JSON.stringify(user));
-                        $.mobile.changePage(app.doms.pageHome, {
-                            transition: "slideup"
+                        app.get_user_lesssons(function () {
+                            $.mobile.changePage(app.doms.pageHome, {
+                                transition: "slideup"
+                            });
+                            $("#icon-teach").trigger("click");
+                            form[0].reset();
                         });
-                        $("#icon-teach").trigger("click");
-                        form[0].reset();
                     })
                     .fail(app.ajaxErrorHandler);
             });
@@ -267,6 +271,8 @@
                     })
                         .done(function (data) {
                             user = data;
+                            teaches = [];
+                            studies = [];
                             $.mobile.changePage(app.doms.pageHome, {
                                 transition: "slideup"
                             });
@@ -298,16 +304,52 @@
                 var selector = $(this).find("#message-recipients");
                 selector.empty();
                 selector.append($("<option>Choose message recipients</option>"));
-                selector.append($('<option select="selected">All lessons</option>'));
-                selector.append($("<option>All teachings</option>"));
-                var tGroups = $('<optgroup label="Teachings"></optgroup>');
-                tGroups.append($("<option>Guitar</option>"));
-
-                var lGroups = $('<optgroup label="Learnings"></optgroup>');
-                selector.append(tGroups);
-                selector.append(lGroups);
+                if (teaches.length > 0 || studies.length > 0) {
+                    selector.append($('<option select="selected">All lessons</option>'));
+                    if (teaches.length > 0) {
+                        selector.append($("<option>All teachings</option>"));
+                    }
+                    if (studies.length > 0) {
+                        selector.append($("<option>All studies</option>"));
+                    }
+                    if (teaches.length > 0) {
+                        var tGroups = $('<optgroup label="Teachings"></optgroup>');
+                        $.each(teaches, function (idx, teach) {
+                            tGroups.append($("<option/>").text(teach.name));
+                        });
+                        selector.append(tGroups);
+                    }
+                    if (studies.length > 0) {
+                        var lGroups = $('<optgroup label="Learnings"></optgroup>');
+                        $.each(studies, function (idx, study) {
+                            lGroups.append($("<option/>").text(study.name));
+                        });
+                        selector.append(lGroups);
+                    }
+                }
                 selector.selectmenu("refresh");
+                $("#message-recipients-menu").on("click", function (event) {
+                    var target = $(event.target);
+                    var index = target.parent().attr("data-option-index");
+                    console.log("index is " + index);
+                    if (target.hasClass("ui-checkbox-on")) {
+                        if (target.text() == "All lessons") {
+                            var ul = $("#message-recipients-menu");
+                            var aDoms = ul.find("a");
+                            for (var i = 0; i < aDoms.length; i++) {
+                                var a = aDoms.eq(i);
+                                console.log(a.parent().attr("data-option-index"));
+                                if (a.parent().attr("data-option-index") != index) {
+                                    a.click();
+                                } else {
+                                    a.click();
+                                }
+                            }
+                        }
+                    }
+                });
             });
+
 
             // Save button on new teach page
             app.doms.pageNewTeach.find("footer a:eq(1)").on("click", function () {
@@ -883,6 +925,18 @@
                 }
                 return false;
             });
+        },
+
+        get_user_lesssons: function (sucessHandler) {
+            $.ajax({
+                url: server_url + "j/get_user_lessons/"
+            })
+                .done(function (data) {
+                    teaches = data.teach;
+                    studies = data.study;
+                })
+                .done(sucessHandler)
+                .fail(app.ajaxErrorHandler);
         },
 
         finishHomeNav: function () {
