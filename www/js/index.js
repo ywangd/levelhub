@@ -325,7 +325,7 @@
                     $.each(teaches.concat(studies), function (idx, lesson) {
                         var theid = "recipient-check-" + idx;
                         $('<input type="checkbox" class="custom"/>').attr({name: theid, id: theid}).appendTo(individualLesson);
-                        $('<label/>').attr({for: theid}).text(lesson.name).appendTo(individualLesson);
+                        $('<label/>').attr({for: theid}).text(lesson.name).data("lesson_id", lesson.lesson_id).appendTo(individualLesson);
                     });
                 }
                 lessonGroups.find("input").checkboxradio();
@@ -372,6 +372,53 @@
                     recipientButton.text("Choose recipients ...");
                 }
             });
+
+            // Send button on new message page
+            app.doms.pageNewMessage.find("footer a:eq(1)").on("click", function () {
+
+                var lesson_ids = [],
+                    labelRadio = lessonGroups.find("label.ui-radio-on").attr("for");
+                if (labelRadio != "recipient-radio-3") {
+                    if (labelRadio == "recipient-radio-0" || labelRadio == "recipient-radio-1") {
+                        $.each(teaches, function (idx, teach) {
+                            lesson_ids.push(teach.lesson_id);
+                        });
+                    }
+                    if (labelRadio == "recipient-radio-0" || labelRadio == "recipient-radio-2") {
+                        $.each(studies, function (idx, study) {
+                            lesson_ids.push(study.lesson_id);
+                        });
+                    }
+                } else {
+                    $.each(individualLesson.find("label.ui-checkbox-on"), function (idx, label) {
+                        lesson_ids.push($(label).data("lesson_id"));
+                    });
+                }
+                var body = $.trim($("#lesson-message-body").val());
+                if (lesson_ids.length == 0) {
+                    app.ajaxErrorAlert("Message has no recipient");
+                    return false;
+                }
+                if (body.length == 0) {
+                    app.ajaxErrorAlert("Message cannot be empty");
+                    return false;
+                }
+                $.ajax({
+                    type: "POST",
+                    url: server_url + "j/lesson_messages/",
+                    data: JSON.stringify({create: {body: body, lesson_ids: lesson_ids}})
+                })
+                    .done(function (data) {
+                        app.showMessages();
+                        history.back();
+                        $("#lesson-message-body").closest("form")[0].reset();
+                    })
+                    .fail(app.ajaxErrorHandler);
+
+                return false;
+            });
+
+
 
             // Save button on new teach page
             app.doms.pageNewTeach.find("footer a:eq(1)").on("click", function () {
