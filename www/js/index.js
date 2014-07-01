@@ -10,11 +10,21 @@
     var stamps, stampsDeleted;
     var stampFirstIdx, stampLastIdx;
 
+    var matchedUsers;
+
+
     var NEW_STAMP = -1;
 
     // Throttle ajax request so request to same url is only fired once every
     // throttle interval value
     var ajaxThrottle, throttleInterval = 300; // ms
+    var delay = (function () {
+        var timer = 0;
+        return function (callback, ms) {
+            clearTimeout(timer);
+            timer = setTimeout(callback, ms);
+        };
+    })();
 
     var homeNavIdx = -1;
     var days = [
@@ -53,11 +63,12 @@
 
             // Gets called before ajax call is sent
             $(document).ajaxSend(function (event, jqXhr, options) {
-                $.mobile.loading('show');
+                $.mobile.loading("show");
             });
 
             // Always gets called when an ajax finishes regardless of success
             $(document).ajaxComplete(function (event, jqXhr, options) {
+                $.mobile.loading("hide")
             });
 
             // This is always called when any ajax call is successfully return, unless
@@ -103,7 +114,7 @@
                 pageNewStudent: $("#new-student"),
                 pageStamps: $("#stamps-page"),
                 pageTeachRegsDetails: $("#teach-regs-details-page"),
-                pageStudentDetails: $("#student-details-page"),
+                pageStudentInfo: $("#student-info-page"),
                 headerHome: $("#home-header"),
                 btnHomeUR: $("#home-btn-right"),
                 listStudents: $("#student-list"),
@@ -169,7 +180,12 @@
 
             // make sure the settings are displayed correctly based on their values
             if (localStorage.getItem("homeContent")) {
-                $("#home-content-selection").val(localStorage.getItem("homeContent")).selectmenu().selectmenu("refresh");
+                var radios = $("#setup-first-page input:radio");
+                radios.checkboxradio();
+                radios.filter("[value=" + localStorage.getItem("homeContent") + "]").attr("checked", true);
+                radios.checkboxradio("refresh");
+            } else {
+                localStorage.setItem("homeContent", $("#setup-first-page input:radio:checked").val());
             }
 
             // The first page to show
@@ -178,16 +194,12 @@
                 user = JSON.parse(savedUser);
                 app.get_user_lesssons(function () {
                     $.mobile.changePage(app.doms.pageHome);
-                    // first home page content to show
-                    if (!localStorage.getItem("homeContent")) {
-                        localStorage.setItem("homeContent", $("#home-content-selection").val());
-                    }
                     $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
                 });
             }
 
-            $("#home-content-selection").on("change", function () {
-                localStorage.setItem("homeContent", $(this).val());
+            $("#setup-first-page").on("click", "label", function () {
+                localStorage.setItem("homeContent", $(this).next("input").val());
             });
 
             $("#login-btn").on("click", function () {
@@ -207,7 +219,7 @@
                             $.mobile.changePage(app.doms.pageHome, {
                                 transition: "slideup"
                             });
-                            $("#icon-teach").trigger("click");
+                            $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
                             form[0].reset();
                         });
                     })
@@ -277,7 +289,7 @@
                             $.mobile.changePage(app.doms.pageHome, {
                                 transition: "slideup"
                             });
-                            $("#icon-teach").trigger("click");
+                            $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
                             form.find("label span").empty();
                             form[0].reset();
                         })
@@ -306,7 +318,7 @@
                 individualLesson = $("#individual-lesson"),
                 recipientButton = $("#choose-recipients");
 
-             // populate recipient list based on user lessons
+            // populate recipient list based on user lessons
             app.doms.pageNewMessage.on("pagebeforeshow", function () {
                 recipientSelection.hide();
                 lessonGroups.empty();
@@ -419,6 +431,41 @@
                 return false;
             });
 
+
+            $("#user-search-input").keyup(function () {
+                var $this = $(this);
+                if ($this.val() == "") {
+                    delay(function () {
+                        $("#user-search-output").empty().listview("refresh");
+                    }, 300);
+                } else {
+                    delay(function () {
+                        $.ajax({
+                            url: server_url + 'j/user_search',
+                            data: {phrase: $this.val()}
+                        })
+                            .done(function (data) {
+                                matchedUsers = data;
+                                var ul = $("#user-search-output");
+                                ul.empty();
+                                $.each(matchedUsers, function (idx, u) {
+                                    $("<li>").append(
+                                        $('<a href="#"></a>')
+                                            .text(app.getUserDisplayName(u)))
+                                        .appendTo(ul);
+                                });
+                                ul.listview("refresh");
+                            })
+                            .fail(app.ajaxErrorHandler);
+                    }, 300);
+                }
+            });
+
+            $("#user-search").on("click", ".ui-input-clear", function () {
+                delay(function () {
+                    $("#user-search-output").empty().listview("refresh");
+                }, 300);
+            });
 
 
             // Save button on new teach page
@@ -533,7 +580,7 @@
             });
 
             // prepare daytime picker when the containing page is first shown
-            app.doms.pageStudentDetails.add(app.doms.pageNewStudent).on("pageshow", function () {
+            app.doms.pageStudentInfo.add(app.doms.pageNewStudent).on("pageshow", function () {
                 var page = $(this),
                     popup = page.find(".daytime-dialog"),
                     idPrefix = page.attr("id");
@@ -624,7 +671,7 @@
             // It modifies the currentReg object if data is changed
             // the object is later persistent into the database if save button
             // is clicked on the stamps page.
-            app.doms.pageStudentDetails.find("header a").on("click", function () {
+            app.doms.pageStudentInfo.find("header a").on("click", function () {
                 var daytimeList = [];
                 $.each($(this).closest("section").find(".daytime-list li a:not([title='delete'])"),
                     function (idx, dom) {
@@ -902,7 +949,7 @@
 
             // Handle transition to student details page
             $("#student-details-button").on("click", function () {
-                var li0 = app.doms.pageStudentDetails.find(".ui-content li:eq(0)");
+                var li0 = app.doms.pageStudentInfo.find(".ui-content li:eq(0)");
                 li0.find("h2").text(app.getRegStudentDisplayName(currentReg));
                 li0.find("p").text("from " + currentReg.creation_time.split(" ")[0]);
 
@@ -925,7 +972,7 @@
                 });
                 app.refresh_listview(app.doms.listStudentDaytime);
 
-                $.mobile.changePage(app.doms.pageStudentDetails, {
+                $.mobile.changePage(app.doms.pageStudentInfo, {
                     transition: "flip"
                 });
                 return false;
@@ -1052,10 +1099,10 @@
                         li.find(".sender").text(app.getUserDisplayName(message.sender));
                         var lesson_names = [];
                         $.each(lessons, function (idx, lesson) {
-                             lesson_names.push(lesson.name);
-                             if (lesson.teacher.user_id == message.sender.user_id) {
-                                 li.find("h2").css("font-weight", "bold");
-                             }
+                            lesson_names.push(lesson.name);
+                            if (lesson.teacher.user_id == message.sender.user_id) {
+                                li.find("h2").css("font-weight", "bold");
+                            }
                         });
                         li.find(".lesson").text(lesson_names.join(", "));
                         li.find(".time").text(app.formatTime(timeString));
@@ -1148,7 +1195,8 @@
                     studies = data;
                     app.doms.listStudies.empty();
                     $.each(studies, function (idx, study) {
-                        var a = $('<a href="#" />').append($("<h2></h2><p><strong></strong></p><p></p>"));
+                        var a = $('<a href="#study-details-page" data-transition="slide"/>')
+                            .append($("<h2></h2><p><strong></strong></p><p></p>"));
                         a.find("h2").text(study.name);
                         a.find("strong").text(app.getUserDisplayName(study.teacher));
                         a.find("p:last-child").text(study.description);

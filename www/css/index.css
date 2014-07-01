@@ -64,9 +64,6 @@ body {
 
 #register-panel .ui-grid-a .ui-block-a {
     padding-right: 2%;
-}
-
-#register-panel .ui-grid-a .ui-block-b {
     padding-left: 2%;
 }
 
@@ -80,6 +77,15 @@ body {
 
 .input-warning {
     color: darkred;
+}
+
+
+#my-details-page label {
+    font-size: smaller;
+}
+#my-details-page .ui-grid-a .ui-block-b {
+    padding-right: 2%;
+    padding-left: 2%;
 }
 
 

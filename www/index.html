@@ -104,36 +104,21 @@
     </div>
     <div role="main" class="ui-content" id="setup">
         <ul data-role="listview" data-inset="true">
-            <li id="user-details-btn"><a href="#">
+            <li id="user-details-btn"><a href="#my-details-page" data-transition="slide">
                 <img src="img/smiley.svg" style="width: 80px;">
 
-                <h2>Broken Bells</h2>
+                <h2></h2>
 
-                <p>Broken Bells</p></a>
+                <p></p></a>
             </li>
         </ul>
 
-        <ul data-role="listview" data-inset="true">
+        <ul data-role="listview" data-inset="true" class="ui-mini">
             <li>
-                <a href="#">First page</a>
+                <a href="#setup-first-page" data-transition="slide">Page shown on startup</a>
             </li>
         </ul>
 
-        <ul data-role="listview" data-inset="true">
-            <li class="ui-field-contain">
-                <div style="display: inline-block; vertical-align: middle;">
-                    <strong>First page:&nbsp;</strong>
-                </div>
-                <div style="display: inline-block; vertical-align: middle; width: 50%;">
-                    <select name="home-content-selection" id="home-content-selection" data-native-menu="false">
-                        <option value="news" selected="selected">News</option>
-                        <option value="teach">Teach</option>
-                        <option value="study">Study</option>
-                        <option value="setup">Setup</option>
-                    </select>
-                </div>
-            </li>
-        </ul>
 
         <ul data-role="listview" data-inset="true" class="delete-solo-btn">
             <li class="ui-body">
@@ -486,20 +471,20 @@
 </section>
 
 
-<section id="student-details-page" data-role="page">
-    <header data-role="header">
-        <h1 style="margin-left: 10%; margin-right: 10%;">Registration Details</h1>
+<section id="student-info-page" data-role="page">
+    <header data-role="header" data-position="fixed">
+        <h1 style="margin-left: 10%; margin-right: 10%;">Registration Info</h1>
         <a href="#stamps-page" data-transition="flip" data-direction="reverse"
            class="ui-btn ui-btn-corner-all ui-btn-right ui-shadow">Done</a>
     </header>
     <div role="main" class="ui-content">
         <ul id="student-details-list" data-role="listview" data-inset="true">
-            <li data-icon="false">
+            <li id="student-details-btn"><a href="#student-details-page" data-transition="slide">
                 <img src="img/smiley.svg" style="width: 80px;">
 
                 <h2></h2>
 
-                <p></p>
+                <p></p></a>
             </li>
         </ul>
 
@@ -566,8 +551,50 @@
 </section>
 
 
+<section id="student-details-page" data-role="page">
+    <header data-role="header" data-position="fixed">
+        <h1 class="wide-header">User Details</h1>
+        <a data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
+        <a href="#"
+           class="ui-btn ui-btn-corner-all ui-btn-right ui-shadow">Done</a>
+    </header>
+    <div role="main" class="ui-content">
+        <form>
+            <label class="ui-mini">Name</label>
+
+
+            <label class="ui-mini">Email <span class="input-warning"></span></label>
+            <input class="ui-mini" type="email" name="email"/>
+
+            <label>About</label>
+            <textarea disabled="disabled" cols="40" rows="6" name="aboutUser" data-autogrow="false"
+                      style="resize: none;"></textarea>
+
+
+        </form>
+    </div>
+</section>
+
+
+<section id="new-student-guide" data-role="page">
+    <header data-role="header" data-position="fixed">
+        <h1>Search by</h1>
+        <a data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-delete ui-btn-right">Cancel</a>
+    </header>
+    <div role="main" class="ui-content">
+        <ul data-role="listview">
+            <li><a href="#user-search" data-transition="slide">Search by Name</a></li>
+            <li><a href="#new-student" data-transition="slide">Non-member</a></li>
+            <li><a href="#" data-transition="slide">Scan</a></li>
+        </ul>
+    </div>
+</section>
+
+
 <section id="new-student" data-role="page">
-    <header data-role="header">
+    <header data-role="header" data-position="fixed">
         <h1>New Student</h1>
     </header>
     <div role="main" class="ui-content">
@@ -638,6 +665,95 @@
                     <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-mini"
                        data-rel="back">Done</a>
                 </div>
+            </fieldset>
+        </form>
+    </div>
+</section>
+
+<section id="study-details-page" data-role="page">
+    <header data-role="header" data-position="fixed">
+        <h1 class="wide-header"></h1>
+        <a data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
+    </header>
+    <div role="main" class="ui-content">
+
+    </div>
+</section>
+
+<section id="my-details-page" data-role="page">
+    <header data-role="header" data-position="fixed">
+        <h1 class="wide-header">My Details</h1>
+        <a data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
+        <a href="#"
+           class="ui-btn ui-btn-corner-all ui-btn-right ui-shadow">Done</a>
+    </header>
+    <div role="main" class="ui-content">
+        <form>
+            <label class="ui-mini">Name</label>
+
+            <div class="ui-grid-a">
+                <div class="ui-block-a">
+                    <input class="ui-mini" type="text" name="fname" placeholder="First"/>
+                </div>
+                <div class="ui-block-b">
+                    <input class="ui-mini" type="text" name="lname" placeholder="Last"/>
+                </div>
+            </div>
+
+            <label class="ui-mini">Email <span class="input-warning"></span></label>
+            <input class="ui-mini" type="email" name="email"/>
+
+            <label>About Me</label>
+            <textarea id="about-user" cols="40" rows="6" name="aboutUser" data-autogrow="false"
+                      style="resize: none;"></textarea>
+
+            <div class="ui-grid-a">
+                <div class="ui-block-a">
+                    <label class="ui-mini">Password <span class="input-warning"></span></label>
+                    <input class="ui-mini" type="password" name="password1"/>
+                </div>
+                <div class="ui-block-b">
+                    <label class="ui-mini">Confirm <span class="input-warning"></span></label>
+                    <input class="ui-mini" type="password" name="password2"/>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section id="user-search" data-role="page">
+    <header data-role="header" data-position="fixed">
+        <h1 class="wide-header">Search User</h1>
+        <a data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
+    </header>
+    <div role="main" class="ui-content">
+        <input name="user-search-input" id="user-search-input" placeholder="search ..." type="search" class="ui-mini">
+        <ul id="user-search-output" data-role="listview" data-inset="true" class="ui-mini">
+
+        </ul>
+    </div>
+</section>
+
+<section id="setup-first-page" data-role="page">
+    <header data-role="header" data-position="fixed">
+        <h1 class="wide-header">Page Shown on Startup</h1>
+        <a data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
+    </header>
+    <div role="main" class="ui-content">
+        <form>
+            <fieldset data-role="controlgroup" data-iconpos="right">
+                <input name="first-page-radio" id="first-page-radio-0" value="news" checked="checked" type="radio">
+                <label for="first-page-radio-0">News</label>
+                <input name="first-page-radio" id="first-page-radio-1" value="teach" type="radio">
+                <label for="first-page-radio-1">Teach</label>
+                <input name="first-page-radio" id="first-page-radio-2" value="study" type="radio">
+                <label for="first-page-radio-2">Study</label>
+                <input name="first-page-radio" id="first-page-radio-3" value="setup" type="radio">
+                <label for="first-page-radio-3">Setup</label>
             </fieldset>
         </form>
     </div>
