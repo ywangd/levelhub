@@ -108,7 +108,7 @@
                 <div style="display: inline-block; vertical-align: middle;">
                     <strong>First page:&nbsp;</strong>
                 </div>
-                <div  style="display: inline-block; vertical-align: middle; width: 50%;">
+                <div style="display: inline-block; vertical-align: middle; width: 50%;">
                     <select name="home-content-selection" id="home-content-selection" data-native-menu="false">
                         <option value="news" selected="selected">News</option>
                         <option value="teach">Teach</option>
@@ -150,16 +150,16 @@
     <div role="main" class="ui-content">
 
         <form>
-            <div>
-                <div style="display: inline-block; vertical-align: middle;"><strong>To:&nbsp;</strong></div>
-                <div class="selector-container" style="display: inline-block; width: 85%; vertical-align: middle;">
-                    <select name="message-recipients" id="message-recipients" multiple="multiple"
-                            data-native-menu="false" class="ui-mini">
-                    </select>
-                </div>
+            <a id="choose-recipients" class="ui-btn ui-btn-icon-right ui-icon-carat-d ui-mini">Choose recipients ...</a>
+
+            <div id="recipient-selection">
+                <fieldset id="lesson-groups" data-role="controlgroup" class="ui-mini">
+                </fieldset>
+                <fieldset id="individual-lesson" data-role="controlgroup" class="ui-mini">
+                </fieldset>
             </div>
-
-
+            <textarea cols="40" rows="6" name="messageBody" data-autogrow="false"
+                      style="resize: none;"></textarea>
         </form>
     </div>
     <footer data-role="footer" data-position="fixed">
@@ -169,7 +169,7 @@
                    data-role="button" data-icon="delete" style="display: block;">Cancel</a>
             </div>
             <div class="ui-block-b">
-                <a href="#" data-role="button" data-theme="b" data-icon="check" style="display: block;">OK</a>
+                <a href="#" data-role="button" data-theme="b" data-icon="check" style="display: block;">Send</a>
             </div>
         </fieldset>
     </footer>

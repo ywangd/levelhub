@@ -299,57 +299,79 @@
                 }
             });
 
-            // populate recipient list
+
+            var recipientSelection = $("#recipient-selection"),
+                lessonGroups = $("#lesson-groups"),
+                individualLesson = $("#individual-lesson"),
+                recipientButton = $("#choose-recipients");
+
+             // populate recipient list based on user lessons
             app.doms.pageNewMessage.on("pagebeforeshow", function () {
-                var selector = $(this).find("#message-recipients");
-                selector.empty();
-                selector.append($("<option>Choose message recipients</option>"));
+                recipientSelection.hide();
+                lessonGroups.empty();
+                individualLesson.hide().empty();
+                recipientButton.text("Choose recipients ...");
                 if (teaches.length > 0 || studies.length > 0) {
-                    selector.append($('<option select="selected">All lessons</option>'));
+                    lessonGroups.append($('<input type="radio" name="recipient-radio" id="recipient-radio-0" value="0"/><label for="recipient-radio-0">All lessons</label>'));
+
                     if (teaches.length > 0) {
-                        selector.append($("<option>All teachings</option>"));
+                        lessonGroups.append($('<input type="radio" name="recipient-radio" id="recipient-radio-1" value="1"/><label for="recipient-radio-1">All teachings</label>'));
                     }
                     if (studies.length > 0) {
-                        selector.append($("<option>All studies</option>"));
+                        lessonGroups.append($('<input type="radio" name="recipient-radio" id="recipient-radio-2" value="2"/><label for="recipient-radio-2">All learnings</label>'));
                     }
-                    if (teaches.length > 0) {
-                        var tGroups = $('<optgroup label="Teachings"></optgroup>');
-                        $.each(teaches, function (idx, teach) {
-                            tGroups.append($("<option/>").text(teach.name));
-                        });
-                        selector.append(tGroups);
-                    }
-                    if (studies.length > 0) {
-                        var lGroups = $('<optgroup label="Learnings"></optgroup>');
-                        $.each(studies, function (idx, study) {
-                            lGroups.append($("<option/>").text(study.name));
-                        });
-                        selector.append(lGroups);
-                    }
+                    lessonGroups.append($('<input type="radio" name="recipient-radio" id="recipient-radio-3" value="3"/><label for="recipient-radio-3">Individual lesson</label>'));
+
+                    $.each(teaches.concat(studies), function (idx, lesson) {
+                        var theid = "recipient-check-" + idx;
+                        $('<input type="checkbox" class="custom"/>').attr({name: theid, id: theid}).appendTo(individualLesson);
+                        $('<label/>').attr({for: theid}).text(lesson.name).appendTo(individualLesson);
+                    });
                 }
-                selector.selectmenu("refresh");
-                $("#message-recipients-menu").on("click", function (event) {
-                    var target = $(event.target);
-                    var index = target.parent().attr("data-option-index");
-                    console.log("index is " + index);
-                    if (target.hasClass("ui-checkbox-on")) {
-                        if (target.text() == "All lessons") {
-                            var ul = $("#message-recipients-menu");
-                            var aDoms = ul.find("a");
-                            for (var i = 0; i < aDoms.length; i++) {
-                                var a = aDoms.eq(i);
-                                console.log(a.parent().attr("data-option-index"));
-                                if (a.parent().attr("data-option-index") != index) {
-                                    a.click();
-                                } else {
-                                    a.click();
-                                }
-                            }
-                        }
-                    }
-                });
+                lessonGroups.find("input").checkboxradio();
+                individualLesson.find("input").checkboxradio();
             });
 
+            // When recipient button is clicked, toggle the recipient selection box
+            // Also change the direction of carat to indicate expand or collapse
+            recipientButton.on("click", function () {
+                var $this = $(this);
+                recipientSelection.toggle();
+                $this.toggleClass("ui-icon-carat-d ui-icon-carat-u");
+            });
+
+            // Change text on the recipient button accordingly based on the selection
+            // of recipients. The selection can be a radio or checkbox input.
+            // The first three radio inputs are simple (just display their values).
+            // The last radio input is for opening the individual lesson selection.
+            // The checkbox can not be processed using the click event, because their
+            // values are changed after the click event. Thus the value is incorrect
+            // when inside the click handler. The following "change" handler is used
+            // to handle the checkbox changes.
+            lessonGroups.on("click", "label", function () {
+                var $this = $(this);
+                if ($this.attr("for") != "recipient-radio-3") {
+                    individualLesson.hide();
+                    recipientButton.text($this.text());
+                } else {
+                    individualLesson.show().find("input:eq(0)").trigger("change");
+                }
+            });
+
+            individualLesson.on("change", "input", function () {
+                var checkBoxes = individualLesson.find("input");
+                var texts = [];
+                for (var i = 0; i < checkBoxes.length; i++) {
+                    if (checkBoxes.eq(i).is(":checked")) {
+                        texts.push(checkBoxes.eq(i).prev("label").text());
+                    }
+                }
+                if (texts.length > 0) {
+                    recipientButton.text(texts.join(","));
+                } else {
+                    recipientButton.text("Choose recipients ...");
+                }
+            });
 
             // Save button on new teach page
             app.doms.pageNewTeach.find("footer a:eq(1)").on("click", function () {
