@@ -978,7 +978,10 @@
                     messageList.empty();
                     var lastDateString = "",
                         today = app.getCurrentTimestamp(true);
-                    $.each(messages, function (idx, message) {
+                    $.each(messages, function (idx, entry) {
+                        var message = entry.message,
+                            lessons = entry.lessons;
+
                         var fields = message.creation_time.split(" "),
                             dateString = fields[0],
                             timeString = fields[1];
@@ -997,11 +1000,16 @@
                         }
 
                         var li = $('<li><h2></h2><div><p class="sender"></p><p>&nbsp;To&nbsp;</p><p class="lesson"></p><p class="time"></p></div>');
-                        li.find("h2").text(message.body).css({
-                            "font-weight": message.sender.user_id == message.lesson.teacher.user_id ? "bold" : "normal"
-                        });
+                        li.find("h2").text(message.body);
                         li.find(".sender").text(app.getUserDisplayName(message.sender));
-                        li.find(".lesson").text(message.lesson.name);
+                        var lesson_names = [];
+                        $.each(lessons, function (idx, lesson) {
+                             lesson_names.push(lesson.name);
+                             if (lesson.teacher.user_id == message.sender.user_id) {
+                                 li.find("h2").css("font-weight", "bold");
+                             }
+                        });
+                        li.find(".lesson").text(lesson_names.join(", "));
                         li.find(".time").text(app.formatTime(timeString));
                         messageList.append(li);
                     });
