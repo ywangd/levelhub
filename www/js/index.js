@@ -159,6 +159,7 @@
                         case "setup":
                             app.doms.headerHome.find("h1").text("Settings");
                             app.doms.btnHomeUR.hide();
+                            app.showSetup();
                             app.finishHomeNav();
                             break;
                     }
@@ -1046,7 +1047,7 @@
                                 $('<li data-role="list-divider"></li>').text(headingValue));
                         }
 
-                        var li = $('<li><h2></h2><div><p class="sender"></p><p>&nbsp;To&nbsp;</p><p class="lesson"></p><p class="time"></p></div>');
+                        var li = $('<li><h2></h2><div style="white-space: normal;"><p class="sender"></p><p>&nbsp;To&nbsp;</p><p class="lesson"></p><p class="time"></p></div></li>');
                         li.find("h2").text(message.body);
                         li.find(".sender").text(app.getUserDisplayName(message.sender));
                         var lesson_names = [];
@@ -1157,6 +1158,12 @@
                     app.finishHomeNav();
                 })
                 .fail(app.ajaxErrorHandler);
+        },
+
+        showSetup: function () {
+            var btn = $("#user-details-btn");
+            btn.find("h2").text(app.getUserDisplayName(user));
+            btn.find("p").text("since " + user.creation_time.split(" ")[0])
         },
 
         getCurrentTimestamp: function (dateOnly) {
