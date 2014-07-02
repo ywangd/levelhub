@@ -82,7 +82,7 @@
 </section>
 
 <section id="home" data-role="page">
-    <header data-role="header" data-position="fixed" id="home-header">
+    <header data-role="header" data-position="fixed" data-tap-toggle="false" id="home-header">
         <h1></h1>
         <a id="popdb" href="#" class="ui-btn ui-btn-left ui-icon-refresh ui-btn-icon-notext ui-corner-all">Populate
             DB</a>
@@ -133,7 +133,7 @@
             </li>
         </ul>
     </div>
-    <footer data-role="footer" data-position="fixed" data-theme="b" class="home-nav ui-mini">
+    <footer data-role="footer" data-position="fixed" data-tap-toggle="false" data-theme="b" class="home-nav ui-mini">
         <div data-role="navbar" data-grid="c" class="home-nav ui-mini">
             <ul class="ui-mini">
                 <li><a href="#" id="icon-news" data-icon="custom">News</a></li>
@@ -146,7 +146,7 @@
 </section>
 
 <section id="new-message" data-role="page">
-    <header data-role="header">
+    <header data-role="header" data-position="fixed" data-tap-toggle="false">
         <h1 class="wide-header">New Message</h1>
     </header>
 
@@ -165,10 +165,10 @@
                       style="resize: none;"></textarea>
         </form>
     </div>
-    <footer data-role="footer" data-position="fixed">
+    <footer data-role="footer" data-position="fixed" data-tap-toggle="false">
         <fieldset class="ui-grid-a">
             <div class="ui-block-a">
-                <a href="#home" data-transition="slideup"
+                <a href="#home" data-rel="back"
                    data-role="button" data-icon="delete" style="display: block;">Cancel</a>
             </div>
             <div class="ui-block-b">

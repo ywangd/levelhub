@@ -41,6 +41,7 @@
     var server_url = "http://levelhub-ywangd.rhcloud.com/";
     server_url = "http://localhost:8000/";
     //server_url = "http://10.0.2.2:8000/";
+    //server_url = "http://192.168.1.16:8000/";
 
     var app = {
         initialize: function () {
@@ -353,11 +354,19 @@
                 individualLesson = $("#individual-lesson"),
                 recipientButton = $("#choose-recipients");
 
+            // When recipient button is clicked, toggle the recipient selection box
+            // Also change the direction of carat to indicate expand or collapse
+            recipientButton.on("click", function () {
+                var $this = $(this);
+                recipientSelection.toggle();
+                $this.toggleClass("ui-icon-carat-d ui-icon-carat-u");
+            });
+
             // populate recipient list based on user lessons
             app.doms.pageNewMessage.on("pagebeforeshow", function () {
-                recipientSelection.hide();
+
                 lessonGroups.empty();
-                individualLesson.hide().empty();
+                individualLesson.empty();
                 recipientButton.text("Choose recipients ...");
                 if (teaches.length > 0 || studies.length > 0) {
                     lessonGroups.append($('<input type="radio" name="recipient-radio" id="recipient-radio-0" value="0"/><label for="recipient-radio-0">All lessons</label>'));
@@ -378,48 +387,46 @@
                 }
                 lessonGroups.find("input").checkboxradio();
                 individualLesson.find("input").checkboxradio();
-            });
 
-            // When recipient button is clicked, toggle the recipient selection box
-            // Also change the direction of carat to indicate expand or collapse
-            recipientButton.on("click", function () {
-                var $this = $(this);
-                recipientSelection.toggle();
-                $this.toggleClass("ui-icon-carat-d ui-icon-carat-u");
-            });
-
-            // Change text on the recipient button accordingly based on the selection
-            // of recipients. The selection can be a radio or checkbox input.
-            // The first three radio inputs are simple (just display their values).
-            // The last radio input is for opening the individual lesson selection.
-            // The checkbox can not be processed using the click event, because their
-            // values are changed after the click event. Thus the value is incorrect
-            // when inside the click handler. The following "change" handler is used
-            // to handle the checkbox changes.
-            lessonGroups.on("click", "label", function () {
-                var $this = $(this);
-                if ($this.attr("for") != "recipient-radio-3") {
-                    individualLesson.hide();
-                    recipientButton.text($this.text());
-                } else {
-                    individualLesson.show().find("input:eq(0)").trigger("change");
-                }
-            });
-
-            individualLesson.on("change", "input", function () {
-                var checkBoxes = individualLesson.find("input");
-                var texts = [];
-                for (var i = 0; i < checkBoxes.length; i++) {
-                    if (checkBoxes.eq(i).is(":checked")) {
-                        texts.push(checkBoxes.eq(i).prev("label").text());
+                // Change text on the recipient button accordingly based on the selection
+                // of recipients. The selection can be a radio or checkbox input.
+                // The first three radio inputs are simple (just display their values).
+                // The last radio input is for opening the individual lesson selection.
+                // The checkbox can not be processed using the click event, because their
+                // values are changed after the click event. Thus the value is incorrect
+                // when inside the click handler. The following "change" handler is used
+                // to handle the checkbox changes.
+                lessonGroups.find('[type="radio"]').on("click", function () {
+                    var $this = $(this);
+                    if ($this.attr("id") != "recipient-radio-3") {
+                        individualLesson.hide();
+                        recipientButton.text($this.prev("label").text());
+                    } else {
+                        individualLesson.show().find("input:eq(0)").trigger("change");
                     }
-                }
-                if (texts.length > 0) {
-                    recipientButton.text(texts.join(","));
-                } else {
-                    recipientButton.text("Choose recipients ...");
-                }
+                });
+
+                individualLesson.find("input").on("change", function () {
+                    var checkBoxes = individualLesson.find("input");
+                    var texts = [];
+                    for (var i = 0; i < checkBoxes.length; i++) {
+                        if (checkBoxes.eq(i).is(":checked")) {
+                            texts.push(checkBoxes.eq(i).prev("label").text());
+                        }
+                    }
+                    if (texts.length > 0) {
+                        recipientButton.text(texts.join(","));
+                    } else {
+                        recipientButton.text("Choose recipients ...");
+                    }
+                });
+
+                recipientSelection.hide();
+                individualLesson.hide();
             });
+
+
+
 
             // Send button on new message page
             app.doms.pageNewMessage.find("footer a:eq(1)").on("click", function () {
