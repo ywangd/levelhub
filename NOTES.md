@@ -45,3 +45,12 @@
 * Clean up the code by reduce file (e.g. svg) sizes and remove testing codees.
 * Global throttle on ajax
 * ajax cache and invalidate caches
+
+* Unify transitions to use slide everywhere?
+* Weekly calendar to show lessons and provide links direct to the stamp management page
+* Enroll, deroll, join, quit requests (approve and decline)
+* News feed pull to refresh
+* Clickable user name and lesson name on News tab.
+* Revamp the setup tab to make it more comprehensive so setup is only one item of it. (It can probably be used to show weekly calendars?)
+* Private messages?
+
