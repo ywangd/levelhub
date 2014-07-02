@@ -495,7 +495,7 @@
         <ul data-role="listview" data-inset="true" id="student-daytime-list"
             class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="b">
         </ul>
-        <a href="#student-daytime-dialog" data-rel="popup" data-position-to="window"
+        <a href="#daytime-dialog" data-rel="popup" data-position-to="window"
            data-transition="slideup"
            class="ui-btn ui-icon-plus ui-btn-icon-left">Add Class Time...</a>
 
@@ -510,43 +510,6 @@
                 </div>
             </li>
         </ul>
-    </div>
-    <div data-role="popup" id="student-daytime-dialog" class="daytime-dialog">
-        <div style="text-align: center;">
-            <div>
-                <select data-role="none" name="class-day">
-                    <option selected="selected">Sunday</option>
-                    <option>Monday</option>
-                    <option>Tuesday</option>
-                    <option>Wednesday</option>
-                    <option>Thursday</option>
-                    <option>Friday</option>
-                    <option>Saturday</option>
-                </select>
-            </div>
-            <div>
-                <select data-role="none" name="class-hour">
-                </select>
-            </div>
-            <div>
-                <select data-role="none" name="class-min">
-                </select>
-            </div>
-            <div>
-                <select data-role="none" name="class-ampm">
-                    <option selected="selected">AM</option>
-                    <option>PM</option>
-                </select>
-            </div>
-        </div>
-        <form style="clear: left;">
-            <fieldset class="ui-grid-solo">
-                <div class="ui-block-a">
-                    <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-mini"
-                       data-rel="back">Done</a>
-                </div>
-            </fieldset>
-        </form>
     </div>
 </section>
 
@@ -614,7 +577,7 @@
                 <ul data-role="listview" data-inset="true" id="new-student-daytime-list"
                     class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="b">
                 </ul>
-                <a href="#new-student-daytime-dialog" data-rel="popup" data-position-to="window"
+                <a href="#daytime-dialog" data-rel="popup" data-position-to="window"
                    data-transition="slideup"
                    class="ui-btn ui-icon-plus ui-btn-icon-left">Add Class Time...</a>
             </form>
@@ -631,43 +594,6 @@
             </div>
         </fieldset>
     </footer>
-    <div data-role="popup" id="new-student-daytime-dialog" class="daytime-dialog">
-        <div style="text-align: center;">
-            <div>
-                <select data-role="none" name="class-day">
-                    <option selected="selected">Sunday</option>
-                    <option>Monday</option>
-                    <option>Tuesday</option>
-                    <option>Wednesday</option>
-                    <option>Thursday</option>
-                    <option>Friday</option>
-                    <option>Saturday</option>
-                </select>
-            </div>
-            <div>
-                <select data-role="none" name="class-hour">
-                </select>
-            </div>
-            <div>
-                <select data-role="none" name="class-min">
-                </select>
-            </div>
-            <div>
-                <select data-role="none" name="class-ampm">
-                    <option selected="selected">AM</option>
-                    <option>PM</option>
-                </select>
-            </div>
-        </div>
-        <form style="clear: left;">
-            <fieldset class="ui-grid-solo">
-                <div class="ui-block-a">
-                    <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-mini"
-                       data-rel="back">Done</a>
-                </div>
-            </fieldset>
-        </form>
-    </div>
 </section>
 
 <section id="study-details-page" data-role="page">
@@ -760,6 +686,44 @@
 </section>
 
 <div id="ajax-error-alert"></div>
+
+<div data-role="popup" id="daytime-dialog" style="border: 0;">
+    <div style="text-align: center;">
+        <div>
+            <select data-role="none" name="class-day" id="class-day">
+                <option selected="selected">Sunday</option>
+                <option>Monday</option>
+                <option>Tuesday</option>
+                <option>Wednesday</option>
+                <option>Thursday</option>
+                <option>Friday</option>
+                <option>Saturday</option>
+            </select>
+        </div>
+        <div>
+            <select data-role="none" name="class-hour" id="class-hour">
+            </select>
+        </div>
+        <div>
+            <select data-role="none" name="class-min" id="class-min">
+            </select>
+        </div>
+        <div>
+            <select data-role="none" name="class-ampm" id="class-ampm">
+                <option selected="selected">AM</option>
+                <option>PM</option>
+            </select>
+        </div>
+    </div>
+    <form style="clear: left;">
+        <fieldset class="ui-grid-solo">
+            <div class="ui-block-a">
+                <a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-mini"
+                   data-rel="back" style="margin: 0;">Done</a>
+            </div>
+        </fieldset>
+    </form>
+</div>
 
 
 <script type="text/javascript" src="jq/jquery-2.1.1.js"></script>

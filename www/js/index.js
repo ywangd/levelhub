@@ -12,7 +12,6 @@
 
     var matchedUsers;
 
-
     var NEW_STAMP = -1;
 
     // Throttle ajax request so request to same url is only fired once every
@@ -41,6 +40,7 @@
 
     var server_url = "http://levelhub-ywangd.rhcloud.com/";
     server_url = "http://localhost:8000/";
+    //server_url = "http://10.0.2.2:8000/";
 
     var app = {
         initialize: function () {
@@ -128,6 +128,43 @@
 
             app.doms.divsHomeContent = app.doms.pageHome.find(".ui-content");
             app.doms.containersStamps = app.doms.pageStamps.find(".stamps-container");
+
+            // initialize the global daytime picker
+            // Pickerize the control only if they have not been pickerized
+            if ($("#uipv_main_class-day").length == 0) {
+                var popup = $("#daytime-dialog"),
+                    popupContainer = $("#daytime-dialog-popup");
+                popup.enhanceWithin().popup();
+                var selects = popup.find("select");
+                // Set proper dimension of the popup
+                var fontSize = app.doms.pageLogin.css("font-size"),
+                    totalWidth = app.doms.pageLogin.css("width"), // window.innerWidth,
+                    width = totalWidth * 0.9 / 5;
+                popup.css("width", width * 5 + "px");
+                popupContainer.css("left", (totalWidth * 0.1 / 2) + "px");
+                // day
+                selects.eq(0).iPhonePicker({
+                    width: width * 2 + "px",
+                    fontSize: fontSize
+                });
+                // populate hours
+                for (var i = 1; i < 13; i++) {
+                    $("<option>", {text: i < 10 ? "0" + i : i})
+                        .attr(i == 1 ? {"selected": "selected"} : {})
+                        .appendTo(selects.eq(1));
+                }
+                // populate miniutes
+                for (i = 0; i < 60; i++) {
+                    $("<option>", {text: i < 10 ? "0" + i : i})
+                        .attr(i == 0 ? {"selected": "selected"} : {})
+                        .appendTo(selects.eq(2));
+                }
+                // hour, min, ampm
+                selects.slice(1).iPhonePicker({
+                    width: width + "px",
+                    fontSize: fontSize
+                });
+            }
 
             // home page init
             // Handle home nav icon press
@@ -433,6 +470,7 @@
 
 
             $("#user-search-input").keyup(function () {
+                console.log("keyup");
                 var $this = $(this);
                 if ($this.val() == "") {
                     delay(function () {
@@ -579,65 +617,20 @@
                 return false;
             });
 
-            // prepare daytime picker when the containing page is first shown
-            app.doms.pageStudentInfo.add(app.doms.pageNewStudent).on("pageshow", function () {
-                var page = $(this),
-                    popup = page.find(".daytime-dialog"),
-                    idPrefix = page.attr("id");
-
-                // Pickerize the control only if they have not been pickerized
-                if ($("#uipv_main_" + idPrefix + "-day").length == 0) {
-                    var selects = popup.find("select");
-                    // dynamically assign the id for each control and namespace
-                    // them with the page id.
-                    // id attribute is required by pickerization
-                    $.each(["day", "hour", "min", "ampm"], function (idx, val) {
-                        selects.eq(idx).attr("id", idPrefix + "-" + val);
-                    });
-                    // Set proper dimension of the popup
-                    var content = page.find(".ui-content:eq(0)"),
-                        fontSize = content.css("font-size"),
-                        width = content.width() / 5;
-                    popup.css("width", width * 5 + "px");
-                    // day
-                    selects.eq(0).iPhonePicker({
-                        width: width * 2 + "px",
-                        fontSize: fontSize
-                    });
-                    // populate hours
-                    for (var i = 1; i < 13; i++) {
-                        $("<option>", {text: i < 10 ? "0" + i : i})
-                            .attr(i == 1 ? {"selected": "selected"} : {})
-                            .appendTo(selects.eq(1));
-                    }
-                    // populate miniutes
-                    for (i = 0; i < 60; i++) {
-                        $("<option>", {text: i < 10 ? "0" + i : i})
-                            .attr(i == 0 ? {"selected": "selected"} : {})
-                            .appendTo(selects.eq(2));
-                    }
-                    // hour, min, ampm
-                    selects.slice(1).iPhonePicker({
-                        width: width + "px",
-                        fontSize: fontSize
-                    });
-                }
-            });
-
             // Modify the DOM accordingly based on which element invoke
             // the daytime dialog. Also sets the initial value of daytime
             // dialog accordingly as well.
-            $(".daytime-dialog").on("click", "a", function () {
-                var popup = $(this).closest(".daytime-dialog"),
+            $("#daytime-dialog").on("click", "a", function () {
+                var popup = $("#daytime-dialog"),
                     selecteds = popup.find("option[selected]");
                 var daytime = selecteds.eq(0).text() + " "
                     + selecteds.eq(1).text() + ":"
                     + selecteds.eq(2).text() + " "
                     + selecteds.eq(3).text();
-                if (popup.data("target")) {
+                if (popup.data("target").is("a")) {  // modify existing daytime
                     popup.data("target").text(daytime);
-                } else {
-                    popup.closest("section").find(".daytime-list")
+                } else {  // append nwe daytime entry
+                    popup.data("target")
                         .append($("<li>").append($("<a>", {href: "#", text: daytime}))
                             .append($("<a>", {href: "#", text: "delete"})))
                         .listview("refresh");
@@ -655,7 +648,7 @@
                     list.listview("refresh");
                 } else {
                     var fields = app.parseClassDaytime($this.text());
-                    var popup = list.closest("section").find(".daytime-dialog"),
+                    var popup = $("#daytime-dialog"),
                         selects = popup.find("select");
                     $.each(selects, function (idx, select) {
                         select.selectedIndex = fields[idx];
@@ -665,6 +658,10 @@
                         transition: "slideup"
                     });
                 }
+            });
+
+            $(".daytime-list + a").on("click", function () {
+                $("#daytime-dialog").data("target", $(this).prev("ul:eq(0)"));
             });
 
             // Handle done button on student details page
