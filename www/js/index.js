@@ -1075,17 +1075,19 @@
                 }
             });
 
-            // Debug function to deal with the slowness of android emulator
-            $(document).keyup(function (event) {
-                if ($.mobile.activePage.attr("id") == "stamps-page" || $.mobile.activePage.attr("id") == "studentStamp-1") {
-                    if (event.which == 65) {
-                        $.mobile.activePage.find(".ui-content").trigger("swiperight");
-                    } else if (event.which == 68) {
-                        $.mobile.activePage.find(".ui-content").trigger("swipeleft");
-                    }
-                }
-                return false;
+            // Handle click on study list
+            app.doms.listStudies.on("click", "a", function () {
+                var $this = $(this),
+                    pageStudyDetails = $("#study-details-page");
+                currentStudy = studies[$this.parent().prevAll().length];
+                pageStudyDetails.find("header h1").text(currentStudy.name);
+                app.populateUserDetailsButton(pageStudyDetails, currentStudy.teacher);
+                $.mobile.changePage(pageStudyDetails, {
+                    transition: "slide"
+                });
             });
+
+
         },
 
         get_user_lesssons: function (sucessHandler) {
@@ -1239,7 +1241,7 @@
                     studies = data;
                     app.doms.listStudies.empty();
                     $.each(studies, function (idx, study) {
-                        var a = $('<a href="#study-details-page" data-transition="slide"/>')
+                        var a = $('<a href="#"/>')
                             .append($("<h2></h2><p><strong></strong></p><p></p>"));
                         a.find("h2").text(study.name);
                         a.find("strong").text(app.getUserDisplayName(study.teacher));
