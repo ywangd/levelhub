@@ -111,7 +111,7 @@
                 pageNewMessage: $("#new-message"),
                 pageNewTeach: $("#new-teach"),
                 pageTeachRegs: $("#teach-regs-page"),
-                pageNewStudent: $("#new-student"),
+                pageNewStudentOffline: $("#new-student-offline"),
                 pageStamps: $("#stamps-page"),
                 pageTeachRegsDetails: $("#teach-regs-details-page"),
                 pageStudentInfo: $("#student-info-page"),
@@ -120,10 +120,7 @@
                 listStudents: $("#student-list"),
                 listTeaches: $("#teach-list"),
                 listStudies: $("#study-list"),
-                popNewStudentDaytime: $("#new-student-daytime-dialog"),
-                listNewStudentDaytime: $("#new-student-daytime-list"),
-                listStudentHistory: $("#student-history"),
-                listStudentDaytime: $("#student-daytime-list")
+                listStudentHistory: $("#student-history")
             };
 
             app.doms.divsHomeContent = app.doms.pageHome.find(".ui-content");
@@ -138,7 +135,7 @@
                 var selects = popup.find("select");
                 // Set proper dimension of the popup
                 var fontSize = app.doms.pageLogin.css("font-size"),
-                    totalWidth = app.doms.pageLogin.css("width"), // window.innerWidth,
+                    totalWidth = app.doms.pageLogin.width(), // window.innerWidth,
                     width = totalWidth * 0.9 / 5;
                 popup.css("width", width * 5 + "px");
                 popupContainer.css("left", (totalWidth * 0.1 / 2) + "px");
@@ -680,7 +677,7 @@
             });
 
             // Handle Save button for new student page
-            app.doms.pageNewStudent.find("footer a:eq(1)").click(function () {
+            app.doms.pageNewStudentOffline.find("footer a:eq(1)").click(function () {
                 var form = $("#new-student-form"),
                     fields = {};
                 $.each(form.serializeArray(), function (idx, field) {
@@ -692,8 +689,10 @@
                 } else {
                     fields['lesson_id'] = currentTeach.lesson_id;
                     // add any class daytime entries
-                    var data = {daytime: []};
-                    $.each(app.doms.listNewStudentDaytime.find("li a:not([title='delete'])"),
+                    var data = {daytime: []},
+                        $daytimeList = app.doms.pageNewStudentOffline.find(".daytime-list");
+
+                    $.each($daytimeList.find("li a:not([title='delete'])"),
                         function (idx, dom) {
                             data.daytime.push(dom.innerHTML);
                         });
@@ -709,7 +708,7 @@
                                 transition: "slideup"
                             });
                             form[0].reset();
-                            app.doms.listNewStudentDaytime.empty();
+                            $daytimeList.empty();
                             currentTeach.nregs += 1;
                             var idxTeachList = teaches.indexOf(currentTeach);
                             app.doms.divsHomeContent.eq(homeNavIdx).
@@ -959,15 +958,16 @@
                     appendTo(app.doms.listStudentHistory);
                 app.refresh_listview(app.doms.listStudentHistory);
 
-                app.doms.listStudentDaytime.empty();
+                var $daytimeList = app.doms.pageStudentInfo.find(".daytime-list");
+                $daytimeList.empty();
                 console.log(currentReg);
                 var daytimeList = JSON.parse(currentReg.data).daytime || [];
                 $.each(daytimeList, function (idx, daytime) {
                     $("<li>").append($("<a>", {href: "#", text: daytime})).
                         append($("<a>", {href: "#", text: "delete"})).
-                        appendTo(app.doms.listStudentDaytime);
+                        appendTo($daytimeList);
                 });
-                app.refresh_listview(app.doms.listStudentDaytime);
+                app.refresh_listview($daytimeList);
 
                 $.mobile.changePage(app.doms.pageStudentInfo, {
                     transition: "flip"

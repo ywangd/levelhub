@@ -234,7 +234,7 @@
     <div data-role="popup" id="teach-regs-popup-menu">
         <ul data-role="listview" data-inset="true">
             <li>
-                <a href="#new-student" data-transition="slidedown"
+                <a href="#new-student-offline" data-transition="slidedown"
                    class="ui-btn ui-icon-plus ui-btn-icon-left">Enroll</a>
             </li>
             <li>
@@ -492,7 +492,7 @@
             class="ui-mini">
         </ul>
 
-        <ul data-role="listview" data-inset="true" id="student-daytime-list"
+        <ul data-role="listview" data-inset="true"
             class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="b">
         </ul>
         <a href="#daytime-dialog" data-rel="popup" data-position-to="window"
@@ -549,14 +549,14 @@
     <div role="main" class="ui-content">
         <ul data-role="listview">
             <li><a href="#user-search" data-transition="slide">Search by Name</a></li>
-            <li><a href="#new-student" data-transition="slide">Non-member</a></li>
+            <li><a href="#new-student-offline" data-transition="slide">Non-member</a></li>
             <li><a href="#" data-transition="slide">Scan</a></li>
         </ul>
     </div>
 </section>
 
 
-<section id="new-student" data-role="page">
+<section id="new-student-offline" data-role="page">
     <header data-role="header" data-position="fixed">
         <h1>New Student</h1>
     </header>
@@ -574,7 +574,7 @@
                     <label for="addlname" class="ui-hidden-accessible">Last Name</label>
                     <input type="text" name="last_name" id="addlname" value="" data-theme="a" placeholder="Last Name"/>
                 </div>
-                <ul data-role="listview" data-inset="true" id="new-student-daytime-list"
+                <ul data-role="listview" data-inset="true"
                     class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="b">
                 </ul>
                 <a href="#daytime-dialog" data-rel="popup" data-position-to="window"
