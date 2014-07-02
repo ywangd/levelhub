@@ -2,7 +2,7 @@
     // Tell jquery to not fire tap event when taphold is fired
     $.event.special.tap.emitTapOnTaphold = false;
 
-    var user = {};
+    var me = {};
     var messages;
     var teaches, currentTeach;
     var studies, currentStudy;
@@ -10,7 +10,7 @@
     var stamps, stampsDeleted;
     var stampFirstIdx, stampLastIdx;
 
-    var matchedUsers;
+    var matchedUsers, currentMatchedUser;
 
     var NEW_STAMP = -1;
 
@@ -112,6 +112,7 @@
                 pageNewTeach: $("#new-teach"),
                 pageTeachRegs: $("#teach-regs-page"),
                 pageNewStudentOffline: $("#new-student-offline"),
+                pageNewStudentOnline: $("#new-student-online"),
                 pageStamps: $("#stamps-page"),
                 pageTeachRegsDetails: $("#teach-regs-details-page"),
                 pageStudentInfo: $("#student-info-page"),
@@ -223,9 +224,9 @@
             }
 
             // The first page to show
-            var savedUser = localStorage.getItem('user');
-            if (savedUser) {
-                user = JSON.parse(savedUser);
+            var savedMe = localStorage.getItem('me');
+            if (savedMe) {
+                me = JSON.parse(savedMe);
                 app.get_user_lesssons(function () {
                     $.mobile.changePage(app.doms.pageHome);
                     $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
@@ -247,8 +248,8 @@
                     data: data
                 })
                     .done(function (data) {
-                        user = data;
-                        localStorage.setItem('user', JSON.stringify(user));
+                        me = data;
+                        localStorage.setItem('me', JSON.stringify(me));
                         app.get_user_lesssons(function () {
                             $.mobile.changePage(app.doms.pageHome, {
                                 transition: "slideup"
@@ -267,8 +268,8 @@
                     data: ""
                 })
                     .always(function (data) {
-                        user = {};
-                        localStorage.removeItem('user');
+                        me = {};
+                        localStorage.removeItem('me');
                         $.mobile.changePage(app.doms.pageLogin, {
                             transition: "slidedown"
                         });
@@ -317,7 +318,7 @@
                         data: data
                     })
                         .done(function (data) {
-                            user = data;
+                            me = data;
                             teaches = [];
                             studies = [];
                             $.mobile.changePage(app.doms.pageHome, {
@@ -466,7 +467,7 @@
             });
 
 
-            $("#user-search-input").keyup(function () {
+            $("#user-search").on("keyup", "#user-search-input", function () {
                 console.log("keyup");
                 var $this = $(this);
                 if ($this.val() == "") {
@@ -485,7 +486,7 @@
                                 ul.empty();
                                 $.each(matchedUsers, function (idx, u) {
                                     $("<li>").append(
-                                        $('<a href="#"></a>')
+                                        $('<a href="#new-student-online" data-transition="slide"></a>')
                                             .text(app.getUserDisplayName(u)))
                                         .appendTo(ul);
                                 });
@@ -494,13 +495,20 @@
                             .fail(app.ajaxErrorHandler);
                     }, 300);
                 }
-            });
-
-            $("#user-search").on("click", ".ui-input-clear", function () {
-                delay(function () {
+            })
+                .on("click", ".ui-input-clear", function () {
+                    delay(function () {
+                        $("#user-search-output").empty().listview("refresh");
+                    }, 300);
+                })
+                .on("click", "#user-search-output a", function () {
+                    currentMatchedUser = matchedUsers[$(this).parent().prevAll().length];
+                    app.populateUserDetailsButton($("#new-student-online"), currentMatchedUser);
+                })
+                .on("pagehide", function () {
+                    $("#user-search-input").val("");
                     $("#user-search-output").empty().listview("refresh");
-                }, 300);
-            });
+                });
 
 
             // Save button on new teach page
@@ -676,7 +684,7 @@
                 currentReg.data = JSON.stringify(data);
             });
 
-            // Handle Save button for new student page
+            // Handle Save button for Offline new student page
             app.doms.pageNewStudentOffline.find("footer a:eq(1)").click(function () {
                 var form = $("#new-student-form"),
                     fields = {};
@@ -718,6 +726,41 @@
                         .fail(app.ajaxErrorHandler);
                 }
             });
+
+            // Handle Save button for Online new student page
+            app.doms.pageNewStudentOnline.find("footer a:eq(1)").click(function () {
+                var fields = {};
+                fields['lesson_id'] = currentTeach.lesson_id;
+                fields['student_id'] = currentMatchedUser.user_id;
+                // add any class daytime entries
+                var data = {daytime: []},
+                    $daytimeList = app.doms.pageNewStudentOnline.find(".daytime-list");
+
+                $.each($daytimeList.find("li a:not([title='delete'])"),
+                    function (idx, dom) {
+                        data.daytime.push(dom.innerHTML);
+                    });
+                fields['data'] = (JSON.stringify(data));
+                $.ajax({
+                    type: 'POST',
+                    url: server_url + 'j/update_lesson_reg_and_logs/',
+                    data: JSON.stringify({'create': fields})
+                })
+                    .done(function (data) {
+                        app.showRegsForTeachLesson();
+                        $.mobile.changePage(app.doms.pageTeachRegs, {
+                            transition: "slideup"
+                        });
+                        $daytimeList.empty();
+                        currentTeach.nregs += 1;
+                        var idxTeachList = teaches.indexOf(currentTeach);
+                        app.doms.divsHomeContent.eq(homeNavIdx).
+                            find("ul a span").
+                            eq(idxTeachList).empty().text(currentTeach.nregs);
+                    })
+                    .fail(app.ajaxErrorHandler);
+            });
+
 
             // Handle the transition from teach regs page to stamps page
             app.doms.listStudents.on("click", "a", function () {
@@ -943,11 +986,9 @@
                 stampDoms.find("img.x-delete").addClass("hidden");
             });
 
-            // Handle transition to student details page
+            // Handle transition to student info page
             $("#student-details-button").on("click", function () {
-                var li0 = app.doms.pageStudentInfo.find(".ui-content li:eq(0)");
-                li0.find("h2").text(app.getRegStudentDisplayName(currentReg));
-                li0.find("p").text("from " + currentReg.creation_time.split(" ")[0]);
+                app.populateUserDetailsButton(app.doms.pageStudentInfo, currentReg);
 
                 app.doms.listStudentHistory.empty();
                 $("<li>").append($("<a>",
@@ -960,7 +1001,6 @@
 
                 var $daytimeList = app.doms.pageStudentInfo.find(".daytime-list");
                 $daytimeList.empty();
-                console.log(currentReg);
                 var daytimeList = JSON.parse(currentReg.data).daytime || [];
                 $.each(daytimeList, function (idx, daytime) {
                     $("<li>").append($("<a>", {href: "#", text: daytime})).
@@ -1113,7 +1153,7 @@
 
         showTeachLessons: function () {
             $.ajax({
-                url: server_url + 'j/get_teach_lessons/' + user.user_id + '/'
+                url: server_url + 'j/get_teach_lessons/' + me.user_id + '/'
             })
                 .done(function (data) {
                     teaches = data;
@@ -1206,9 +1246,21 @@
         },
 
         showSetup: function () {
-            var btn = $("#user-details-btn");
-            btn.find("h2").text(app.getUserDisplayName(user));
-            btn.find("p").text("since " + user.creation_time.split(" ")[0])
+            app.populateUserDetailsButton($("#setup"), me);
+        },
+
+        populateUserDetailsButton: function (container, theUser) {
+            var btn = container.find(".user-details-btn"),
+                name, headingText;
+            if (theUser.reg_id != undefined) {
+                name = app.getRegStudentDisplayName(theUser);
+                headingText = "Enrolled on ";
+            } else {
+                name = app.getUserDisplayName(theUser);
+                headingText = "Member since ";
+            }
+            btn.find("h2").text(name);
+            btn.find("p").text(headingText + theUser.creation_time.split(" ")[0])
         },
 
         getCurrentTimestamp: function (dateOnly) {

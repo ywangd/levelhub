@@ -104,12 +104,14 @@
     </div>
     <div role="main" class="ui-content" id="setup">
         <ul data-role="listview" data-inset="true">
-            <li id="user-details-btn"><a href="#my-details-page" data-transition="slide">
-                <img src="img/smiley.svg" style="width: 80px;">
+            <li class="user-details-btn">
+                <a href="#my-details-page" data-transition="slide">
+                    <img src="img/smiley.svg" style="width: 80px;">
 
-                <h2></h2>
+                    <h2></h2>
 
-                <p></p></a>
+                    <p></p>
+                </a>
             </li>
         </ul>
 
@@ -234,7 +236,7 @@
     <div data-role="popup" id="teach-regs-popup-menu">
         <ul data-role="listview" data-inset="true">
             <li>
-                <a href="#new-student-offline" data-transition="slidedown"
+                <a href="#new-student-guide" data-transition="slidedown"
                    class="ui-btn ui-icon-plus ui-btn-icon-left">Enroll</a>
             </li>
             <li>
@@ -478,13 +480,15 @@
            class="ui-btn ui-btn-corner-all ui-btn-right ui-shadow">Done</a>
     </header>
     <div role="main" class="ui-content">
-        <ul id="student-details-list" data-role="listview" data-inset="true">
-            <li id="student-details-btn"><a href="#student-details-page" data-transition="slide">
-                <img src="img/smiley.svg" style="width: 80px;">
+        <ul data-role="listview" data-inset="true">
+            <li class="user-details-btn">
+                <a href="#user-details-page" data-transition="slide">
+                    <img src="img/smiley.svg" style="width: 80px;">
 
-                <h2></h2>
+                    <h2></h2>
 
-                <p></p></a>
+                    <p></p>
+                </a>
             </li>
         </ul>
 
@@ -514,7 +518,7 @@
 </section>
 
 
-<section id="student-details-page" data-role="page">
+<section id="user-details-page" data-role="page">
     <header data-role="header" data-position="fixed">
         <h1 class="wide-header">User Details</h1>
         <a data-rel="back"
@@ -548,11 +552,50 @@
     </header>
     <div role="main" class="ui-content">
         <ul data-role="listview">
-            <li><a href="#user-search" data-transition="slide">Search by Name</a></li>
+            <li><a href="#user-search" data-transition="slide">Search by name</a></li>
             <li><a href="#new-student-offline" data-transition="slide">Non-member</a></li>
             <li><a href="#" data-transition="slide">Scan</a></li>
         </ul>
     </div>
+</section>
+
+
+<section id="new-student-online" data-role="page">
+    <header data-role="header" data-position="fixed">
+        <h1>New Student</h1>
+    </header>
+    <div role="main" class="ui-content">
+        <div>
+            <ul data-role="listview" data-inset="true">
+                <li class="user-details-btn">
+                    <a href="#user-details-page" data-transition="slide">
+                        <img src="img/smiley.svg" style="width: 80px;">
+
+                        <h2></h2>
+
+                        <p></p>
+                    </a>
+                </li>
+            </ul>
+            <ul data-role="listview" data-inset="true"
+                class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="b">
+            </ul>
+            <a href="#daytime-dialog" data-rel="popup" data-position-to="window"
+               data-transition="slideup"
+               class="ui-btn ui-icon-plus ui-btn-icon-left">Add Class Time...</a>
+        </div>
+    </div>
+    <footer data-role="footer" data-position="fixed">
+        <fieldset class="ui-grid-a">
+            <div class="ui-block-a">
+                <a href="#" data-rel="back"
+                   data-role="button" data-icon="delete" style="display: block;">Cancel</a>
+            </div>
+            <div class="ui-block-b">
+                <a href="#" data-role="button" data-theme="b" data-icon="check" style="display: block;">OK</a>
+            </div>
+        </fieldset>
+    </footer>
 </section>
 
 
@@ -586,7 +629,7 @@
     <footer data-role="footer" data-position="fixed">
         <fieldset class="ui-grid-a">
             <div class="ui-block-a">
-                <a href="#teach-regs-page" data-transition="slideup"
+                <a href="#" data-rel="back"
                    data-role="button" data-icon="delete" style="display: block;">Cancel</a>
             </div>
             <div class="ui-block-b">
