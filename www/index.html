@@ -214,8 +214,8 @@
 <section id="teach-regs-page" data-role="page">
     <header data-role="header" data-position="fixed">
         <h1 class="wide-header"></h1>
-        <a href="#home" data-transition="slide" data-direction="reverse"
-           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-left ui-btn-icon-notext">Back</a>
+        <a href="#" data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
         <a href="#teach-regs-popup-menu" data-rel="popup"
            class="ui-btn ui-btn-right ui-icon-bars ui-btn-icon-notext ui-btn-corner-all">More...</a>
     </header>
@@ -251,10 +251,22 @@
     </div>
 </section>
 
+<section id="lesson-regs-page" data-role="page">
+    <header data-role="header" data-position="fixed" data-tap-toggle="false">
+        <h1 class="wide-header">Lesson Registrations</h1>
+        <a href="#" data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
+    </header>
+    <div role="main" class="ui-content">
+        <ul data-role="listview">
+        </ul>
+    </div>
+</section>
+
 
 <section id="teach-details-page" data-role="page">
     <header data-role="header">
-        <h1 class="wide-header">Class Details</h1>
+        <h1 class="wide-header">Teach Details</h1>
         <a href="#teach-regs-page" data-transition="flip" data-direction="reverse"
            class="ui-btn ui-btn-corner-all ui-btn-right ui-shadow">Done</a>
     </header>
@@ -498,6 +510,9 @@
 
         <ul data-role="listview" data-inset="true" id="student-history"
             class="ui-mini">
+            <li><a href="#taken-history-page" data-transition="slide"><span class="list-leading">Taken</span>
+                <span class="lesson-taken-count"></span></a></li>
+            <li><span class="list-leading">Unused</span><span class="lesson-unused-count"></span></li>
         </ul>
 
         <ul data-role="listview" data-inset="true"
@@ -530,12 +545,20 @@
     </header>
     <div role="main" class="ui-content">
         <ul data-role="listview">
-            <li><span class="list-leading">Username</span><span id="user-details-username"></span></li>
-            <li><span class="list-leading">Name</span><span id="user-details-displayname"></span></li>
+            <li id="user-details-header">
+                <img src="img/smiley.svg" style="width: 76px; margin: 2px;"/>
+
+                <h2></h2>
+
+                <p></p>
+            </li>
             <li><span class="list-leading">Email</span><span id="user-details-email"></span></li>
-            <li><span class="list-leading">About</span><div id="user-details-about" style="white-space: normal;"></div></li>
+            <li><span class="list-leading">About</span>
+
+                <div id="user-details-about" style="white-space: normal;"></div>
+            </li>
             <li><a href="#user-teaches-page" data-transition="slide">Teaches</a></li>
-            <li><a href="#">Send message ...</a></li>
+            <li><a href="#">Send message</a></li>
         </ul>
     </div>
 </section>
@@ -656,16 +679,35 @@
            class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
     </header>
     <div role="main" class="ui-content">
-        <ul data-role="listview" data-inset="true">
-            <li class="user-details-btn">
-                <a href="#user-details-page" data-transition="slide">
-                    <img src="img/smiley.svg" style="width: 80px;">
+        <ul data-role="listview">
+            <li data-role="list-divider">My Infomration</li>
+            <li><a href="#taken-history-page" data-transition="slide"><span class="list-leading">Taken</span>
+                <span id="study-details-taken"></span></a></li>
+            <li><span class="list-leading">Unused</span><span id="study-details-unused"></span></li>
+            <li><span class="list-leading">Enrolled</span><span id="study-details-since"></span></li>
+            <li data-role="list-divider">Lesson Information</li>
+            <li><a href="#user-details-page" data-transition="slide"><span class="list-leading">Teacher</span>
+                <span id="study-details-teacher"></span></a></li>
+            <li><span class="list-leading">Name</span><span id="study-details-name"></span></li>
+            <li><span class="list-leading">Description</span>
+                <div id="study-details-description" style="white-space: normal;"></div></li>
+            <li><span class="list-leading">Created</span><span id="study-details-lesson-since"></span></li>
+            <li><a href="#lesson-regs-page" data-transition="slide"><span class="list-leading">Members</span>
+                <span id="study-details-members"></span></a></li>
+        </ul>
 
-                    <h2></h2>
+    </div>
+</section>
 
-                    <p></p>
-                </a>
-            </li>
+<section id="taken-history-page" data-role="page">
+    <header data-role="header" data-position="fixed" data-tap-toggle="false">
+        <h1 class="wide-header">Class History</h1>
+        <a data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
+    </header>
+    <div role="main" class="ui-content">
+        <ul data-role="listview" class="ui-mini">
+
         </ul>
     </div>
 </section>
@@ -766,8 +808,11 @@
     <div role="main" class="ui-content">
         <ul data-role="listview">
             <li><span class="list-leading">Name</span><span id="lesson-details-name"></span></li>
-            <li><span class="list-leading">Description</span><div id="lesson-details-description" style="white-space: normal;"></div></li>
-            <li><span class="list-leading">Since</span><span id="lesson-details-creation_time"></span></li>
+            <li><span class="list-leading">Description</span>
+
+                <div id="lesson-details-description" style="white-space: normal;"></div>
+            </li>
+            <li><span class="list-leading">Created</span><span id="lesson-details-creation_time"></span></li>
             <li><span class="list-leading">Members</span><span id="lesson-details-nregs"></span></li>
         </ul>
 

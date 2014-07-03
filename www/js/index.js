@@ -762,11 +762,12 @@
                 $("#daytime-dialog").data("target", $(this).prev("ul:eq(0)"));
             });
 
-            // Handle done button on student details page
-            // It modifies the currentReg object if data is changed
+            // Memorize the class daytime changes when leaving the registration
+            // info page.
+            // It modifies the currentReg object if data is changed and
             // the object is later persistent into the database if save button
             // is clicked on the stamps page.
-            app.doms.pageRegistrationInfo.find("header a").on("click", function () {
+            app.doms.pageRegistrationInfo.on("pagebeforehide", function () {
                 var daytimeList = [];
                 $.each($(this).closest("section").find(".daytime-list li a:not([title='delete'])"),
                     function (idx, dom) {
@@ -875,7 +876,7 @@
                 stampDoms.find("img.x-delete").addClass("hidden");
 
                 $.ajax({
-                    url: server_url + 'j/get_lesson_reg_logs/' + currentReg.reg_id + '/'
+                    url: server_url + "j/get_lesson_reg_logs/" + currentReg.reg_id + "/"
                 })
                     .done(function (data) {
                         stamps = data;
@@ -1089,13 +1090,9 @@
             $("#student-details-button").on("click", function () {
                 app.populateUserDetailsButton(app.doms.pageRegistrationInfo, currentReg);
 
-                app.doms.listStudentHistory.empty();
-                $("<li>").append($("<a>",
-                    {href: "#", text: "Taken: " + (currentReg.total - currentReg.unused)})).
-                    appendTo(app.doms.listStudentHistory);
-                $("<li>", {"data-icon": "false"}).
-                    append($("<a>", {href: "#", text: "Unused: " + currentReg.unused})).
-                    appendTo(app.doms.listStudentHistory);
+                app.doms.pageRegistrationInfo.find(".lesson-taken-count")
+                    .text(currentReg.total - currentReg.unused)
+                    .end().find(".lesson-unused-count").text(currentReg.unused);
                 app.refresh_listview(app.doms.listStudentHistory);
 
                 var $daytimeList = app.doms.pageRegistrationInfo.find(".daytime-list");
@@ -1167,17 +1164,64 @@
                 }
             });
 
-            // Handle click on study list
+            // Handle click on study list to show study details
             app.doms.listStudies.on("click", "a", function () {
                 var $this = $(this),
                     pageStudyDetails = $("#study-details-page");
                 currentStudy = studies[$this.parent().prevAll().length];
                 currentUser = currentStudy.teacher;
                 pageStudyDetails.find("header h1").text(currentStudy.name);
-                app.populateUserDetailsButton(pageStudyDetails, currentUser);
+                $("#study-details-taken").text(
+                        currentStudy.registration.total - currentStudy.registration.unused);
+                $("#study-details-unused").text(currentStudy.registration.unused);
+                $("#study-details-since").text(currentStudy.registration.creation_time.split(" ")[0]);
+
+                pageStudyDetails.find(".study-details-daytime").remove();
+                var daytimeList = JSON.parse(currentStudy.registration.data).daytime || [];
+                $.each(daytimeList.reverse(), function (idx, daytime) {
+                    $("#study-details-since")
+                        .after($('<li class="study-details-daytime"><span class="list-leading">Class time</span><span>'
+                            + daytime + '</span></li>'));
+                });
+
+                $("#study-details-teacher").text(app.getUserDisplayName(currentStudy.teacher));
+                $("#study-details-name").text(currentStudy.name);
+                $("#study-details-description").text(currentStudy.description);
+                $("#study-details-lesson-since").text(currentStudy.creation_time.split(" ")[0]);
+                $("#study-details-members").text(currentStudy.nregs);
+                app.refresh_listview(pageStudyDetails.find("ul"));
                 $.mobile.changePage(pageStudyDetails, {
                     transition: "slide"
                 });
+            });
+
+            // Populate taken history page
+            $("a[href='#taken-history-page']").on("click", function () {
+                var reg_id;
+                switch ($(this).closest("section").attr("id")) {
+                    case "study-details-page":
+                        reg_id = currentStudy.registration.reg_id;
+                        break;
+                    case "registration-info-page":
+                        reg_id = currentReg.reg_id;
+                        break;
+                }
+                var page = $("#taken-history-page"),
+                    ul = page.find("ul");
+                ul.empty();
+                $.ajax({
+                    url: server_url + "j/get_lesson_reg_logs/" + reg_id + "/"
+                })
+                    .done(function (data) {
+                        $.each(data.reverse(), function (idx, log) {
+                            if (log.use_time) {
+                                ul.append(
+                                    $("<li></li>").text(app.processTimeStamp(log.use_time)["simpleDateString"]));
+                            }
+                        });
+                        app.refresh_listview(ul);
+                    })
+                    .fail(app.ajaxErrorHandler);
             });
 
             // Populate user details page
@@ -1190,8 +1234,9 @@
                 }
 
                 var pageUserDetails = $("#user-details-page");
-                pageUserDetails.find("#user-details-username").text(currentUser.username);
-                pageUserDetails.find("#user-details-displayname").text(app.getUserDisplayName(currentUser));
+                pageUserDetails.find("#user-details-header")
+                    .find("h2").text(app.getUserDisplayName(currentUser))
+                    .end().find("p").text("member since " + currentUser.creation_time.split(" ")[0]);
                 pageUserDetails.find("#user-details-email").text(currentUser.email);
                 pageUserDetails.find("#user-details-about").text(currentUser.about);
 
@@ -1400,6 +1445,27 @@
             }
         },
 
+        processTimeStamp: function (tsString) {
+            // timestamp string is of format YYYY-MM-DD HH:MM:SSZ
+            var fields = tsString.split(" "),
+                dateString = fields[0],
+                timeString = fields[1].slice(0,8),
+                tzString = fields[1].slice(8);
+
+            if (tzString != "") {
+                console.log("Time Zone is not UTC. ", tzString);
+            }
+
+            simpleTimeString = app.formatTime(timeString);
+
+            return {
+                dateString: dateString,
+                timeString: timeString,
+                simpleTimeString: simpleTimeString,
+                simpleDateString: dateString + ' ' + simpleTimeString
+            };
+        },
+
         parseDate: function (dateString) {
             // dateString is of format YYYY-MM-DD
             var fields = dateString.split("-"),
@@ -1462,7 +1528,7 @@
         },
 
         confirm: function (message, callback, title) {
-            console.log(navigator.notification);
+            console.log(message);
             navigator.notification.confirm(message, callback, title);
         },
 
