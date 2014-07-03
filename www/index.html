@@ -497,7 +497,7 @@
         </ul>
 
         <ul data-role="listview" data-inset="true"
-            class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="b">
+            class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="a">
         </ul>
         <a href="#daytime-dialog" data-rel="popup" data-position-to="window"
            data-transition="slideup"
@@ -523,23 +523,29 @@
         <h1 class="wide-header">User Details</h1>
         <a data-rel="back"
            class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
-        <a href="#"
-           class="ui-btn ui-btn-corner-all ui-btn-right ui-shadow">Done</a>
     </header>
     <div role="main" class="ui-content">
-        <form>
-            <label class="ui-mini">Name</label>
+        <ul data-role="listview">
+            <li><span class="list-leading">Username</span><span id="user-details-username"></span></li>
+            <li><span class="list-leading">Name</span><span id="user-details-displayname"></span></li>
+            <li><span class="list-leading">Email</span><span id="user-details-email"></span></li>
+            <li><span class="list-leading">About</span><div id="user-details-about" style="white-space: normal;"></div></li>
+            <li><a href="#user-teaches-page">Teaches</a></li>
+            <li><a href="#">Send message ...</a></li>
+        </ul>
+    </div>
+</section>
 
+<section id="user-teaches-page" data-role="page">
+    <header data-role="header" data-position="fixed">
+        <h1 class="wide-header">User Teaches</h1>
+        <a data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
+    </header>
+    <div role="main" class="ui-content">
+        <ul data-role="listview">
 
-            <label class="ui-mini">Email <span class="input-warning"></span></label>
-            <input class="ui-mini" type="email" name="email"/>
-
-            <label>About</label>
-            <textarea disabled="disabled" cols="40" rows="6" name="aboutUser" data-autogrow="false"
-                      style="resize: none;"></textarea>
-
-
-        </form>
+        </ul>
     </div>
 </section>
 
@@ -578,7 +584,7 @@
                 </li>
             </ul>
             <ul data-role="listview" data-inset="true"
-                class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="b">
+                class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="a">
             </ul>
             <a href="#daytime-dialog" data-rel="popup" data-position-to="window"
                data-transition="slideup"
@@ -618,7 +624,7 @@
                     <input type="text" name="last_name" id="addlname" value="" data-theme="a" placeholder="Last Name"/>
                 </div>
                 <ul data-role="listview" data-inset="true"
-                    class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="b">
+                    class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="a">
                 </ul>
                 <a href="#daytime-dialog" data-rel="popup" data-position-to="window"
                    data-transition="slideup"
@@ -702,6 +708,21 @@
     </div>
 </section>
 
+<section id="new-study-guide" data-role="page">
+    <header data-role="header" data-position="fixed">
+        <h1>Search by</h1>
+        <a data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-delete ui-btn-right">Cancel</a>
+    </header>
+    <div role="main" class="ui-content">
+        <ul data-role="listview">
+            <li><a href="#lesson-search" data-transition="slide">Search by lesson name and description</a></li>
+            <li><a href="#user-search" data-transition="slide">Search by user name</a></li>
+        </ul>
+    </div>
+</section>
+
+
 <section id="user-search" data-role="page">
     <header data-role="header" data-position="fixed">
         <h1 class="wide-header">Search User</h1>
@@ -715,6 +736,41 @@
         </ul>
     </div>
 </section>
+
+
+<section id="lesson-search" data-role="page">
+    <header data-role="header" data-position="fixed">
+        <h1 class="wide-header">Search Lesson</h1>
+        <a data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
+    </header>
+    <div role="main" class="ui-content">
+        <input name="lesson-search-input" id="lesson-search-input" placeholder="search ..." type="search">
+        <ul id="lesson-search-output" data-role="listview" data-inset="true" class="ui-mini">
+
+        </ul>
+    </div>
+</section>
+
+
+<section id="lesson-details-page" data-role="page">
+    <header data-role="header" data-position="fixed">
+        <h1 class="wide-header">Lesson Details</h1>
+        <a data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
+    </header>
+    <div role="main" class="ui-content">
+        <ul data-role="listview">
+            <li><span class="list-leading">Name</span><span id="lesson-details-name"></span></li>
+            <li><span class="list-leading">Description</span><div id="lesson-details-description" style="white-space: normal;"></div></li>
+            <li><span class="list-leading">Since</span><span id="lesson-details-creation_time"></span></li>
+            <li><span class="list-leading">Members</span><span id="lesson-details-nregs"></span></li>
+        </ul>
+
+        <a href="#" class="ui-btn ui-corner-all ui-btn-a" style="margin-top: 2em;">Join</a>
+    </div>
+</section>
+
 
 <section id="setup-first-page" data-role="page">
     <header data-role="header" data-position="fixed">

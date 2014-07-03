@@ -11,6 +11,7 @@
     var stampFirstIdx, stampLastIdx;
 
     var matchedUsers, currentMatchedUser;
+    var matchedLessons, currentMatchedLesson;
 
     var NEW_STAMP = -1;
 
@@ -181,7 +182,8 @@
                         case "news":
                             app.doms.headerHome.find("h1").text("Recent News");
                             app.doms.btnHomeUR.removeClass("ui-icon-refresh")
-                                .addClass("ui-icon-plus").attr({
+                                .addClass("ui-icon-plus")
+                                .attr({
                                     "href": "#new-message",
                                     "data-transition": "slidedown"
                                 }).show();
@@ -191,7 +193,8 @@
                         case "teach":
                             app.doms.headerHome.find("h1").text("My Teachings");
                             app.doms.btnHomeUR.removeClass("ui-icon-refresh")
-                                .addClass("ui-icon-plus").attr({
+                                .addClass("ui-icon-plus")
+                                .attr({
                                     "href": "#new-teach",
                                     "data-transition": "slidedown"
                                 }).show();
@@ -200,7 +203,9 @@
                         case "study":
                             app.doms.headerHome.find("h1").text("My Learnings");
                             app.doms.btnHomeUR.removeClass("ui-icon-refresh")
-                                .addClass("ui-icon-plus").show();
+                                .addClass("ui-icon-plus")
+                                .attr({"href": "#new-study-guide"})
+                                .show();
                             app.showStudyLessons();
                             break;
                         case "setup":
@@ -426,8 +431,6 @@
             });
 
 
-
-
             // Send button on new message page
             app.doms.pageNewMessage.find("footer a:eq(1)").on("click", function () {
 
@@ -475,7 +478,6 @@
 
 
             $("#user-search").on("keyup", "#user-search-input", function () {
-                console.log("keyup");
                 var $this = $(this);
                 if ($this.val() == "") {
                     delay(function () {
@@ -515,6 +517,49 @@
                 .on("pagehide", function () {
                     $("#user-search-input").val("");
                     $("#user-search-output").empty().listview("refresh");
+                });
+
+
+            $("#lesson-search").on("keyup", "#lesson-search-input", function () {
+                var $this = $(this);
+                if ($this.val() == "") {
+                    delay(function () {
+                        $("#lesson-search-output").empty().listview("refresh");
+                    }, 300);
+                } else {
+                    delay(function () {
+                        $.ajax({
+                            url: server_url + 'j/lesson_search',
+                            data: {phrase: $this.val()}
+                        })
+                            .done(function (data) {
+                                matchedLessons = data;
+                                var ul = $("#lesson-search-output");
+                                ul.empty();
+                                $.each(matchedLessons, function (idx, x) {
+                                    $("<li>").append(
+                                        $('<a href="#lesson-details-page" data-transition="slide"></a>')
+                                            .text(x.name))
+                                        .appendTo(ul);
+                                });
+                                ul.listview("refresh");
+                            })
+                            .fail(app.ajaxErrorHandler);
+                    }, 300);
+                }
+            })
+                .on("click", ".ui-input-clear", function () {
+                    delay(function () {
+                        $("#lesson-search-output").empty().listview("refresh");
+                    }, 300);
+                })
+                .on("click", "#lesson-search-output a", function () {
+                    currentMatchedLesson = matchedLessons[$(this).parent().prevAll().length];
+                    app.populateUserDetailsButton($("#new-student-online"), currentMatchedLesson);
+                })
+                .on("pagehide", function () {
+                    $("#lesson-search-input").val("");
+                    $("#lesson-search-output").empty().listview("refresh");
                 });
 
 
@@ -1085,6 +1130,36 @@
                 $.mobile.changePage(pageStudyDetails, {
                     transition: "slide"
                 });
+            });
+
+            // Populate user details page
+            $("a[href='#user-details-page']").on("click", function (event) {
+                var page = $(this).closest("section"),
+                    userToDisplay;
+
+                switch (page.attr("id")) {
+                    case "student-info-page":
+                        userToDisplay = currentReg.student;
+                        break;
+                    case "new-student-online":
+                        userToDisplay = currentMatchedUser;
+                        break;
+                    case "study-details-page":
+                        userToDisplay = currentStudy.teacher;
+                        break;
+                }
+
+                if (!userToDisplay) {
+                    app.alert("User profile is only available to LevelHub members.");
+                    return false;
+                }
+
+                var pageUserDetails = $("#user-details-page");
+                pageUserDetails.find("#user-details-username").text(userToDisplay.username);
+                pageUserDetails.find("#user-details-displayname").text(app.getUserDisplayName(userToDisplay));
+                pageUserDetails.find("#user-details-email").text(userToDisplay.email);
+                pageUserDetails.find("#user-details-about").text(userToDisplay.about);
+
             });
 
 
