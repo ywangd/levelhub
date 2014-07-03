@@ -118,8 +118,8 @@
                 pageNewStudentOffline: $("#new-student-offline"),
                 pageNewStudentOnline: $("#new-student-online"),
                 pageStamps: $("#stamps-page"),
-                pageTeachRegsDetails: $("#teach-regs-details-page"),
-                pageStudentInfo: $("#student-info-page"),
+                pageTeachDetails: $("#teach-details-page"),
+                pageRegistrationInfo: $("#registration-info-page"),
                 headerHome: $("#home-header"),
                 btnHomeUR: $("#home-btn-right"),
                 listStudents: $("#student-list"),
@@ -644,18 +644,18 @@
 
             // Handle details button on teach regs page
             $("#teach-details-button").on("click", function () {
-                var li0 = app.doms.pageTeachRegsDetails.find(".ui-content li:eq(0)");
+                var li0 = app.doms.pageTeachDetails.find(".ui-content li:eq(0)");
                 li0.find("h2").text(currentTeach.name);
                 li0.find("p:eq(0)").text(currentTeach.description);
                 li0.find("p:eq(1)").text("Created: " + currentTeach.creation_time.split(" ")[0]);
-                $.mobile.changePage(app.doms.pageTeachRegsDetails, {
+                $.mobile.changePage(app.doms.pageTeachDetails, {
                     transition: "flip"
                 });
                 return false;
             });
 
             // fill the current teach details for popup
-            app.doms.pageTeachRegsDetails.on("pageshow", function () {
+            app.doms.pageTeachDetails.on("pageshow", function () {
                 var popup0 = $("#teach-edit-popup-0");
                 popup0.find("input").val(currentTeach.name);
                 popup0.find("textarea").val(currentTeach.description);
@@ -679,7 +679,7 @@
                             'lesson_id': currentTeach.lesson_id}})
                     })
                         .done(function (data) {
-                            var li0 = app.doms.pageTeachRegsDetails.find(".ui-content li:eq(0)");
+                            var li0 = app.doms.pageTeachDetails.find(".ui-content li:eq(0)");
                             li0.find("h2").text(currentTeach.name);
                             li0.find("p:eq(0)").text(currentTeach.description);
                             app.doms.pageTeachRegs.find("header h1").text(currentTeach.name);
@@ -766,7 +766,7 @@
             // It modifies the currentReg object if data is changed
             // the object is later persistent into the database if save button
             // is clicked on the stamps page.
-            app.doms.pageStudentInfo.find("header a").on("click", function () {
+            app.doms.pageRegistrationInfo.find("header a").on("click", function () {
                 var daytimeList = [];
                 $.each($(this).closest("section").find(".daytime-list li a:not([title='delete'])"),
                     function (idx, dom) {
@@ -1087,7 +1087,7 @@
 
             // Handle transition to student info page
             $("#student-details-button").on("click", function () {
-                app.populateUserDetailsButton(app.doms.pageStudentInfo, currentReg);
+                app.populateUserDetailsButton(app.doms.pageRegistrationInfo, currentReg);
 
                 app.doms.listStudentHistory.empty();
                 $("<li>").append($("<a>",
@@ -1098,7 +1098,7 @@
                     appendTo(app.doms.listStudentHistory);
                 app.refresh_listview(app.doms.listStudentHistory);
 
-                var $daytimeList = app.doms.pageStudentInfo.find(".daytime-list");
+                var $daytimeList = app.doms.pageRegistrationInfo.find(".daytime-list");
                 $daytimeList.empty();
                 var daytimeList = JSON.parse(currentReg.data).daytime || [];
                 $.each(daytimeList, function (idx, daytime) {
@@ -1108,7 +1108,7 @@
                 });
                 app.refresh_listview($daytimeList);
 
-                $.mobile.changePage(app.doms.pageStudentInfo, {
+                $.mobile.changePage(app.doms.pageRegistrationInfo, {
                     transition: "flip"
                 });
                 return false;
@@ -1457,8 +1457,8 @@
         },
 
         alert: function (message, callback, title) {
-            navigator.notification.alert(message, callback, title);
             console.log(message);
+            navigator.notification.alert(message, callback, title);
         },
 
         confirm: function (message, callback, title) {
@@ -1503,7 +1503,7 @@
 
     app.initialize();
 
-    $("#popdb").click(function () {
+    $("#reset-db").click(function () {
         console.log("Reset DB");
         $.ajax({
             type: 'POST',
@@ -1512,7 +1512,7 @@
         })
             .done(function () {
                 homeNavIdx = -1;  // force reload on teach list page
-                $("#icon-teach").trigger("click");
+                $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
             })
             .fail(app.ajaxErrorHandler);
     });
