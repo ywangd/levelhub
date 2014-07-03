@@ -10,8 +10,10 @@
     var stamps, stampsDeleted;
     var stampFirstIdx, stampLastIdx;
 
-    var matchedUsers, currentMatchedUser;
-    var matchedLessons, currentMatchedLesson;
+    var currentUser, currentLesson; // These are the user and lesson to be shown for variable details page
+    var users, lessons;
+
+    var userSearchHitLink;
 
     var NEW_STAMP = -1;
 
@@ -166,6 +168,11 @@
                 });
             }
 
+            $("section").not(app.doms.pageLogin).not(app.doms.pageHome).not(app.doms.pageRegister).not(app.doms.pageStamps)
+                .on("swiperight", function () {
+                    history.back();
+                });
+
             // home page init
             // Handle home nav icon press
             app.doms.pageHome.on("click", "#icon-news, #icon-teach, #icon-study, #icon-setup", function () {
@@ -185,10 +192,9 @@
                                 .addClass("ui-icon-plus")
                                 .attr({
                                     "href": "#new-message",
-                                    "data-transition": "slidedown"
+                                    "data-transition": "slide"
                                 }).show();
                             app.showMessages();
-                            app.finishHomeNav();
                             break;
                         case "teach":
                             app.doms.headerHome.find("h1").text("My Teachings");
@@ -196,25 +202,27 @@
                                 .addClass("ui-icon-plus")
                                 .attr({
                                     "href": "#new-teach",
-                                    "data-transition": "slidedown"
+                                    "data-transition": "slide"
                                 }).show();
-                            app.showTeachLessons();
+                            app.showTeachLessons(me, app.doms.listTeaches);
                             break;
                         case "study":
                             app.doms.headerHome.find("h1").text("My Learnings");
                             app.doms.btnHomeUR.removeClass("ui-icon-refresh")
                                 .addClass("ui-icon-plus")
-                                .attr({"href": "#new-study-guide"})
-                                .show();
+                                .attr({
+                                    "href": "#new-study-guide",
+                                    "data-transition": "slide"
+                                }).show();
                             app.showStudyLessons();
                             break;
                         case "setup":
                             app.doms.headerHome.find("h1").text("Settings");
                             app.doms.btnHomeUR.hide();
                             app.showSetup();
-                            app.finishHomeNav();
                             break;
                     }
+                    app.doms.divsHomeContent.hide().eq(homeNavIdx).show();
                 }
                 return false;
             });
@@ -476,6 +484,16 @@
                 return false;
             });
 
+            $(".user-search-btn").on("click", function () {
+                switch ($(this).closest("section").attr("id")) {
+                    case "new-student-guide":
+                        userSearchHitLink = "#new-student-online";
+                        break;
+                    case "new-study-guide":
+                        userSearchHitLink = "#user-teaches-page";
+                        break;
+                }
+            });
 
             $("#user-search").on("keyup", "#user-search-input", function () {
                 var $this = $(this);
@@ -490,12 +508,13 @@
                             data: {phrase: $this.val()}
                         })
                             .done(function (data) {
-                                matchedUsers = data;
+                                users = data;
                                 var ul = $("#user-search-output");
                                 ul.empty();
-                                $.each(matchedUsers, function (idx, u) {
+                                $.each(users, function (idx, u) {
                                     $("<li>").append(
-                                        $('<a href="#new-student-online" data-transition="slide"></a>')
+                                        $('<a data-transition="slide"></a>')
+                                            .attr("href", userSearchHitLink)
                                             .text(app.getUserDisplayName(u)))
                                         .appendTo(ul);
                                 });
@@ -511,13 +530,34 @@
                     }, 300);
                 })
                 .on("click", "#user-search-output a", function () {
-                    currentMatchedUser = matchedUsers[$(this).parent().prevAll().length];
-                    app.populateUserDetailsButton($("#new-student-online"), currentMatchedUser);
+                    currentUser = users[$(this).parent().prevAll().length];
                 })
                 .on("pagehide", function () {
                     $("#user-search-input").val("");
                     $("#user-search-output").empty().listview("refresh");
                 });
+
+
+            app.doms.pageNewStudentOnline.on("pagebeforeshow", function () {
+                app.populateUserDetailsButton($(this), currentUser);
+            });
+
+            $("#user-teaches-page").on("pagebeforeshow", function () {
+                app.showTeachLessons(currentUser, $(this).find("ul"));
+            })
+                .on("click", "ul a", function () {
+                    currentLesson = lessons[$(this).parent().prevAll().length];
+                    $.mobile.changePage($("#lesson-details-page"), {
+                        transition: "slide"
+                    });
+                });
+
+            $("#lesson-details-page").on("pagebeforeshow", function () {
+                $("#lesson-details-name").text(currentLesson.name);
+                $("#lesson-details-description").text(currentLesson.description);
+                $("#lesson-details-creation_time").text(currentLesson.creation_time.split(" ")[0]);
+                $("#lesson-details-nregs").text(currentLesson.nregs);
+            });
 
 
             $("#lesson-search").on("keyup", "#lesson-search-input", function () {
@@ -533,10 +573,10 @@
                             data: {phrase: $this.val()}
                         })
                             .done(function (data) {
-                                matchedLessons = data;
+                                lessons = data;
                                 var ul = $("#lesson-search-output");
                                 ul.empty();
-                                $.each(matchedLessons, function (idx, x) {
+                                $.each(lessons, function (idx, x) {
                                     $("<li>").append(
                                         $('<a href="#lesson-details-page" data-transition="slide"></a>')
                                             .text(x.name))
@@ -554,13 +594,14 @@
                     }, 300);
                 })
                 .on("click", "#lesson-search-output a", function () {
-                    currentMatchedLesson = matchedLessons[$(this).parent().prevAll().length];
-                    app.populateUserDetailsButton($("#new-student-online"), currentMatchedLesson);
+                    currentLesson = lessons[$(this).parent().prevAll().length];
+                    currentUser = currentLesson.teacher;
                 })
                 .on("pagehide", function () {
                     $("#lesson-search-input").val("");
                     $("#lesson-search-output").empty().listview("refresh");
                 });
+
 
 
             // Save button on new teach page
@@ -583,7 +624,7 @@
                     })
                         .done(function (data) {
                             form[0].reset();
-                            app.showTeachLessons();
+                            app.showTeachLessons(me, app.doms.listTeaches);
                             $.mobile.changePage(app.doms.pageHome, {
                                 transition: "pop",
                                 reverse: true
@@ -765,7 +806,8 @@
                         .done(function (data) {
                             app.showRegsForTeachLesson();
                             $.mobile.changePage(app.doms.pageTeachRegs, {
-                                transition: "slideup"
+                                transition: "slide",
+                                reverse: true
                             });
                             form[0].reset();
                             $daytimeList.empty();
@@ -783,7 +825,7 @@
             app.doms.pageNewStudentOnline.find("footer a:eq(1)").click(function () {
                 var fields = {};
                 fields['lesson_id'] = currentTeach.lesson_id;
-                fields['student_id'] = currentMatchedUser.user_id;
+                fields['student_id'] = currentUser.user_id;
                 // add any class daytime entries
                 var data = {daytime: []},
                     $daytimeList = app.doms.pageNewStudentOnline.find(".daytime-list");
@@ -801,7 +843,8 @@
                     .done(function (data) {
                         app.showRegsForTeachLesson();
                         $.mobile.changePage(app.doms.pageTeachRegs, {
-                            transition: "slideup"
+                            transition: "slide",
+                            reverse: true
                         });
                         $daytimeList.empty();
                         currentTeach.nregs += 1;
@@ -818,6 +861,7 @@
             app.doms.listStudents.on("click", "a", function () {
                 var $this = $(this);
                 currentReg = registrations[$this.parent().prevAll(":not(.ui-li-divider)").length];
+                currentUser = currentReg.student;
                 // Save the start values in case the operations are cancelled
                 currentReg.saved_total = currentReg.total;
                 currentReg.saved_unused = currentReg.unused;
@@ -1023,10 +1067,13 @@
                         var idxStudentList = registrations.indexOf(currentReg);
                         app.doms.pageTeachRegs.find("ul a span").
                             eq(idxStudentList).empty().text(currentReg.unused);
+                        history.back();
+                        /*
                         $.mobile.changePage(app.doms.pageTeachRegs, {
                             transition: "pop",
                             reverse: true
                         });
+                        */
                     })
                     .fail(app.ajaxErrorHandler);
             });
@@ -1125,8 +1172,9 @@
                 var $this = $(this),
                     pageStudyDetails = $("#study-details-page");
                 currentStudy = studies[$this.parent().prevAll().length];
+                currentUser = currentStudy.teacher;
                 pageStudyDetails.find("header h1").text(currentStudy.name);
-                app.populateUserDetailsButton(pageStudyDetails, currentStudy.teacher);
+                app.populateUserDetailsButton(pageStudyDetails, currentUser);
                 $.mobile.changePage(pageStudyDetails, {
                     transition: "slide"
                 });
@@ -1134,31 +1182,18 @@
 
             // Populate user details page
             $("a[href='#user-details-page']").on("click", function (event) {
-                var page = $(this).closest("section"),
-                    userToDisplay;
+                var page = $(this).closest("section");
 
-                switch (page.attr("id")) {
-                    case "student-info-page":
-                        userToDisplay = currentReg.student;
-                        break;
-                    case "new-student-online":
-                        userToDisplay = currentMatchedUser;
-                        break;
-                    case "study-details-page":
-                        userToDisplay = currentStudy.teacher;
-                        break;
-                }
-
-                if (!userToDisplay) {
+                if (!currentUser) {
                     app.alert("User profile is only available to LevelHub members.");
                     return false;
                 }
 
                 var pageUserDetails = $("#user-details-page");
-                pageUserDetails.find("#user-details-username").text(userToDisplay.username);
-                pageUserDetails.find("#user-details-displayname").text(app.getUserDisplayName(userToDisplay));
-                pageUserDetails.find("#user-details-email").text(userToDisplay.email);
-                pageUserDetails.find("#user-details-about").text(userToDisplay.about);
+                pageUserDetails.find("#user-details-username").text(currentUser.username);
+                pageUserDetails.find("#user-details-displayname").text(app.getUserDisplayName(currentUser));
+                pageUserDetails.find("#user-details-email").text(currentUser.email);
+                pageUserDetails.find("#user-details-about").text(currentUser.about);
 
             });
 
@@ -1175,13 +1210,6 @@
                 })
                 .done(sucessHandler)
                 .fail(app.ajaxErrorHandler);
-        },
-
-        finishHomeNav: function () {
-            var activeContentDiv = app.doms.divsHomeContent.eq(homeNavIdx);
-            app.doms.divsHomeContent.hide();
-            activeContentDiv.show();
-            $.mobile.loading("hide");
         },
 
         showMessages: function () {
@@ -1230,19 +1258,22 @@
                         messageList.append(li);
                     });
                     app.refresh_listview(messageList);
-                    app.finishHomeNav();
                 })
                 .fail(app.ajaxErrorHandler);
         },
 
-        showTeachLessons: function () {
+        showTeachLessons: function (theUser, outputList) {
             $.ajax({
-                url: server_url + 'j/get_teach_lessons/' + me.user_id + '/'
+                url: server_url + 'j/get_teach_lessons/' + theUser.user_id + '/'
             })
                 .done(function (data) {
-                    teaches = data;
-                    app.doms.listTeaches.empty();
-                    $.each(teaches, function (idx, teach) {
+                    if (theUser === me) {
+                        teaches = data;
+                    } else {
+                        lessons = data;
+                    }
+                    outputList.empty();
+                    $.each(data, function (idx, teach) {
                         var a = $("<a>", {
                             "href": "#",
                             text: teach.name
@@ -1251,10 +1282,9 @@
                             class: "ui-li-count ui-btn-up-c ui-btn-corner-all",
                             text: teach.nregs
                         }));
-                        app.doms.listTeaches.append($("<li>").append(a));
+                        outputList.append($("<li>").append(a));
                     });
-                    app.refresh_listview(app.doms.listTeaches);
-                    app.finishHomeNav();
+                    app.refresh_listview(outputList);
                 })
                 .fail(app.ajaxErrorHandler);
         },
@@ -1324,7 +1354,6 @@
                         app.doms.listStudies.append($("<li>").append(a));
                     });
                     app.refresh_listview(app.doms.listStudies);
-                    app.finishHomeNav();
                 })
                 .fail(app.ajaxErrorHandler);
         },

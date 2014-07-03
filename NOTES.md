@@ -53,4 +53,5 @@
 * Clickable user name and lesson name on News tab.
 * Revamp the setup tab to make it more comprehensive so setup is only one item of it. (It can probably be used to show weekly calendars?)
 * Private messages?
+* Support swiperight to go back for most of the pages except home, login, register and stamp.
 

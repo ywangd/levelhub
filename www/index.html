@@ -222,6 +222,7 @@
             data-filter="true" data-filter-placeholder="Search">
         </ul>
     </div>
+    <!--
     <footer data-role="footer" data-position="fixed">
         <div class="ui-grid-b">
             <div class="ui-block-a" style="width: 15%; text-align: left;">
@@ -233,10 +234,11 @@
             </div>
         </div>
     </footer>
+    -->
     <div data-role="popup" id="teach-regs-popup-menu">
         <ul data-role="listview" data-inset="true">
             <li>
-                <a href="#new-student-guide" data-transition="slidedown"
+                <a href="#new-student-guide" data-transition="slide"
                    class="ui-btn ui-icon-plus ui-btn-icon-left">Enroll</a>
             </li>
             <li>
@@ -439,7 +441,7 @@
     <footer data-role="footer" data-position="fixed">
         <div class="ui-grid-a">
             <div class="ui-block-a">
-                <a href="#teach-regs-page" data-transition="slide" data-direction="reverse"
+                <a href="#" data-rel="back"
                    data-role="button" data-icon="delete" style="display: block;">Cancel</a>
             </div>
             <div class="ui-block-b">
@@ -530,7 +532,7 @@
             <li><span class="list-leading">Name</span><span id="user-details-displayname"></span></li>
             <li><span class="list-leading">Email</span><span id="user-details-email"></span></li>
             <li><span class="list-leading">About</span><div id="user-details-about" style="white-space: normal;"></div></li>
-            <li><a href="#user-teaches-page">Teaches</a></li>
+            <li><a href="#user-teaches-page" data-transition="slide">Teaches</a></li>
             <li><a href="#">Send message ...</a></li>
         </ul>
     </div>
@@ -558,7 +560,7 @@
     </header>
     <div role="main" class="ui-content">
         <ul data-role="listview">
-            <li><a href="#user-search" data-transition="slide">Search by name</a></li>
+            <li><a href="#user-search" class="user-search-btn" data-transition="slide">Search by name</a></li>
             <li><a href="#new-student-offline" data-transition="slide">Non-member</a></li>
             <li><a href="#" data-transition="slide">Scan</a></li>
         </ul>
@@ -717,7 +719,7 @@
     <div role="main" class="ui-content">
         <ul data-role="listview">
             <li><a href="#lesson-search" data-transition="slide">Search by lesson name and description</a></li>
-            <li><a href="#user-search" data-transition="slide">Search by user name</a></li>
+            <li><a href="#user-search" class="user-search-btn" data-transition="slide">Search by user name</a></li>
         </ul>
     </div>
 </section>
