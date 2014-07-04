@@ -339,20 +339,6 @@ body {
     margin-right: 10%;
 }
 
-ul.delete-solo-btn {
-    border: 0 !important;
-    box-shadow: none !important;
-    -webkit-box-shadow: none !important;
-}
-
-ul.delete-solo-btn li {
-    border: 0 !important;
-    background-color: transparent !important;
-}
-
-ul.delete-solo-btn li a {
-    background-color: darkred !important;
-}
 
 #ajax-error-alert {
     position: fixed;
@@ -370,4 +356,11 @@ ul.delete-solo-btn li a {
     display: inline-block;
     width: 30%;
     font-size: small;
+}
+
+a.dangerous {
+    background-color: darkred !important;
+    margin-top: 4em;
+    margin-left: 15%;
+    margin-right: 15%;
 }

@@ -178,52 +178,49 @@
             app.doms.pageHome.on("click", "#icon-news, #icon-teach, #icon-study, #icon-setup", function () {
                 var $this = $(this);
                 var idx = $this.parent().prevAll().length;
-                // Do nothing if the nav button is already the current active one
-                if (idx != homeNavIdx) {
-                    homeNavIdx = idx;
-                    // Still need to manually manage classes to make highlight button persistent
-                    $this.parent().siblings().find("a").removeClass("ui-btn-active ui-state-persist");
-                    $this.addClass("ui-btn-active ui-state-persist");
+                homeNavIdx = idx;
+                // Still need to manually manage classes to make highlight button persistent
+                $this.parent().siblings().find("a").removeClass("ui-btn-active ui-state-persist");
+                $this.addClass("ui-btn-active ui-state-persist");
 
-                    switch (app.doms.divsHomeContent.eq(idx).attr("id")) {
-                        case "news":
-                            app.doms.headerHome.find("h1").text("Recent News");
-                            app.doms.btnHomeUR.removeClass("ui-icon-refresh")
-                                .addClass("ui-icon-plus")
-                                .attr({
-                                    "href": "#new-message",
-                                    "data-transition": "slide"
-                                }).show();
-                            app.showMessages();
-                            break;
-                        case "teach":
-                            app.doms.headerHome.find("h1").text("My Teachings");
-                            app.doms.btnHomeUR.removeClass("ui-icon-refresh")
-                                .addClass("ui-icon-plus")
-                                .attr({
-                                    "href": "#new-teach",
-                                    "data-transition": "slide"
-                                }).show();
-                            app.showTeachLessons(me, app.doms.listTeaches);
-                            break;
-                        case "study":
-                            app.doms.headerHome.find("h1").text("My Learnings");
-                            app.doms.btnHomeUR.removeClass("ui-icon-refresh")
-                                .addClass("ui-icon-plus")
-                                .attr({
-                                    "href": "#new-study-guide",
-                                    "data-transition": "slide"
-                                }).show();
-                            app.showStudyLessons();
-                            break;
-                        case "setup":
-                            app.doms.headerHome.find("h1").text("Settings");
-                            app.doms.btnHomeUR.hide();
-                            app.showSetup();
-                            break;
-                    }
-                    app.doms.divsHomeContent.hide().eq(homeNavIdx).show();
+                switch (app.doms.divsHomeContent.eq(idx).attr("id")) {
+                    case "news":
+                        app.doms.headerHome.find("h1").text("Recent News");
+                        app.doms.btnHomeUR.removeClass("ui-icon-refresh")
+                            .addClass("ui-icon-plus")
+                            .attr({
+                                "href": "#new-message",
+                                "data-transition": "slide"
+                            }).show();
+                        app.showMessages();
+                        break;
+                    case "teach":
+                        app.doms.headerHome.find("h1").text("My Teachings");
+                        app.doms.btnHomeUR.removeClass("ui-icon-refresh")
+                            .addClass("ui-icon-plus")
+                            .attr({
+                                "href": "#new-teach",
+                                "data-transition": "slide"
+                            }).show();
+                        app.showTeachLessons(me, app.doms.listTeaches);
+                        break;
+                    case "study":
+                        app.doms.headerHome.find("h1").text("My Learnings");
+                        app.doms.btnHomeUR.removeClass("ui-icon-refresh")
+                            .addClass("ui-icon-plus")
+                            .attr({
+                                "href": "#new-study-guide",
+                                "data-transition": "slide"
+                            }).show();
+                        app.showStudyLessons();
+                        break;
+                    case "setup":
+                        app.doms.headerHome.find("h1").text("Settings");
+                        app.doms.btnHomeUR.hide();
+                        app.showSetup();
+                        break;
                 }
+                app.doms.divsHomeContent.hide().eq(homeNavIdx).show();
                 return false;
             });
 
@@ -347,21 +344,6 @@
                             form[0].reset();
                         })
                         .fail(app.ajaxErrorHandler);
-                }
-            });
-
-            // Handle home page upper right button, note this button reacts
-            // different based on different active home section
-            app.doms.btnHomeUR.on("click", function () {
-                switch (app.doms.divsHomeContent.eq(homeNavIdx).attr("id")) {
-                    case "news":
-                        break;
-                    case "teach":
-                        break;
-                    case "study":
-                        break;
-                    case "setup":
-                        break;
                 }
             });
 
@@ -671,7 +653,7 @@
             });
 
             // Handle teach delete button
-            $("#teach-delete-button").on("click", function () {
+            $("#teach-delete-btn").on("click", function () {
                 app.confirm('The operation is not reversible!',
                     function (btnIdx) {
                         if (btnIdx == 1) {
@@ -815,9 +797,9 @@
                     });
                 fields["daytimes"] = daytimeList.join(",");
                 $.ajax({
-                    type: 'POST',
-                    url: server_url + 'j/update_lesson_reg_and_logs/',
-                    data: JSON.stringify({'create': fields})
+                    type: "POST",
+                    url: server_url + "j/update_lesson_reg_and_logs/",
+                    data: JSON.stringify({create: fields})
                 })
                     .done(function (data) {
                         app.showRegsForTeachLesson();
@@ -1085,7 +1067,7 @@
             });
 
             // handle student deletion
-            $("#student-delete-button").on("click", function () {
+            $("#student-delete-btn").on("click", function () {
                 app.confirm('The operation is not reversible!',
                     function (btnIdx) {
                         if (btnIdx == 1) {
@@ -1162,6 +1144,19 @@
                 $.mobile.changePage(pageStudyDetails, {
                     transition: "slide"
                 });
+            });
+
+            $("#lesson-join-btn").on("click", function () {
+                $.ajax({
+                    type: "POST",
+                    url: server_url + "j/update_lesson_reg_and_logs/",
+                    data: JSON.stringify({create: {lesson_id: currentLesson.lesson_id, student_id: me.user_id}})
+                })
+                    .done(function () {
+                        app.showTeachLessons(me, app.doms.listTeaches);
+                        history.back();
+                    })
+                    .fail(app.ajaxErrorHandler);
             });
 
             // Populate taken history page
@@ -1377,6 +1372,7 @@
                         app.doms.listStudents.append($("<li>").append(a));
                     });
                     app.refresh_listview(app.doms.listStudents);
+
                     $.mobile.changePage(app.doms.pageTeachRegs, {
                         transition: "slide"
                     });
@@ -1474,7 +1470,7 @@
                 tzString = fields[1].slice(8);
 
             if (tzString != "") {
-                console.log("Time Zone is not UTC. ", tzString);
+                console.log("Time Zone is not UTC [" + tzString + "]", tsString);
             }
 
             var date = app.parseDate(dateString),

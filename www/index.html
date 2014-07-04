@@ -120,16 +120,8 @@
         </ul>
 
 
-        <ul data-role="listview" data-inset="true" class="delete-solo-btn">
-            <li class="ui-body">
-                <div class="ui-grid-solo">
-                    <div class="ui-block-a">
-                        <a id="logout-btn"
-                           class="ui-btn ui-mini ui-corner-all ui-btn-b">Sign Out</a>
-                    </div>
-                </div>
-            </li>
-        </ul>
+        <a href="#" id="logout-btn"
+           class="ui-btn ui-mini ui-corner-all ui-btn-b dangerous">Quit</a>
 
         <a id="reset-db" href="#"
            class="ui-btn ui-icon-refresh ui-corner-all">Reset DB</a>
@@ -220,6 +212,7 @@
            class="ui-btn ui-btn-right ui-icon-bars ui-btn-icon-notext ui-btn-corner-all">More...</a>
     </header>
     <div role="main" class="ui-content" style="padding-top: 0;">
+
         <ul id="student-list" data-role="listview" data-autodividers="true"
             data-filter="true" data-filter-placeholder="Search">
         </ul>
@@ -267,8 +260,8 @@
 <section id="teach-details-page" data-role="page">
     <header data-role="header">
         <h1 class="wide-header">Teach Details</h1>
-        <a href="#teach-regs-page" data-transition="flip" data-direction="reverse"
-           class="ui-btn ui-btn-corner-all ui-btn-right ui-shadow">Done</a>
+        <a href="#" data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
     </header>
     <div role="main" class="ui-content">
         <ul data-role="listview" data-inset="true">
@@ -283,16 +276,10 @@
                 <a href="#teach-edit-popup-0" data-rel="popup" data-transition="pop" data-position-to="window">Edit</a>
             </li>
         </ul>
-        <ul data-role="listview" data-inset="true" class="delete-solo-btn">
-            <li class="ui-body">
-                <div class="ui-grid-solo">
-                    <div class="ui-block-a">
-                        <a href="#" id="teach-delete-button"
-                           class="ui-btn ui-corner-all ui-btn-b">Delete</a>
-                    </div>
-                </div>
-            </li>
-        </ul>
+
+        <a href="#" id="teach-delete-btn"
+           class="ui-btn ui-mini ui-corner-all ui-btn-b dangerous">Delete</a>
+        
     </div>
     <div data-role="popup" id="teach-edit-popup-0" data-overlay-theme="b" data-theme="a" data-dismissible="false">
         <div data-role="header">
@@ -518,17 +505,9 @@
            data-transition="slideup"
            class="ui-btn ui-icon-plus ui-btn-icon-left">Add Class Time...</a>
 
-        <ul data-role="listview" data-inset="true" class="delete-solo-btn">
-            <li clss="ui-body">
-                <div class="ui-grid-solo">
-                    <div class="ui-block-a">
-                        <a id="student-delete-button"
-                           class="ui-btn ui-corner-all ui-btn-b">Delete
-                        </a>
-                    </div>
-                </div>
-            </li>
-        </ul>
+        <a href="#" id="student-delete-btn"
+           class="ui-btn ui-mini ui-corner-all ui-btn-b dangerous">Delete</a>
+
     </div>
 </section>
 
@@ -536,7 +515,7 @@
 <section id="user-details-page" data-role="page">
     <header data-role="header" data-position="fixed">
         <h1 class="wide-header">User Details</h1>
-        <a data-rel="back"
+        <a href="#" data-rel="back"
            class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
     </header>
     <div role="main" class="ui-content">
@@ -688,6 +667,9 @@
                 <span id="study-details-members"></span></a></li>
         </ul>
 
+        <a href="#" id="lesson-quit-btn"
+           class="ui-btn ui-mini ui-corner-all ui-btn-b dangerous">Quit</a>
+
     </div>
 </section>
 
@@ -810,7 +792,8 @@
             <li><span class="list-leading">Members</span><span id="lesson-details-nregs"></span></li>
         </ul>
 
-        <a href="#" class="ui-btn ui-corner-all ui-btn-a" style="margin-top: 2em;">Join</a>
+        <a href="#" id="lesson-join-btn"
+           class="ui-btn ui-corner-all ui-btn-a" style="margin-top: 2em;">Join</a>
     </div>
 </section>
 
