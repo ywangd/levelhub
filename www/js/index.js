@@ -29,7 +29,7 @@
     })();
 
     var homeNavIdx = -1;
-    var days = [
+    var weekdays = [
             "Sunday",
             "Monday",
             "Tuesday",
@@ -603,7 +603,6 @@
                 });
 
 
-
             // Save button on new teach page
             app.doms.pageNewTeach.find("footer a:eq(1)").on("click", function () {
                 var form = $(this).closest("section").find("form"),
@@ -758,6 +757,7 @@
                 }
             });
 
+            // handle the click on the add class time button
             $(".daytime-list + a").on("click", function () {
                 $("#daytime-dialog").data("target", $(this).prev("ul:eq(0)"));
             });
@@ -773,9 +773,7 @@
                     function (idx, dom) {
                         daytimeList.push(dom.innerHTML);
                     });
-                var data = JSON.parse(currentReg.data);
-                data.daytime = daytimeList;
-                currentReg.data = JSON.stringify(data);
+                currentReg.daytimes = daytimeList.join(",");
             });
 
             // Handle Save button for Offline new student page
@@ -791,14 +789,14 @@
                 } else {
                     fields['lesson_id'] = currentTeach.lesson_id;
                     // add any class daytime entries
-                    var data = {daytime: []},
+                    var daytimeList = [],
                         $daytimeList = app.doms.pageNewStudentOffline.find(".daytime-list");
 
                     $.each($daytimeList.find("li a:not([title='delete'])"),
                         function (idx, dom) {
-                            data.daytime.push(dom.innerHTML);
+                            daytimeList.push(dom.innerHTML);
                         });
-                    fields['data'] = (JSON.stringify(data));
+                    fields["daytimes"] = daytimeList.join(",");
                     $.ajax({
                         type: 'POST',
                         url: server_url + 'j/update_lesson_reg_and_logs/',
@@ -828,14 +826,14 @@
                 fields['lesson_id'] = currentTeach.lesson_id;
                 fields['student_id'] = currentUser.user_id;
                 // add any class daytime entries
-                var data = {daytime: []},
+                var daytimeList = [],
                     $daytimeList = app.doms.pageNewStudentOnline.find(".daytime-list");
 
                 $.each($daytimeList.find("li a:not([title='delete'])"),
                     function (idx, dom) {
-                        data.daytime.push(dom.innerHTML);
+                        daytimeList.push(dom.innerHTML);
                     });
-                fields['data'] = (JSON.stringify(data));
+                fields["daytimes"] = daytimeList.join(",");
                 $.ajax({
                     type: 'POST',
                     url: server_url + 'j/update_lesson_reg_and_logs/',
@@ -866,6 +864,7 @@
                 // Save the start values in case the operations are cancelled
                 currentReg.saved_total = currentReg.total;
                 currentReg.saved_unused = currentReg.unused;
+                currentReg.saved_daytimes = currentReg.daytimes;
                 currentReg.saved_data = currentReg.data;
                 app.doms.pageStamps.find("header h1").text(app.getRegStudentDisplayName(currentReg));
 
@@ -1031,6 +1030,7 @@
             app.doms.pageStamps.find("footer a:eq(0)").on("click", function () {
                 currentReg.total = currentReg.saved_total;
                 currentReg.unused = currentReg.saved_unused;
+                currentReg.daytimes = currentReg.saved_daytimes;
                 currentReg.data = currentReg.saved_data;
             });
 
@@ -1060,6 +1060,7 @@
                     data: JSON.stringify({
                         'update': {
                             reg_id: currentReg.reg_id,
+                            daytimes: currentReg.daytimes,
                             data: currentReg.data,
                             'rlogs': rlogs
                         }})
@@ -1070,11 +1071,11 @@
                             eq(idxStudentList).empty().text(currentReg.unused);
                         history.back();
                         /*
-                        $.mobile.changePage(app.doms.pageTeachRegs, {
-                            transition: "pop",
-                            reverse: true
-                        });
-                        */
+                         $.mobile.changePage(app.doms.pageTeachRegs, {
+                         transition: "pop",
+                         reverse: true
+                         });
+                         */
                     })
                     .fail(app.ajaxErrorHandler);
             });
@@ -1097,7 +1098,7 @@
 
                 var $daytimeList = app.doms.pageRegistrationInfo.find(".daytime-list");
                 $daytimeList.empty();
-                var daytimeList = JSON.parse(currentReg.data).daytime || [];
+                var daytimeList = currentReg.daytimes == "" ? [] : currentReg.daytimes.split(",");
                 $.each(daytimeList, function (idx, daytime) {
                     $("<li>").append($("<a>", {href: "#", text: daytime})).
                         append($("<a>", {href: "#", text: "delete"})).
@@ -1177,7 +1178,7 @@
                 $("#study-details-since").text(currentStudy.registration.creation_time.split(" ")[0]);
 
                 pageStudyDetails.find(".study-details-daytime").remove();
-                var daytimeList = JSON.parse(currentStudy.registration.data).daytime || [];
+                var daytimeList = currentStudy.registration.daytimes ? currentStudy.registration.daytimes.split(",") : [];
                 $.each(daytimeList.reverse(), function (idx, daytime) {
                     $("#study-details-since")
                         .after($('<li class="study-details-daytime"><span class="list-leading">Class time</span><span>'
@@ -1213,10 +1214,13 @@
                     url: server_url + "j/get_lesson_reg_logs/" + reg_id + "/"
                 })
                     .done(function (data) {
+                        var dateFields;
                         $.each(data.reverse(), function (idx, log) {
                             if (log.use_time) {
+                                dateFields = app.processTimestampString(log.use_time);
                                 ul.append(
-                                    $("<li></li>").text(app.processTimeStamp(log.use_time)["simpleDateString"]));
+                                    $("<li></li>").text(
+                                        dateFields.dateString + " " + dateFields.dayName + " " + dateFields.simpleTimeString));
                             }
                         });
                         app.refresh_listview(ul);
@@ -1236,10 +1240,12 @@
                 var pageUserDetails = $("#user-details-page");
                 pageUserDetails.find("#user-details-header")
                     .find("h2").text(app.getUserDisplayName(currentUser))
-                    .end().find("p").text("member since " + currentUser.creation_time.split(" ")[0]);
+                    .end().find("p").text("member since " + app.processTimestampString(currentUser.creation_time).dateString);
                 pageUserDetails.find("#user-details-email").text(currentUser.email);
                 pageUserDetails.find("#user-details-about").text(currentUser.about);
-
+                var dateFields = app.processTimestampString(currentUser.last_login);
+                pageUserDetails.find("#user-details-last-login").text(
+                    dateFields.dateString + " " + dateFields.simpleTimeString);
             });
 
 
@@ -1282,7 +1288,7 @@
                                 var headingValue = 'Today, ' + dateString;
                             } else {
                                 var date = app.parseDate(dateString),
-                                    headingValue = days[date.getDay()] + ', ' + dateString;
+                                    headingValue = weekdays[date.getDay()] + ', ' + dateString;
                             }
                             messageList.append(
                                 $('<li data-role="list-divider"></li>').text(headingValue));
@@ -1445,24 +1451,26 @@
             }
         },
 
-        processTimeStamp: function (tsString) {
+        processTimestampString: function (tsString) {
             // timestamp string is of format YYYY-MM-DD HH:MM:SSZ
             var fields = tsString.split(" "),
                 dateString = fields[0],
-                timeString = fields[1].slice(0,8),
+                timeString = fields[1].slice(0, 8),
                 tzString = fields[1].slice(8);
 
             if (tzString != "") {
                 console.log("Time Zone is not UTC. ", tzString);
             }
 
-            simpleTimeString = app.formatTime(timeString);
+            var date = app.parseDate(dateString),
+                dayName = weekdays[date.getDay()],
+                simpleTimeString = app.formatTime(timeString);
 
             return {
                 dateString: dateString,
                 timeString: timeString,
-                simpleTimeString: simpleTimeString,
-                simpleDateString: dateString + ' ' + simpleTimeString
+                dayName: dayName,
+                simpleTimeString: simpleTimeString
             };
         },
 
@@ -1498,7 +1506,7 @@
                 hour = hourmin[0],
                 min = hourmin[1],
                 ampm = fields[2];
-            return [days.indexOf(day), parseInt(hour) - 1, parseInt(min), periods.indexOf(ampm)];
+            return [weekdays.indexOf(day), parseInt(hour) - 1, parseInt(min), periods.indexOf(ampm)];
         },
 
         getUserDisplayName: function (student) {
