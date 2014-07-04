@@ -11,7 +11,6 @@
     var stampFirstIdx, stampLastIdx;
 
     var currentUser, currentLesson; // These are the user and lesson to be shown for variable details page
-    var users, lessons;
 
     var userSearchHitLink;
 
@@ -168,6 +167,7 @@
                 });
             }
 
+            // Support swiperight to go back previous page
             $("section").not(app.doms.pageLogin).not(app.doms.pageHome).not(app.doms.pageRegister).not(app.doms.pageStamps)
                 .on("swiperight", function () {
                     history.back();
@@ -247,10 +247,12 @@
                 });
             }
 
+            // Handle changes on first page settings
             $("#setup-first-page").on("click", "label", function () {
                 localStorage.setItem("homeContent", $(this).next("input").val());
             });
 
+            // Login
             $("#login-btn").on("click", function () {
                 var loginPanel = $("#login-panel"),
                     form = loginPanel.find("form"),
@@ -275,6 +277,7 @@
                     .fail(app.ajaxErrorHandler);
             });
 
+            // Logout
             $("#logout-btn").on("click", function () {
                 $.ajax({
                     type: "POST",
@@ -291,6 +294,7 @@
                     .fail(app.ajaxErrorHandler);
             });
 
+            // Register
             $("#register-btn").on("click", function () {
                 var registerPanel = $("#register-panel"),
                     form = registerPanel.find("form"),
@@ -484,6 +488,8 @@
                 return false;
             });
 
+            // The user search button can be in different page.
+            // Hence the search hits point to different links.
             $(".user-search-btn").on("click", function () {
                 switch ($(this).closest("section").attr("id")) {
                     case "new-student-guide":
@@ -495,6 +501,7 @@
                 }
             });
 
+            // Handle continuous user search
             $("#user-search").on("keyup", "#user-search-input", function () {
                 var $this = $(this);
                 if ($this.val() == "") {
@@ -507,15 +514,15 @@
                             url: server_url + 'j/user_search',
                             data: {phrase: $this.val()}
                         })
-                            .done(function (data) {
-                                users = data;
+                            .done(function (users) {
                                 var ul = $("#user-search-output");
                                 ul.empty();
-                                $.each(users, function (idx, u) {
+                                $.each(users, function (idx, user) {
                                     $("<li>").append(
                                         $('<a data-transition="slide"></a>')
                                             .attr("href", userSearchHitLink)
-                                            .text(app.getUserDisplayName(u)))
+                                            .text(app.getUserDisplayName(user))
+                                            .data("user", user))
                                         .appendTo(ul);
                                 });
                                 ul.listview("refresh");
@@ -530,36 +537,14 @@
                     }, 300);
                 })
                 .on("click", "#user-search-output a", function () {
-                    currentUser = users[$(this).parent().prevAll().length];
+                    currentUser = $(this).data("user");
                 })
-                .on("pagehide", function () {
+                .on("pagehide", function () {  // reset search page when it is hidden
                     $("#user-search-input").val("");
                     $("#user-search-output").empty().listview("refresh");
                 });
 
-
-            app.doms.pageNewStudentOnline.on("pagebeforeshow", function () {
-                app.populateUserDetailsButton($(this), currentUser);
-            });
-
-            $("#user-teaches-page").on("pagebeforeshow", function () {
-                app.showTeachLessons(currentUser, $(this).find("ul"));
-            })
-                .on("click", "ul a", function () {
-                    currentLesson = lessons[$(this).parent().prevAll().length];
-                    $.mobile.changePage($("#lesson-details-page"), {
-                        transition: "slide"
-                    });
-                });
-
-            $("#lesson-details-page").on("pagebeforeshow", function () {
-                $("#lesson-details-name").text(currentLesson.name);
-                $("#lesson-details-description").text(currentLesson.description);
-                $("#lesson-details-creation_time").text(currentLesson.creation_time.split(" ")[0]);
-                $("#lesson-details-nregs").text(currentLesson.nregs);
-            });
-
-
+            // Handle continuous lesson search
             $("#lesson-search").on("keyup", "#lesson-search-input", function () {
                 var $this = $(this);
                 if ($this.val() == "") {
@@ -572,14 +557,14 @@
                             url: server_url + 'j/lesson_search',
                             data: {phrase: $this.val()}
                         })
-                            .done(function (data) {
-                                lessons = data;
+                            .done(function (lessons) {
                                 var ul = $("#lesson-search-output");
                                 ul.empty();
-                                $.each(lessons, function (idx, x) {
+                                $.each(lessons, function (idx, lesson) {
                                     $("<li>").append(
                                         $('<a href="#lesson-details-page" data-transition="slide"></a>')
-                                            .text(x.name))
+                                            .text(lesson.name)
+                                            .data("lesson", lesson))
                                         .appendTo(ul);
                                 });
                                 ul.listview("refresh");
@@ -594,8 +579,7 @@
                     }, 300);
                 })
                 .on("click", "#lesson-search-output a", function () {
-                    currentLesson = lessons[$(this).parent().prevAll().length];
-                    currentUser = currentLesson.teacher;
+                    currentLesson = $(this).data("lesson");
                 })
                 .on("pagehide", function () {
                     $("#lesson-search-input").val("");
@@ -624,10 +608,7 @@
                         .done(function (data) {
                             form[0].reset();
                             app.showTeachLessons(me, app.doms.listTeaches);
-                            $.mobile.changePage(app.doms.pageHome, {
-                                transition: "pop",
-                                reverse: true
-                            });
+                            history.back();
                         })
                         .fail(app.ajaxErrorHandler);
                 }
@@ -635,8 +616,7 @@
 
             // Handle click on teach list
             app.doms.listTeaches.on("click", "a", function () {
-                var $this = $(this);
-                currentTeach = teaches[$this.parent().prevAll().length];
+                currentTeach = $(this).data("lesson");
                 app.doms.pageTeachRegs.find("header h1").text(currentTeach.name);
                 app.showRegsForTeachLesson();
             });
@@ -858,9 +838,7 @@
 
             // Handle the transition from teach regs page to stamps page
             app.doms.listStudents.on("click", "a", function () {
-                var $this = $(this);
-                currentReg = registrations[$this.parent().prevAll(":not(.ui-li-divider)").length];
-                currentUser = currentReg.student;
+                currentReg = $(this).data("registration");
                 // Save the start values in case the operations are cancelled
                 currentReg.saved_total = currentReg.total;
                 currentReg.saved_unused = currentReg.unused;
@@ -954,7 +932,7 @@
                 return false;
             });
 
-            // Handle stamps deletion and checkmark
+            // Handle stamps deletion and checkmark tick
             app.doms.containersStamps.on("tap", ".stamp", function (event) {
                 var $this = $(this); // this is stamp
                 var idxWithinPage = $this.parent().prevAll().length;
@@ -1019,7 +997,7 @@
                 }
             });
 
-            // Handle taphold for stamps deletion
+            // Handle taphold to toggle stamps wobble
             app.doms.containersStamps.on("taphold", ".stamp", function () {
                 var stampDoms = app.doms.containersStamps.find(".stamp");
                 stampDoms.toggleClass("wobbly");
@@ -1040,10 +1018,8 @@
                 $.each(stamps, function (idx, stamp) {
                     if (stamp.updated) {
                         var entry = {use_time: stamp.use_time, data: JSON.stringify(stamp.data)};
-                        console.log(entry);
                         if (stamp.rlog_id == NEW_STAMP) {
                             rlogs.create.push(entry);
-                            console.log(rlogs.create);
                         } else {
                             rlogs.update.push($.extend(entry, {rlog_id: stamp.rlog_id}));
                         }
@@ -1070,12 +1046,6 @@
                         app.doms.pageTeachRegs.find("ul a span").
                             eq(idxStudentList).empty().text(currentReg.unused);
                         history.back();
-                        /*
-                         $.mobile.changePage(app.doms.pageTeachRegs, {
-                         transition: "pop",
-                         reverse: true
-                         });
-                         */
                     })
                     .fail(app.ajaxErrorHandler);
             });
@@ -1088,12 +1058,14 @@
             });
 
             // Handle transition to student info page
-            $("#student-details-button").on("click", function () {
-                app.populateUserDetailsButton(app.doms.pageRegistrationInfo, currentReg);
-
-                app.doms.pageRegistrationInfo.find(".lesson-taken-count")
+            $("#registration-info-btn").on("click", function () {
+                currentUser = currentReg.student;  // Note this could be null for non-member student
+                app.doms.pageRegistrationInfo.find(".user-displayname")
+                    .text(app.getRegStudentDisplayName(currentReg))
+                    .end().find(".lesson-taken-count")
                     .text(currentReg.total - currentReg.unused)
-                    .end().find(".lesson-unused-count").text(currentReg.unused);
+                    .end().find(".lesson-unused-count")
+                    .text(currentReg.unused);
                 app.refresh_listview(app.doms.listStudentHistory);
 
                 var $daytimeList = app.doms.pageRegistrationInfo.find(".daytime-list");
@@ -1122,12 +1094,9 @@
                                 url: server_url + 'j/update_lesson_reg_and_logs/',
                                 data: JSON.stringify({delete: {reg_id: currentReg.reg_id}})
                             })
-                                .done(function (data) {
+                                .done(function () {
                                     app.showRegsForTeachLesson();
-                                    $.mobile.changePage(app.doms.pageTeachRegs, {
-                                        transition: "pop",
-                                        reverse: true
-                                    });
+                                    history.go(-2);  // go back to the teach regs page
                                     var idxTeachList = teaches.indexOf(currentTeach);
                                     currentTeach.nregs -= 1;
                                     app.doms.divsHomeContent.eq(homeNavIdx).find("ul a span").
@@ -1167,10 +1136,8 @@
 
             // Handle click on study list to show study details
             app.doms.listStudies.on("click", "a", function () {
-                var $this = $(this),
-                    pageStudyDetails = $("#study-details-page");
-                currentStudy = studies[$this.parent().prevAll().length];
-                currentUser = currentStudy.teacher;
+                var pageStudyDetails = $("#study-details-page");
+                currentStudy = $(this).data("lesson");
                 pageStudyDetails.find("header h1").text(currentStudy.name);
                 $("#study-details-taken").text(
                         currentStudy.registration.total - currentStudy.registration.unused);
@@ -1185,7 +1152,8 @@
                             + daytime + '</span></li>'));
                 });
 
-                $("#study-details-teacher").text(app.getUserDisplayName(currentStudy.teacher));
+                $("#study-details-teacher").text(app.getUserDisplayName(currentStudy.teacher))
+                    .closest("a").data("user", currentStudy.teacher);
                 $("#study-details-name").text(currentStudy.name);
                 $("#study-details-description").text(currentStudy.description);
                 $("#study-details-lesson-since").text(currentStudy.creation_time.split(" ")[0]);
@@ -1220,7 +1188,7 @@
                                 dateFields = app.processTimestampString(log.use_time);
                                 ul.append(
                                     $("<li></li>").text(
-                                        dateFields.dateString + " " + dateFields.dayName + " " + dateFields.simpleTimeString));
+                                            dateFields.dateString + " " + dateFields.dayName + " " + dateFields.simpleTimeString));
                             }
                         });
                         app.refresh_listview(ul);
@@ -1229,8 +1197,14 @@
             });
 
             // Populate user details page
-            $("a[href='#user-details-page']").on("click", function (event) {
-                var page = $(this).closest("section");
+            $(document).on("click", "a[href='#user-details-page']", function () {
+                // The user can be associated to the element by either direct user object or
+                // a registration object with user as its sub-element.
+                // If none of them are available to the element, use existing currentUser
+                currentUser = $(this).data("user") ||
+                    ($(this).data("registration") ? $(this).data("registration").student : currentUser);
+
+                console.log("currentUser is ", currentUser);
 
                 if (!currentUser) {
                     app.alert("User profile is only available to LevelHub members.");
@@ -1245,10 +1219,49 @@
                 pageUserDetails.find("#user-details-about").text(currentUser.about);
                 var dateFields = app.processTimestampString(currentUser.last_login);
                 pageUserDetails.find("#user-details-last-login").text(
-                    dateFields.dateString + " " + dateFields.simpleTimeString);
-            });
-
-
+                        dateFields.dateString + " " + dateFields.simpleTimeString);
+            })
+                // Populate the lesson details page
+                .on("click", "a[href='#lesson-details-page']", function () {
+                    currentLesson = $(this).data("lesson");
+                    $("#lesson-details-name").text(currentLesson.name);
+                    $("#lesson-details-teacher").text(app.getUserDisplayName(currentLesson.teacher))
+                        .closest("a").data("user", currentLesson.teacher);
+                    $("#lesson-details-description").text(currentLesson.description);
+                    $("#lesson-details-creation_time").text(
+                        app.processTimestampString(currentLesson.creation_time).dateString);
+                    $("#lesson-details-nregs").text(currentLesson.nregs);
+                })
+                // Populate the lesson regs page
+                .on("click", "a[href='#lesson-regs-page']", function () {
+                    var targetPage = $("#lesson-regs-page"),
+                        ul = targetPage.find("ul");
+                    $.ajax({
+                        url: server_url + "j/get_lesson_regs/" + currentStudy.lesson_id + "/"
+                    })
+                        .done(function (data) {
+                            ul.empty();
+                            $.each(data, function (idx, registration) {
+                                $('<a href="#user-details-page" data-transition="slide"></a>')
+                                    .text(app.getRegStudentDisplayName(registration))
+                                    .data("registration", registration)
+                                    .appendTo($("<li>")).parent().appendTo(ul);
+                            });
+                            app.refresh_listview(ul);
+                        })
+                        .fail(app.ajaxErrorHandler);
+                })
+                // Populate the new student online's student element
+                .on("click", "a[href='#new-student-online']", function () {
+                    currentUser = $(this).data("user");
+                    app.doms.pageNewStudentOnline.find(".user-displayname")
+                        .text(app.getUserDisplayName(currentUser));
+                })
+                // Populate the user teaches page
+                .on("click", "a[href='#user-teaches-page']", function () {
+                    currentUser = $(this).data("user") || currentUser;
+                    app.showTeachLessons(currentUser, $("#user-teaches-page").find("ul"));
+                });
         },
 
         get_user_lesssons: function (sucessHandler) {
@@ -1318,21 +1331,25 @@
                 url: server_url + 'j/get_teach_lessons/' + theUser.user_id + '/'
             })
                 .done(function (data) {
+                    var href;
                     if (theUser === me) {
                         teaches = data;
+                        href = "#";
                     } else {
-                        lessons = data;
+                        href = "#lesson-details-page";
                     }
                     outputList.empty();
                     $.each(data, function (idx, teach) {
                         var a = $("<a>", {
-                            "href": "#",
+                            href: href,
+                            "data-transition": "slide",
                             text: teach.name
                         });
                         a.append($("<span>", {
                             class: "ui-li-count ui-btn-up-c ui-btn-corner-all",
                             text: teach.nregs
-                        }));
+                        }))
+                            .data("lesson", teach);
                         outputList.append($("<li>").append(a));
                     });
                     app.refresh_listview(outputList);
@@ -1342,7 +1359,7 @@
 
         showRegsForTeachLesson: function () {
             $.ajax({
-                url: server_url + 'j/get_lesson_regs/' + currentTeach.lesson_id + '/'
+                url: server_url + "j/get_lesson_regs/" + currentTeach.lesson_id + "/"
             })
                 .done(function (data) {
                     registrations = data;
@@ -1351,7 +1368,8 @@
                         var a = $("<a>", {
                             href: "#",
                             text: app.getRegStudentDisplayName(registration)
-                        });
+                        })
+                            .data("registration", registration);
                         a.append($("<span>", {
                             "class": "ui-li-count ui-btn-up-c ui-btn-corner-all",
                             text: registration.unused
@@ -1362,7 +1380,6 @@
                     $.mobile.changePage(app.doms.pageTeachRegs, {
                         transition: "slide"
                     });
-                    $.mobile.loading('hide');
                 })
                 .fail(app.ajaxErrorHandler);
         },
@@ -1398,7 +1415,8 @@
                     app.doms.listStudies.empty();
                     $.each(studies, function (idx, study) {
                         var a = $('<a href="#"/>')
-                            .append($("<h2></h2><p><strong></strong></p><p></p>"));
+                            .append($("<h2></h2><p><strong></strong></p><p></p>"))
+                            .data("lesson", study);
                         a.find("h2").text(study.name);
                         a.find("strong").text(app.getUserDisplayName(study.teacher));
                         a.find("p:last-child").text(study.description);
@@ -1410,21 +1428,18 @@
         },
 
         showSetup: function () {
-            app.populateUserDetailsButton($("#setup"), me);
-        },
-
-        populateUserDetailsButton: function (container, theUser) {
-            var btn = container.find(".user-details-btn"),
+            var btn = $("#my-details-btn"),
                 name, headingText;
-            if (theUser.reg_id != undefined) {
-                name = app.getRegStudentDisplayName(theUser);
-                headingText = "Enrolled on ";
+            if (me.reg_id != undefined) {
+                name = app.getRegStudentDisplayName(me);
+                headingText = "Enrolled ";
             } else {
-                name = app.getUserDisplayName(theUser);
+                name = app.getUserDisplayName(me);
                 headingText = "Member since ";
             }
             btn.find("h2").text(name);
-            btn.find("p").text(headingText + theUser.creation_time.split(" ")[0])
+            btn.find("p").text(
+                    headingText + app.processTimestampString(me.creation_time).dateString);
         },
 
         getCurrentTimestamp: function (dateOnly) {

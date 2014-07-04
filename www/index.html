@@ -102,9 +102,9 @@
     </div>
     <div role="main" class="ui-content" id="setup">
         <ul data-role="listview" data-inset="true">
-            <li class="user-details-btn">
+            <li id="my-details-btn">
                 <a href="#my-details-page" data-transition="slide">
-                    <img src="img/smiley.svg" style="width: 80px;">
+                    <img src="img/smiley.svg" style="width: 76px; margin: 2px;">
 
                     <h2></h2>
 
@@ -326,7 +326,7 @@
         <h1></h1>
 
         <div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-left">
-            <a href="#" id="student-details-button"
+            <a href="#" id="registration-info-btn"
                class="ui-btn ui-icon-info ui-btn-icon-notext ui-corner-all ui-btn-d icon-btn-in-ctrlgrp">Details</a>
             <a href="#" class="ui-btn pageCount"></a>
         </div>
@@ -499,11 +499,7 @@
         <ul data-role="listview" data-inset="true">
             <li class="user-details-btn">
                 <a href="#user-details-page" data-transition="slide">
-                    <img src="img/smiley.svg" style="width: 80px;">
-
-                    <h2></h2>
-
-                    <p></p>
+                    <span class="list-leading">Name</span><span class="user-displayname"></span>
                 </a>
             </li>
         </ul>
@@ -600,16 +596,9 @@
     </header>
     <div role="main" class="ui-content">
         <div>
-            <ul data-role="listview" data-inset="true">
-                <li class="user-details-btn">
-                    <a href="#user-details-page" data-transition="slide">
-                        <img src="img/smiley.svg" style="width: 80px;">
-
-                        <h2></h2>
-
-                        <p></p>
-                    </a>
-                </li>
+            <ul data-role="listview">
+                <li><a href="#user-details-page" data-transition="slide"><span class="list-leading">Name</span><span
+                        class="user-displayname"></span></a></li>
             </ul>
             <ul data-role="listview" data-inset="true"
                 class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="a">
@@ -687,9 +676,9 @@
             <li><span class="list-leading">Unused</span><span id="study-details-unused"></span></li>
             <li><span class="list-leading">Enrolled</span><span id="study-details-since"></span></li>
             <li data-role="list-divider">Lesson Information</li>
+            <li><span class="list-leading">Name</span><span id="study-details-name"></span></li>
             <li><a href="#user-details-page" data-transition="slide"><span class="list-leading">Teacher</span>
                 <span id="study-details-teacher"></span></a></li>
-            <li><span class="list-leading">Name</span><span id="study-details-name"></span></li>
             <li><span class="list-leading">Description</span>
 
                 <div id="study-details-description" style="white-space: normal;"></div>
@@ -811,6 +800,8 @@
     <div role="main" class="ui-content">
         <ul data-role="listview">
             <li><span class="list-leading">Name</span><span id="lesson-details-name"></span></li>
+            <li><a href="#user-details-page" data-transition="slide"><span class="list-leading">Teacher</span><span
+                    id="lesson-details-teacher"></span></a></li>
             <li><span class="list-leading">Description</span>
 
                 <div id="lesson-details-description" style="white-space: normal;"></div>
