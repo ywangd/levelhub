@@ -42,6 +42,9 @@
 
     var server_url = "http://levelhub-ywangd.rhcloud.com/";
     server_url = "http://localhost:8000/";
+    if (window.location.hostname != "localhost") {
+        server_url = "http://levelhub-ywangd.rhcloud.com/";
+    }
     //server_url = "http://10.0.2.2:8000/";
     //server_url = "http://192.168.1.16:8000/";
 
@@ -99,7 +102,7 @@
             $.ajaxPrefilter(function (options, originalOptions, jqXhr) {
                 // Ensure the same ajax call does not fire twice in a row
                 if (ajaxThrottle[options.url] && (Date.now() - ajaxThrottle[options.url]) < throttleInterval) {
-                    console.log('Aborting duplicate ajax call ...');
+                    console.log('Aborting duplicate ajax call ', options.url);
                     jqXhr.abort();
                 } else {
                     ajaxThrottle[options.url] = Date.now();
@@ -238,7 +241,7 @@
             var savedMe = localStorage.getItem('me');
             if (savedMe) {
                 me = JSON.parse(savedMe);
-                app.get_user_lesssons(function () {
+                app.get_user_lessons(function () {
                     $.mobile.changePage(app.doms.pageHome);
                     $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
                 });
@@ -261,15 +264,18 @@
                     data: data
                 })
                     .done(function (data) {
-                        me = data;
+                        me = data['main'];
                         localStorage.setItem('me', JSON.stringify(me));
-                        app.get_user_lesssons(function () {
-                            $.mobile.changePage(app.doms.pageHome, {
-                                transition: "slideup"
-                            });
-                            $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
-                            form[0].reset();
-                        });
+                        app.get_user_lessons(function (data) {
+                                teaches = data.main.teach;
+                                studies = data.main.study;
+                                $.mobile.changePage(app.doms.pageHome, {
+                                    transition: "slideup"
+                                });
+                                $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
+                                form[0].reset();
+                            },
+                            'all');
                     })
                     .fail(app.ajaxErrorHandler);
             });
@@ -1259,15 +1265,13 @@
                 });
         },
 
-        get_user_lesssons: function (sucessHandler) {
+        get_user_lessons: function (successHandler, category, user_id) {
+
             $.ajax({
-                url: server_url + "j/get_user_lessons/"
+                url: server_url + "j/process_lessons/",
+                data: $.param({category: category, user_id: user_id})
             })
-                .done(function (data) {
-                    teaches = data.teach;
-                    studies = data.study;
-                })
-                .done(sucessHandler)
+                .done(successHandler)
                 .fail(app.ajaxErrorHandler);
         },
 
@@ -1561,6 +1565,8 @@
                     app.ajaxErrorAlert("Connection timeout. Please try again.");
                 } else if (jqXHR.status == 500) {
                     app.ajaxErrorAlert("Server error. Please try again.");
+                } else if (jqXHR.status == 404) {
+                    app.ajaxErrorAlert("Page not found.")
                 }
                 else {
                     app.ajaxErrorAlert(jqXHR.responseText);
