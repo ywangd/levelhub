@@ -101,7 +101,7 @@
         </ul>
     </div>
     <div role="main" class="ui-content" id="more">
-        <ul data-role="listview" data-inset="true">
+        <ul data-role="listview" data-inset="true" style="margin-top: 0;">
             <li id="my-details-btn">
                 <a href="#my-details-page" data-transition="slide">
                     <img src="img/smiley.svg" style="width: 76px; margin: 2px;">
@@ -113,18 +113,21 @@
             </li>
         </ul>
 
-        <ul data-role="listview" data-inset="true" class="ui-mini">
+        <ul data-role="listview" style="margin-top: 0;">
             <li>
-                <a href="#settings-first-page" data-transition="slide">Page shown on startup</a>
+                <a href="#settings" data-transition="slide">Settings</a>
+            </li>
+            <li>
+                <a href="#lesson-requests" data-transition="slide">Requests</a>
+            </li>
+            <li>
+                <a id="reset-db" href="#">DEBUG: Reset DB</a>
             </li>
         </ul>
 
 
         <a href="#" id="logout-btn"
            class="ui-btn ui-mini ui-corner-all ui-btn-b dangerous">Sign Out</a>
-
-        <a id="reset-db" href="#"
-           class="ui-btn ui-icon-refresh ui-corner-all">Reset DB</a>
 
     </div>
     <footer data-role="footer" data-position="fixed" data-tap-toggle="false" data-theme="b" class="ui-mini">
@@ -805,6 +808,19 @@
     </div>
 </section>
 
+<section id="settings" data-role="page">
+    <header data-role="header" data-position="fixed" data-tap-toggle="false">
+        <h1 class="wide-header">Settings</h1>
+        <a data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
+    </header>
+    <ul data-role="listview">
+        <li>
+            <a href="#settings-first-page" data-transition="slide">Page shown on startup</a>
+        </li>
+    </ul>
+
+</section>
 
 <section id="settings-first-page" data-role="page">
     <header data-role="header" data-position="fixed">

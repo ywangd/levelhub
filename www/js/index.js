@@ -273,7 +273,7 @@
                     data: data
                 })
                     .done(function (data) {
-                        me = data['main'];
+                        me = app.process_pulse(data);
                         localStorage.setItem('me', JSON.stringify(me));
                         app.get_user_lessons(function (data) {
                                 data = app.process_pulse(data);
@@ -349,7 +349,7 @@
                         data: data
                     })
                         .done(function (data) {
-                            me = data;
+                            me = app.process_pulse(data);
                             teaches = [];
                             studies = [];
                             $.mobile.changePage(app.doms.pageHome, {
@@ -473,10 +473,11 @@
                 }
                 $.ajax({
                     type: "POST",
-                    url: server_url + "j/lesson_messages/",
-                    data: JSON.stringify({create: {body: body, lesson_ids: lesson_ids}})
+                    url: server_url + "j/process_lesson_messages/",
+                    data: JSON.stringify({action: "create", body: body, lesson_ids: lesson_ids})
                 })
                     .done(function (data) {
+                        app.process_pulse(data);
                         app.showMessages();
                         history.back();
                         $("#lesson-message-body").closest("form")[0].reset();
@@ -512,7 +513,8 @@
                             url: server_url + 'j/user_search',
                             data: {phrase: $this.val()}
                         })
-                            .done(function (users) {
+                            .done(function (data) {
+                                var users = app.process_pulse(data);
                                 var ul = $("#user-search-output");
                                 ul.empty();
                                 $.each(users, function (idx, user) {
@@ -555,7 +557,8 @@
                             url: server_url + 'j/lesson_search',
                             data: {phrase: $this.val()}
                         })
-                            .done(function (lessons) {
+                            .done(function (data) {
+                                var lessons = app.process_pulse(data);
                                 var ul = $("#lesson-search-output");
                                 ul.empty();
                                 $.each(lessons, function (idx, lesson) {
@@ -592,18 +595,18 @@
                 $.each(form.serializeArray(), function (idx, field) {
                     fields[field.name] = $.trim(field.value);
                 });
+                fields.action = "create";
                 // Must have name for the new teach class
                 if (fields['name'] == '') {
                     app.alert('Class name is required.', undefined, 'Invalid Input');
                 } else {
                     $.ajax({
                         type: 'POST',
-                        url: server_url + 'j/update_lesson/',
-                        // headers: {'mobile-app': ''},
-                        // do not set content-type so options request can be skipped
-                        data: JSON.stringify({'create': fields})
+                        url: server_url + 'j/process_lessons/',
+                        data: JSON.stringify(fields)
                     })
                         .done(function (data) {
+                            app.process_pulse(data);
                             form[0].reset();
                             app.showTeachLessons(me, app.doms.listTeaches);
                             history.back();
@@ -649,13 +652,15 @@
                     currentTeach.description = popup0.find("textarea").val();
                     $.ajax({
                         type: 'POST',
-                        url: server_url + 'j/update_lesson/',
-                        data: JSON.stringify({'update': {
-                            'name': currentTeach.name,
-                            'description': currentTeach.description,
-                            'lesson_id': currentTeach.lesson_id}})
+                        url: server_url + 'j/process_lessons/',
+                        data: JSON.stringify({
+                            action: "update",
+                            name: currentTeach.name,
+                            description: currentTeach.description,
+                            lesson_id: currentTeach.lesson_id})
                     })
                         .done(function (data) {
+                            app.process_pulse(data);
                             var li0 = app.doms.pageTeachDetails.find(".ui-content li:eq(0)");
                             li0.find("h2").text(currentTeach.name);
                             li0.find("p:eq(0)").text(currentTeach.description);
@@ -675,10 +680,14 @@
                         if (btnIdx == 1) {
                             $.ajax({
                                 type: 'POST',
-                                url: server_url + 'j/update_lesson/',
-                                data: JSON.stringify({'delete': {'lesson_id': currentTeach.lesson_id}})
+                                url: server_url + 'j/process_lessons/',
+                                data: JSON.stringify({
+                                    action: "delete",
+                                    lesson_id: currentTeach.lesson_id
+                                })
                             })
                                 .done(function (data) {
+                                    app.process_pulse(data);
                                     homeNavIdx = -1; // force reload on teach list page
                                     $("#icon-teach").trigger("click");
                                     $.mobile.changePage(app.doms.pageHome, {
@@ -775,12 +784,14 @@
                             daytimeList.push(dom.innerHTML);
                         });
                     fields["daytimes"] = daytimeList.join(",");
+                    fields.action = "enroll";
                     $.ajax({
                         type: 'POST',
-                        url: server_url + 'j/update_lesson_reg_and_logs/',
-                        data: JSON.stringify({'create': fields})
+                        url: server_url + 'j/process_lesson_requests/',
+                        data: JSON.stringify(fields)
                     })
                         .done(function (data) {
+                            app.process_pulse(data);
                             app.showRegsForTeachLesson();
                             $.mobile.changePage(app.doms.pageTeachRegs, {
                                 transition: "slide",
@@ -812,12 +823,14 @@
                         daytimeList.push(dom.innerHTML);
                     });
                 fields["daytimes"] = daytimeList.join(",");
+                fields.action = "enroll";
                 $.ajax({
                     type: "POST",
-                    url: server_url + "j/update_lesson_reg_and_logs/",
-                    data: JSON.stringify({create: fields})
+                    url: server_url + "j/process_lesson_requests/",
+                    data: JSON.stringify(fields)
                 })
                     .done(function (data) {
+                        app.process_pulse(data);
                         app.showRegsForTeachLesson();
                         $.mobile.changePage(app.doms.pageTeachRegs, {
                             transition: "slide",
@@ -851,10 +864,11 @@
                 stampDoms.find("img.x-delete").addClass("hidden");
 
                 $.ajax({
-                    url: server_url + "j/get_lesson_reg_logs/" + currentReg.reg_id + "/"
+                    url: server_url + "j/process_lesson_reg_logs/",
+                    data: {reg_id: currentReg.reg_id}
                 })
                     .done(function (data) {
-                        stamps = data;
+                        stamps = app.process_pulse(data);
                         var length = stamps.length;
                         // pre-set to last idx in case no unused slot is available
                         var firstUnusedIdx = length == 0 ? 0 : length - 1;
@@ -1089,10 +1103,11 @@
                         if (btnIdx == 1) {
                             $.ajax({
                                 type: 'POST',
-                                url: server_url + 'j/update_lesson_reg_and_logs/',
-                                data: JSON.stringify({delete: {reg_id: currentReg.reg_id}})
+                                url: server_url + 'j/process_lesson_requests/',
+                                data: JSON.stringify({action: "deroll", reg_id: currentReg.reg_id})
                             })
-                                .done(function () {
+                                .done(function (data) {
+                                    app.process_pulse(data);
                                     app.showRegsForTeachLesson();
                                     history.go(-2);  // go back to the teach regs page
                                     var idxTeachList = teaches.indexOf(currentTeach);
@@ -1165,10 +1180,13 @@
             $("#lesson-join-btn").on("click", function () {
                 $.ajax({
                     type: "POST",
-                    url: server_url + "j/update_lesson_reg_and_logs/",
-                    data: JSON.stringify({create: {lesson_id: currentLesson.lesson_id, student_id: me.user_id}})
+                    url: server_url + "j/process_lesson_requests/",
+                    data: JSON.stringify({
+                        action: "join",
+                        lesson_id: currentLesson.lesson_id})
                 })
-                    .done(function () {
+                    .done(function (data) {
+                        app.process_pulse(data);
                         app.showTeachLessons(me, app.doms.listTeaches);
                         history.back();
                     })
@@ -1190,11 +1208,13 @@
                     ul = page.find("ul");
                 ul.empty();
                 $.ajax({
-                    url: server_url + "j/get_lesson_reg_logs/" + reg_id + "/"
+                    url: server_url + "j/process_lesson_reg_logs/",
+                    data: {reg_id: reg_id}
                 })
                     .done(function (data) {
+                        var logs = app.process_pulse(data);
                         var dateFields;
-                        $.each(data.reverse(), function (idx, log) {
+                        $.each(logs.reverse(), function (idx, log) {
                             if (log.use_time) {
                                 dateFields = app.processTimestampString(log.use_time);
                                 ul.append(
@@ -1248,11 +1268,13 @@
                     var targetPage = $("#lesson-regs-page"),
                         ul = targetPage.find("ul");
                     $.ajax({
-                        url: server_url + "j/get_lesson_regs/" + currentStudy.lesson_id + "/"
+                        url: server_url + "j/process_lesson_regs/",
+                        data: {lesson_id: currentStudy.lesson_id}
                     })
                         .done(function (data) {
+                            var registrations = app.process_pulse(data);
                             ul.empty();
-                            $.each(data, function (idx, registration) {
+                            $.each(registrations, function (idx, registration) {
                                 $('<a href="#user-details-page" data-transition="slide"></a>')
                                     .text(app.getRegStudentDisplayName(registration))
                                     .data("registration", registration)
@@ -1290,7 +1312,7 @@
         get_user_lessons: function (successHandler, category, user_id) {
             $.ajax({
                 url: server_url + "j/process_lessons/",
-                data: $.param({category: category, user_id: user_id})
+                data: {category: category, user_id: user_id}
             })
                 .done(successHandler)
                 .fail(app.ajaxErrorHandler);
@@ -1298,10 +1320,10 @@
 
         showMessages: function () {
             $.ajax({
-                url: server_url + 'j/lesson_messages/'
+                url: server_url + 'j/process_lesson_messages/'
             })
                 .done(function (data) {
-                    messages = data;
+                    messages = app.process_pulse(data);
                     var messageList = $("#message-list");
                     messageList.empty();
                     var lastDateString = "",
@@ -1348,9 +1370,11 @@
 
         showTeachLessons: function (theUser, outputList) {
             $.ajax({
-                url: server_url + 'j/get_teach_lessons/' + theUser.user_id + '/'
+                url: server_url + 'j/process_lessons/',
+                data: {category: "teach", user_id: theUser.user_id}
             })
                 .done(function (data) {
+                    data = app.process_pulse(data);
                     var href;
                     if (theUser === me) {
                         teaches = data;
@@ -1379,10 +1403,11 @@
 
         showRegsForTeachLesson: function () {
             $.ajax({
-                url: server_url + "j/get_lesson_regs/" + currentTeach.lesson_id + "/"
+                url: server_url + "j/process_lesson_regs/",
+                data: {lesson_id: currentTeach.lesson_id}
             })
                 .done(function (data) {
-                    registrations = data;
+                    registrations = app.process_pulse(data);
                     app.doms.listStudents.empty();
                     $.each(registrations, function (idx, registration) {
                         var a = $("<a>", {
@@ -1428,11 +1453,11 @@
 
         showStudyLessons: function () {
             $.ajax({
-                url: server_url + 'j/get_study_lessons/'
-
+                url: server_url + 'j/process_lessons/',
+                data: {category: "study"}
             })
                 .done(function (data) {
-                    studies = data;
+                    studies = app.process_pulse(data);
                     app.doms.listStudies.empty();
                     $.each(studies, function (idx, study) {
                         var a = $('<a href="#"/>')
@@ -1494,7 +1519,7 @@
                 timeString = fields[1].slice(0, 8),
                 tzString = fields[1].slice(8);
 
-            if (tzString != "") {
+            if (tzString != "Z") {
                 console.log("Time Zone is not UTC [" + tzString + "]", tsString);
             }
 
