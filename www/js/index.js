@@ -749,18 +749,26 @@
                 $("#daytime-dialog").data("target", $(this).prev("ul:eq(0)"));
             });
 
-            // Memorize the class daytime changes when leaving the registration
-            // info page.
-            // It modifies the currentReg object if data is changed and
-            // the object is later persistent into the database if save button
-            // is clicked on the stamps page.
-            app.doms.pageRegistrationInfo.on("pagebeforehide", function () {
+            // Handle the Done button on registration info page to save
+            // the daytimes information.
+            $("#registration-info-save-btn").on("click", function() {
                 var daytimeList = [];
                 $.each($(this).closest("section").find(".daytime-list li a:not([title='delete'])"),
                     function (idx, dom) {
                         daytimeList.push(dom.innerHTML);
                     });
-                currentReg.daytimes = daytimeList.join(",");
+                var daytimes = daytimeList.join(",");
+                $.ajax({
+                    type: "POST",
+                    url: server_url + "j/process_lesson_regs/",
+                    data: JSON.stringify({reg_id: currentReg.reg_id, daytimes: daytimes})
+                })
+                    .done(function (data) {
+                        currentReg.daytimes = daytimes;
+                        history.back();
+                        app.process_pulse(data);
+                    })
+                    .fail(app.ajaxErrorHandler);
             });
 
             // Handle Save button for Offline new student page
@@ -853,7 +861,6 @@
                 // Save the start values in case the operations are cancelled
                 currentReg.saved_total = currentReg.total;
                 currentReg.saved_unused = currentReg.unused;
-                currentReg.saved_daytimes = currentReg.daytimes;
                 currentReg.saved_data = currentReg.data;
                 app.doms.pageStamps.find("header h1").text(app.getRegStudentDisplayName(currentReg));
 
@@ -1020,38 +1027,31 @@
             app.doms.pageStamps.find("footer a:eq(0)").on("click", function () {
                 currentReg.total = currentReg.saved_total;
                 currentReg.unused = currentReg.saved_unused;
-                currentReg.daytimes = currentReg.saved_daytimes;
                 currentReg.data = currentReg.saved_data;
             });
 
             // Handle save button on stamps page
             app.doms.pageStamps.find("footer a:eq(1)").on("click", function () {
-                var rlogs = {create: [], update: [], delete: []};
+                var rlogs = [];
                 $.each(stamps, function (idx, stamp) {
                     if (stamp.updated) {
                         var entry = {use_time: stamp.use_time, data: JSON.stringify(stamp.data)};
                         if (stamp.rlog_id == NEW_STAMP) {
-                            rlogs.create.push(entry);
-                        } else {
-                            rlogs.update.push($.extend(entry, {rlog_id: stamp.rlog_id}));
+                            rlogs.push($.extend(entry, {action: "create"}));
+                        } else {  // modified stamp
+                            rlogs.push($.extend(entry, {rlog_id: stamp.rlog_id, action: "update"}));
                         }
                     }
                 });
                 $.each(stampsDeleted, function (idx, stamp) {
                     if (stamp.rlog_id != NEW_STAMP) {
-                        rlogs.delete.push({rlog_id: stamp.rlog_id});
+                        rlogs.push({rlog_id: stamp.rlog_id, action: "delete"});
                     }
                 });
                 $.ajax({
                     type: 'POST',
-                    url: server_url + 'j/update_lesson_reg_and_logs/',
-                    data: JSON.stringify({
-                        'update': {
-                            reg_id: currentReg.reg_id,
-                            daytimes: currentReg.daytimes,
-                            data: currentReg.data,
-                            'rlogs': rlogs
-                        }})
+                    url: server_url + 'j/process_lesson_reg_logs/',
+                    data: JSON.stringify(rlogs)
                 })
                     .done(function () {
                         var idxStudentList = registrations.indexOf(currentReg);
@@ -1069,7 +1069,7 @@
                 stampDoms.find("img.x-delete").addClass("hidden");
             });
 
-            // Handle transition to student info page
+            // Handle transition to registration info page
             $("#registration-info-btn").on("click", function () {
                 currentUser = currentReg.student;  // Note this could be null for non-member student
                 app.doms.pageRegistrationInfo.find(".user-displayname")
