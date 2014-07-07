@@ -356,6 +356,7 @@ body {
     display: inline-block;
     width: 30%;
     font-size: small;
+    font-weight: normal;
 }
 
 a.dangerous {
@@ -379,6 +380,7 @@ a.dangerous {
 
 #new-requests-count {
     display: none;
-    color: red;
+    color: white;
+    background-color: red;
     border-color: red;
 }

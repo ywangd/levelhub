@@ -10,7 +10,8 @@
     var stamps, stampsDeleted;
     var stampFirstIdx, stampLastIdx;
 
-    var currentUser, currentLesson; // These are the user and lesson to be shown for variable details page
+    var currentUser, currentLesson,  // These are the user and lesson to be shown for variable details page
+        currentRequest;
 
     var userSearchHitLink;
 
@@ -255,7 +256,7 @@
             var savedMe = localStorage.getItem('me');
             if (savedMe) {
                 me = JSON.parse(savedMe);
-                app.get_user_lessons(function (data) {
+                app.getUserLessons(function (data) {
                         data = app.process_pulse(data);
                         teaches = data.teach;
                         studies = data.study;
@@ -284,7 +285,7 @@
                     .done(function (data) {
                         me = app.process_pulse(data);
                         localStorage.setItem('me', JSON.stringify(me));
-                        app.get_user_lessons(function (data) {
+                        app.getUserLessons(function (data) {
                                 data = app.process_pulse(data);
                                 teaches = data.teach;
                                 studies = data.study;
@@ -1236,6 +1237,37 @@
                     .fail(app.ajaxErrorHandler);
             });
 
+            // Handle request accept, reject and dismiss
+            $("#lesson-request-accept-btn, #lesson-request-decline-btn, #lesson-request-dismiss-btn")
+                .on("click", function () {
+                    var action;
+                    switch ($(this).attr("id")) {
+                        case "lesson-request-accept-btn":
+                            action = "accept";
+                            break;
+                        case "lesson-request-decline-btn":
+                            action = "reject";
+                            break;
+                        case "lesson-request-dismiss-btn":
+                            action = "dismiss";
+                            break;
+                    }
+                    console.log("action is ", action, $(this).attr("id"));
+                    $.ajax({
+                        type: "POST",
+                        url: server_url + "j/process_lesson_requests/",
+                        data: JSON.stringify({action: action, req_id: currentRequest.req_id})
+                    })
+                        .done(function (data) {
+                            app.process_pulse(data);
+                            var ul = $("#lesson-requests").find("ul");
+                            ul.find("li").eq(currentRequest.listidx).remove();
+                            app.refresh_listview(ul);
+                            history.back();
+                        })
+                        .fail(app.ajaxErrorHandler);
+                });
+
             // Populate user details page
             $(document).on("click", "a[href='#user-details-page']", function () {
                 // The user can be associated to the element by either direct user object or
@@ -1327,7 +1359,7 @@
                                         break;
                                     case REQUEST_JOIN:
                                         if (request.sender.username == me.username) {
-                                            texts = "You asked to join "+ request.lesson.name;
+                                            texts = "You asked to join " + request.lesson.name;
                                         } else {
                                             texts = app.getUserDisplayName(request.sender) + " wants to join " + request.lesson.name;
                                         }
@@ -1344,13 +1376,73 @@
                                     case REQUEST_JOIN_REJECTED:
                                         texts = "You are declined to join " + request.lesson.name;
                                         break;
+                                    case REQUEST_DEROLL:
+                                        texts = "You are disenrolled from " + request.lesson.name;
+                                        break;
+                                    case REQUEST_QUIT:
+                                        texts = app.getUserDisplayName(request.sender) + " has quit from " + request.lesson.name;
                                 }
-                                $("<li>").append($('<a href="#lesson-request-details" data-transition="slide"/>').text(texts).data("request", request))
+                                $("<li>").append(
+                                    $('<a href="#lesson-request-details" data-transition="slide"/>')
+                                        .text(texts)
+                                        .data("request", request))
                                     .appendTo(ul);
                             });
                             app.refresh_listview(ul);
                         })
                         .fail(app.ajaxErrorHandler);
+                })
+                .on("click", "a[href='#lesson-request-details']", function () {
+                    var $this = $(this);
+                    currentRequest = $this.data("request");
+                    currentRequest.listidx = $this.parent().prevAll().length;
+                    var page = $("#lesson-request-details");
+                    page.find("#lesson-request-details-title").text($this.text());
+                    if (currentRequest.sender.username == me.username) {
+                        page.find("#lesson-request-details-user")
+                            .text(app.getUserDisplayName(currentRequest.receiver))
+                            .prev("span").text("To")
+                            .parent().data("user", currentRequest.receiver);
+                    } else {
+                        page.find("#lesson-request-details-user")
+                            .text(app.getUserDisplayName(currentRequest.sender))
+                            .prev("span").text("From")
+                            .parent().data("user", currentRequest.sender);
+                    }
+                    page.find("#lesson-request-details-lesson")
+                        .text(currentRequest.lesson.name)
+                        .parent().data("lesson", currentRequest.lesson);
+                    page.find("#lesson-request-details-timestamp")
+                        .text(app.processTimestampString(currentRequest.creation_time).dateString)
+                    page.find("#lesson-request-details-message")
+                        .text(currentRequest.message);
+
+                    var btnYesNo = $("#lesson-request-details-yes-or-no"),
+                        btnDismiss = $("#lesson-request-details-dismiss");
+                    switch (currentRequest.status) {
+                        case REQUEST_ENROLL:
+                        case REQUEST_JOIN:
+                            btnDismiss.hide();
+                            if (currentRequest.receiver.username == me.username) {
+                                btnYesNo.show();
+                            } else {
+                                btnYesNo.hide()
+                            }
+                            break;
+                        case REQUEST_ENROLL_ACCEPTED:
+                        case REQUEST_ENROLL_REJECTED:
+                        case REQUEST_JOIN_ACCEPTED:
+                        case REQUEST_JOIN_REJECTED:
+                        case REQUEST_DEROLL:
+                        case REQUEST_QUIT:
+                            btnYesNo.hide();
+                            btnDismiss.show();
+                            break;
+                        default:
+                            btnYesNo.hide();
+                            btnDismiss.hide();
+                            break;
+                    }
                 });
         },
 
@@ -1367,7 +1459,7 @@
             }
         },
 
-        get_user_lessons: function (successHandler, category, user_id) {
+        getUserLessons: function (successHandler, category, user_id) {
             $.ajax({
                 url: server_url + "j/process_lessons/",
                 data: {category: category, user_id: user_id}
