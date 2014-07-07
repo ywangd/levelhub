@@ -1169,7 +1169,7 @@
                 pageStudyDetails.find(".study-details-daytime").remove();
                 var daytimeList = currentStudy.registration.daytimes ? currentStudy.registration.daytimes.split(",") : [];
                 $.each(daytimeList.reverse(), function (idx, daytime) {
-                    $("#study-details-since")
+                    $("#study-details-since").parent()
                         .after($('<li class="study-details-daytime"><span class="list-leading">Class time</span><span>'
                             + daytime + '</span></li>'));
                 });
@@ -1309,7 +1309,7 @@
                     var ul = $("#lesson-requests").find("ul");
                     ul.empty();
                     $.ajax({
-                        url: server_url + "j/process_lesson_requests"
+                        url: server_url + "j/process_lesson_requests/"
                     })
                         .done(function (data) {
                             $("#more-pulse").hide();
@@ -1319,13 +1319,21 @@
                             $.each(lesson_requests, function (idx, request) {
                                 switch (request.status) {
                                     case REQUEST_ENROLL:
-                                        texts = "You requested to enroll " + app.getUserDisplayName(request.receiver) + " to " + request.lesson.name;
+                                        if (request.sender.username == me.username) {
+                                            texts = "You requested to enroll " + app.getUserDisplayName(request.receiver) + " to " + request.lesson.name;
+                                        } else {
+                                            texts = app.getUserDisplayName(request.receiver) + " asked you to join " + request.lesson.name;
+                                        }
                                         break;
                                     case REQUEST_JOIN:
-                                        texts = app.getUserDisplayName(request.sender) + " wants to join " + request.lesson.name;
+                                        if (request.sender.username == me.username) {
+                                            texts = "You asked to join "+ request.lesson.name;
+                                        } else {
+                                            texts = app.getUserDisplayName(request.sender) + " wants to join " + request.lesson.name;
+                                        }
                                         break;
                                     case REQUEST_ENROLL_ACCEPTED:
-                                        texts = app.getUserDisplayName(request.receiver) + " is now enrolled in " + request.lesson.name;
+                                        texts = app.getUserDisplayName(request.receiver) + " accepted to be enrolled in " + request.lesson.name;
                                         break;
                                     case REQUEST_ENROLL_REJECTED:
                                         texts = app.getUserDisplayName(request.receiver) + "declined to enroll in " + request.lesson.name;
@@ -1337,7 +1345,7 @@
                                         texts = "You are declined to join " + request.lesson.name;
                                         break;
                                 }
-                                $("<li>").append($('<a href="#" data-transition="slide"/>').text(texts))
+                                $("<li>").append($('<a href="#lesson-request-details" data-transition="slide"/>').text(texts).data("request", request))
                                     .appendTo(ul);
                             });
                             app.refresh_listview(ul);
