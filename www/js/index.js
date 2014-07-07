@@ -16,6 +16,15 @@
 
     var NEW_STAMP = -1;
 
+    var REQUEST_ENROLL = 1,
+        REQUEST_JOIN = 2,
+        REQUEST_DEROLL = 3,
+        REQUEST_QUIT = 4,
+        REQUEST_ENROLL_ACCEPTED = 201,
+        REQUEST_ENROLL_REJECTED = 202,
+        REQUEST_JOIN_ACCEPTED = 203,
+        REQUEST_JOIN_REJECTED = 204;
+
     // Throttle ajax request so request to same url is only fired once every
     // throttle interval value
     var ajaxThrottle, throttleInterval = 300; // ms
@@ -751,7 +760,7 @@
 
             // Handle the Done button on registration info page to save
             // the daytimes information.
-            $("#registration-info-save-btn").on("click", function() {
+            $("#registration-info-save-btn").on("click", function () {
                 var daytimeList = [];
                 $.each($(this).closest("section").find(".daytime-list li a:not([title='delete'])"),
                     function (idx, dom) {
@@ -1294,6 +1303,46 @@
                 .on("click", "a[href='#user-teaches-page']", function () {
                     currentUser = $(this).data("user") || currentUser;
                     app.showTeachLessons(currentUser, $("#user-teaches-page").find("ul"));
+                })
+                // Populate the lesson requests page
+                .on("click", "a[href='#lesson-requests']", function () {
+                    var ul = $("#lesson-requests").find("ul");
+                    ul.empty();
+                    $.ajax({
+                        url: server_url + "j/process_lesson_requests"
+                    })
+                        .done(function (data) {
+                            $("#more-pulse").hide();
+                            $("#new-requests-count").hide();
+                            var lesson_requests = app.process_pulse(data),
+                                texts;
+                            $.each(lesson_requests, function (idx, request) {
+                                switch (request.status) {
+                                    case REQUEST_ENROLL:
+                                        texts = "You requested to enroll " + app.getUserDisplayName(request.receiver) + " to " + request.lesson.name;
+                                        break;
+                                    case REQUEST_JOIN:
+                                        texts = app.getUserDisplayName(request.sender) + " wants to join " + request.lesson.name;
+                                        break;
+                                    case REQUEST_ENROLL_ACCEPTED:
+                                        texts = app.getUserDisplayName(request.receiver) + " is now enrolled in " + request.lesson.name;
+                                        break;
+                                    case REQUEST_ENROLL_REJECTED:
+                                        texts = app.getUserDisplayName(request.receiver) + "declined to enroll in " + request.lesson.name;
+                                        break;
+                                    case REQUEST_JOIN_ACCEPTED:
+                                        texts = "You are accepted to join " + request.lesson.name;
+                                        break;
+                                    case REQUEST_JOIN_REJECTED:
+                                        texts = "You are declined to join " + request.lesson.name;
+                                        break;
+                                }
+                                $("<li>").append($('<a href="#" data-transition="slide"/>').text(texts))
+                                    .appendTo(ul);
+                            });
+                            app.refresh_listview(ul);
+                        })
+                        .fail(app.ajaxErrorHandler);
                 });
         },
 
@@ -1302,6 +1351,7 @@
             if (data.pulse) {
                 if (data.pulse.n_new_requests) {
                     $("#more-pulse").show();
+                    $("#new-requests-count").text(data.pulse.n_new_requests).show();
                 }
                 return data.main;
             } else {
