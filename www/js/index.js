@@ -98,14 +98,19 @@
                 timeout: 9000
             });
 
-            // Always attach json as a parameter to request for json data
+            // Throttle ajax GET requests. So the request to the same URL + parameters
+            // only happens every throttleInterval interval
             $.ajaxPrefilter(function (options, originalOptions, jqXhr) {
-                // Ensure the same ajax call does not fire twice in a row
-                if (ajaxThrottle[options.url] && (Date.now() - ajaxThrottle[options.url]) < throttleInterval) {
-                    console.log('Aborting duplicate ajax call ', options.url);
-                    jqXhr.abort();
-                } else {
-                    ajaxThrottle[options.url] = Date.now();
+                if (options.type == "GET") {
+                    var fullPath = options.url + "?" + options.data;
+                    console.log(fullPath);
+                    // Ensure the same ajax call does not fire twice in a row
+                    if (ajaxThrottle[fullPath] && (Date.now() - ajaxThrottle[fullPath]) < throttleInterval) {
+                        console.log('Aborting duplicate ajax call ', fullPath);
+                        jqXhr.abort();
+                    } else {
+                        ajaxThrottle[fullPath] = Date.now();
+                    }
                 }
             });
 
@@ -178,7 +183,7 @@
 
             // home page init
             // Handle home nav icon press
-            app.doms.pageHome.on("click", "#icon-news, #icon-teach, #icon-study, #icon-setup", function () {
+            app.doms.pageHome.on("click", "#icon-news, #icon-teach, #icon-study, #icon-more", function () {
                 var $this = $(this);
                 var idx = $this.parent().prevAll().length;
                 homeNavIdx = idx;
@@ -217,7 +222,7 @@
                             }).show();
                         app.showStudyLessons();
                         break;
-                    case "setup":
+                    case "more":
                         app.doms.headerHome.find("h1").text("Settings");
                         app.doms.btnHomeUR.hide();
                         app.showSetup();
@@ -229,26 +234,30 @@
 
             // make sure the settings are displayed correctly based on their values
             if (localStorage.getItem("homeContent")) {
-                var radios = $("#setup-first-page input:radio");
+                var radios = $("#settings-first-page input:radio");
                 radios.checkboxradio();
                 radios.filter("[value=" + localStorage.getItem("homeContent") + "]").attr("checked", true);
                 radios.checkboxradio("refresh");
             } else {
-                localStorage.setItem("homeContent", $("#setup-first-page input:radio:checked").val());
+                localStorage.setItem("homeContent", $("#settings-first-page input:radio:checked").val());
             }
 
             // The first page to show
             var savedMe = localStorage.getItem('me');
             if (savedMe) {
                 me = JSON.parse(savedMe);
-                app.get_user_lessons(function () {
-                    $.mobile.changePage(app.doms.pageHome);
-                    $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
-                });
+                app.get_user_lessons(function (data) {
+                        data = app.process_pulse(data);
+                        teaches = data.teach;
+                        studies = data.study;
+                        $.mobile.changePage(app.doms.pageHome);
+                        $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
+                    },
+                    "all");
             }
 
             // Handle changes on first page settings
-            $("#setup-first-page").on("click", "label", function () {
+            $("#settings-first-page").on("click", "label", function () {
                 localStorage.setItem("homeContent", $(this).next("input").val());
             });
 
@@ -267,15 +276,16 @@
                         me = data['main'];
                         localStorage.setItem('me', JSON.stringify(me));
                         app.get_user_lessons(function (data) {
-                                teaches = data.main.teach;
-                                studies = data.main.study;
+                                data = app.process_pulse(data);
+                                teaches = data.teach;
+                                studies = data.study;
                                 $.mobile.changePage(app.doms.pageHome, {
                                     transition: "slideup"
                                 });
                                 $("#icon-" + localStorage.getItem("homeContent")).trigger("click");
                                 form[0].reset();
                             },
-                            'all');
+                            "all");
                     })
                     .fail(app.ajaxErrorHandler);
             });
@@ -1265,8 +1275,19 @@
                 });
         },
 
-        get_user_lessons: function (successHandler, category, user_id) {
+        // Process the pulse info and return the main payload
+        process_pulse: function (data) {
+            if (data.pulse) {
+                if (data.pulse.n_new_requests) {
+                    $("#more-pulse").show();
+                }
+                return data.main;
+            } else {
+                return data;
+            }
+        },
 
+        get_user_lessons: function (successHandler, category, user_id) {
             $.ajax({
                 url: server_url + "j/process_lessons/",
                 data: $.param({category: category, user_id: user_id})
@@ -1567,6 +1588,8 @@
                     app.ajaxErrorAlert("Server error. Please try again.");
                 } else if (jqXHR.status == 404) {
                     app.ajaxErrorAlert("Page not found.")
+                } else if (jqXHR.status == 0) {
+                    app.ajaxErrorAlert("Connection error. Please try again.");
                 }
                 else {
                     app.ajaxErrorAlert(jqXHR.responseText);
@@ -1588,7 +1611,7 @@
                 'display': 'block',
                 'opacity': 1
             })
-                .stop().fadeOut(4000);
+                .stop().fadeOut(6000);
         }
     };
 

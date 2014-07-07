@@ -100,7 +100,7 @@
         <ul id="study-list" data-role="listview">
         </ul>
     </div>
-    <div role="main" class="ui-content" id="setup">
+    <div role="main" class="ui-content" id="more">
         <ul data-role="listview" data-inset="true">
             <li id="my-details-btn">
                 <a href="#my-details-page" data-transition="slide">
@@ -115,7 +115,7 @@
 
         <ul data-role="listview" data-inset="true" class="ui-mini">
             <li>
-                <a href="#setup-first-page" data-transition="slide">Page shown on startup</a>
+                <a href="#settings-first-page" data-transition="slide">Page shown on startup</a>
             </li>
         </ul>
 
@@ -127,13 +127,21 @@
            class="ui-btn ui-icon-refresh ui-corner-all">Reset DB</a>
 
     </div>
-    <footer data-role="footer" data-position="fixed" data-tap-toggle="false" data-theme="b" class="home-nav ui-mini">
-        <div data-role="navbar" data-grid="c" class="home-nav ui-mini">
-            <ul class="ui-mini">
-                <li><a href="#" id="icon-news" data-icon="custom">News</a></li>
-                <li><a href="#" id="icon-teach" data-icon="custom">Teach</a></li>
-                <li><a href="#" id="icon-study" data-icon="custom">Study</a></li>
-                <li><a href="#" id="icon-setup" data-icon="custom">Setup</a></li>
+    <footer data-role="footer" data-position="fixed" data-tap-toggle="false" data-theme="b" class="ui-mini">
+        <div data-role="navbar" data-grid="c" class="ui-mini">
+            <ul id="home-nav-bar" class="ui-mini">
+                <li><a href="#" id="icon-news" data-icon="custom">News
+                    <div><span id="news-pulse">&bullet;</span></div>
+                </a></li>
+                <li><a href="#" id="icon-teach" data-icon="custom">Teach
+                    <div><span id="teach-pulse">&bullet;</span></div>
+                </a></li>
+                <li><a href="#" id="icon-study" data-icon="custom">Study
+                    <div><span id="study-pulse">&bullet;</span></div>
+                </a></li>
+                <li><a href="#" id="icon-more" data-icon="custom">Setup
+                    <div><span id="more-pulse">&bullet;</span></div>
+                </a></li>
             </ul>
         </div>
     </footer>
@@ -279,7 +287,7 @@
 
         <a href="#" id="teach-delete-btn"
            class="ui-btn ui-mini ui-corner-all ui-btn-b dangerous">Delete</a>
-        
+
     </div>
     <div data-role="popup" id="teach-edit-popup-0" data-overlay-theme="b" data-theme="a" data-dismissible="false">
         <div data-role="header">
@@ -798,7 +806,7 @@
 </section>
 
 
-<section id="setup-first-page" data-role="page">
+<section id="settings-first-page" data-role="page">
     <header data-role="header" data-position="fixed">
         <h1 class="wide-header">Page Shown on Startup</h1>
         <a data-rel="back"
@@ -813,7 +821,7 @@
                 <label for="first-page-radio-1">Teach</label>
                 <input name="first-page-radio" id="first-page-radio-2" value="study" type="radio">
                 <label for="first-page-radio-2">Study</label>
-                <input name="first-page-radio" id="first-page-radio-3" value="setup" type="radio">
+                <input name="first-page-radio" id="first-page-radio-3" value="more" type="radio">
                 <label for="first-page-radio-3">Setup</label>
             </fieldset>
         </form>

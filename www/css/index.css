@@ -89,7 +89,7 @@ body {
 }
 
 
-#news, #teach, #study, #setup {
+#news, #teach, #study, #more {
     display: none;
 }
 
@@ -108,8 +108,8 @@ body {
     background-size: contain;
 }
 
-#icon-setup:after {
-    background: url("../img/home-setup.svg") 50% 50% no-repeat;
+#icon-more:after {
+    background: url("../img/home-more.svg") 50% 50% no-repeat;
     background-size: contain;
 }
 
@@ -363,4 +363,16 @@ a.dangerous {
     margin-top: 4em;
     margin-left: 15%;
     margin-right: 15%;
+}
+
+#home-nav-bar li div {
+    display: inline-block;
+}
+
+#home-nav-bar li div span {
+    display: none;
+    position: absolute;
+    bottom: 1em;
+    color: red;
+    font-weight: bold;
 }
