@@ -373,8 +373,9 @@ a.dangerous {
 #home-nav-bar li div span {
     display: none;
     position: absolute;
-    bottom: 1em;
+    bottom: 0.25em;
     color: red;
+    font-size: 2em;
     font-weight: bold;
 }
 
