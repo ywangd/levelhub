@@ -572,7 +572,7 @@
     <header data-role="header" data-position="fixed">
         <h1>Search by</h1>
         <a data-rel="back"
-           class="ui-btn ui-btn-corner-all ui-icon-delete ui-btn-right">Cancel</a>
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
     </header>
     <div role="main" class="ui-content">
         <ul data-role="listview">
@@ -747,7 +747,7 @@
     <header data-role="header" data-position="fixed">
         <h1>Search by</h1>
         <a data-rel="back"
-           class="ui-btn ui-btn-corner-all ui-icon-delete ui-btn-right">Cancel</a>
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
     </header>
     <div role="main" class="ui-content">
         <ul data-role="listview">
@@ -806,8 +806,30 @@
             <li><span class="list-leading">Members</span><span id="lesson-details-nregs"></span></li>
         </ul>
 
-        <a href="#" id="lesson-join-btn"
-           class="ui-btn ui-corner-all ui-btn-a" style="margin-top: 2em;">Join</a>
+        <a href="#lesson-join-popup" data-rel="popup" data-transition="pop" data-position-to="window"
+           class="ui-btn ui-corner-all ui-btn-a ui-mini"
+           style="margin-top: 2em; margin-left: 15%; margin-right: 15%;">Join</a>
+    </div>
+    <div data-role="popup" id="lesson-join-popup" data-overlay-theme="b" data-theme="a" data-dismissible="false">
+        <div data-role="header">
+            <h1 class="wide-header">Request Message</h1>
+        </div>
+        <div role="main" class="ui-content">
+            <form>
+                <textarea cols="40" rows="6" id="join-request-message" data-autogrow="false"
+                          style="resize: none;"></textarea>
+                <fieldset class="ui-grid-a">
+                    <div class="ui-block-a">
+                        <a href="#" class="ui-btn ui-corner-all ui-btn-a ui-shadow ui-mini"
+                           data-rel="back">Cancel</a>
+                    </div>
+                    <div class="ui-block-b">
+                        <a href="#" id="lesson-join-btn"
+                           class="ui-btn ui-corner-all ui-btn-b ui-shadow ui-mini">Send</a>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
     </div>
 </section>
 
@@ -846,7 +868,7 @@
 
 
         <div class="ui-grid-solo" id="lesson-request-details-dismiss"
-             style="margin-top: 2em; padding-left: 25%; padding-right: 25%;">
+             style="margin-top: 2em; padding-left: 15%; padding-right: 15%;">
             <div class="ui-block-a">
                 <a href="#" id="lesson-request-dismiss-btn"
                    class="ui-btn ui-corner-all ui-mini">Dismiss</a>

@@ -53,7 +53,7 @@
     var server_url = "http://levelhub-ywangd.rhcloud.com/";
     server_url = "http://localhost:8000/";
     if (window.location.hostname != "localhost") {
-        server_url = "http://levelhub-ywangd.rhcloud.com/";
+        //server_url = "http://levelhub-ywangd.rhcloud.com/";
     }
     //server_url = "http://10.0.2.2:8000/";
     //server_url = "http://192.168.1.16:8000/";
@@ -1187,20 +1187,49 @@
                 });
             });
 
+            // handle lesson join button
             $("#lesson-join-btn").on("click", function () {
                 $.ajax({
                     type: "POST",
                     url: server_url + "j/process_lesson_requests/",
                     data: JSON.stringify({
                         action: "join",
-                        lesson_id: currentLesson.lesson_id})
+                        lesson_id: currentLesson.lesson_id,
+                        message: $("#join-request-message").val()
+                    })
                 })
                     .done(function (data) {
                         app.process_pulse(data);
-                        app.showTeachLessons(me, app.doms.listTeaches);
                         history.back();
+                        app.alert("Please wait for response from the teacher",
+                            undefined,
+                            "Request Sent");
                     })
                     .fail(app.ajaxErrorHandler);
+            });
+
+            // Handle lesson quit button
+            $("#lesson-quit-btn").on("click", function () {
+                app.confirm('The operation is not reversible!',
+                    function (btnIdx) {
+                        if (btnIdx == 1) {
+                            $.ajax({
+                                type: 'POST',
+                                url: server_url + 'j/process_lesson_requests/',
+                                data: JSON.stringify({
+                                    action: "quit",
+                                    reg_id: currentStudy.registration.reg_id
+                                })
+                            })
+                                .done(function (data) {
+                                    app.process_pulse(data);
+                                    $("#icon-study").trigger("click");
+                                    history.back();
+                                })
+                                .fail(app.ajaxErrorHandler);
+                        }
+                    }, 'Delete class?');
+                return false;
             });
 
             // Populate taken history page
