@@ -141,8 +141,7 @@
                 btnHomeUR: $("#home-btn-right"),
                 listStudents: $("#student-list"),
                 listTeaches: $("#teach-list"),
-                listStudies: $("#study-list"),
-                listStudentHistory: $("#student-history")
+                listStudies: $("#study-list")
             };
 
             app.doms.divsHomeContent = app.doms.pageHome.find(".ui-content");
@@ -722,11 +721,10 @@
                     + selecteds.eq(2).text() + " "
                     + selecteds.eq(3).text();
                 if (popup.data("target").is("a")) {  // modify existing daytime
-                    popup.data("target").text(daytime);
+                    popup.data("target").find("span:eq(1)").text(daytime);
                 } else {  // append nwe daytime entry
                     popup.data("target")
-                        .append($("<li>").append($("<a>", {href: "#", text: daytime}))
-                            .append($("<a>", {href: "#", text: "delete"})))
+                        .append(app.createDaytimeLi(daytime))
                         .listview("refresh");
                 }
             }).on("popupafterclose", function () {
@@ -741,7 +739,7 @@
                     $this.closest("li").remove();
                     list.listview("refresh");
                 } else {
-                    var fields = app.parseClassDaytime($this.text());
+                    var fields = app.parseClassDaytime($this.find("span:eq(1)").text());
                     var popup = $("#daytime-dialog"),
                         selects = popup.find("select");
                     $.each(selects, function (idx, select) {
@@ -762,16 +760,13 @@
             // Handle the Done button on registration info page to save
             // the daytimes information.
             $("#registration-info-save-btn").on("click", function () {
-                var daytimeList = [];
-                $.each($(this).closest("section").find(".daytime-list li a:not([title='delete'])"),
-                    function (idx, dom) {
-                        daytimeList.push(dom.innerHTML);
-                    });
-                var daytimes = daytimeList.join(",");
+                var daytimes = app.readDaytimeList($(this).closest("section").find(".daytime-list"));
                 $.ajax({
                     type: "POST",
                     url: server_url + "j/process_lesson_regs/",
-                    data: JSON.stringify({reg_id: currentReg.reg_id, daytimes: daytimes})
+                    data: JSON.stringify({
+                        reg_id: currentReg.reg_id,
+                        daytimes: daytimes})
                 })
                     .done(function (data) {
                         currentReg.daytimes = daytimes;
@@ -794,14 +789,8 @@
                 } else {
                     fields['lesson_id'] = currentTeach.lesson_id;
                     // add any class daytime entries
-                    var daytimeList = [],
-                        $daytimeList = app.doms.pageNewStudentOffline.find(".daytime-list");
-
-                    $.each($daytimeList.find("li a:not([title='delete'])"),
-                        function (idx, dom) {
-                            daytimeList.push(dom.innerHTML);
-                        });
-                    fields["daytimes"] = daytimeList.join(",");
+                    var $daytimeList = app.doms.pageNewStudentOffline.find(".daytime-list");
+                    fields["daytimes"] = app.readDaytimeList($daytimeList);
                     fields.action = "enroll";
                     $.ajax({
                         type: 'POST',
@@ -810,11 +799,8 @@
                     })
                         .done(function (data) {
                             app.process_pulse(data);
-                            app.showRegsForTeachLesson();
-                            $.mobile.changePage(app.doms.pageTeachRegs, {
-                                transition: "slide",
-                                reverse: true
-                            });
+                            app.showRegsForTeachLesson(false);
+                            history.back();
                             form[0].reset();
                             $daytimeList.empty();
                             currentTeach.nregs += 1;
@@ -833,14 +819,9 @@
                 fields['lesson_id'] = currentTeach.lesson_id;
                 fields['student_id'] = currentUser.user_id;
                 // add any class daytime entries
-                var daytimeList = [],
-                    $daytimeList = app.doms.pageNewStudentOnline.find(".daytime-list");
-
-                $.each($daytimeList.find("li a:not([title='delete'])"),
-                    function (idx, dom) {
-                        daytimeList.push(dom.innerHTML);
-                    });
-                fields["daytimes"] = daytimeList.join(",");
+                var $daytimeList = app.doms.pageNewStudentOnline.find(".daytime-list");
+                fields["daytimes"] = app.readDaytimeList($daytimeList);
+                fields["message"] = $("#enroll-request-message").val();
                 fields.action = "enroll";
                 $.ajax({
                     type: "POST",
@@ -849,17 +830,12 @@
                 })
                     .done(function (data) {
                         app.process_pulse(data);
-                        app.showRegsForTeachLesson();
-                        $.mobile.changePage(app.doms.pageTeachRegs, {
-                            transition: "slide",
-                            reverse: true
-                        });
+                        history.back();
+                        app.alert("Please wait for response from the student",
+                            undefined,
+                            "Request Sent");
                         $daytimeList.empty();
-                        currentTeach.nregs += 1;
-                        var idxTeachList = teaches.indexOf(currentTeach);
-                        app.doms.divsHomeContent.eq(homeNavIdx).
-                            find("ul a span").
-                            eq(idxTeachList).empty().text(currentTeach.nregs);
+                        $("#enroll-request-message").val("");
                     })
                     .fail(app.ajaxErrorHandler);
             });
@@ -1047,7 +1023,7 @@
                     if (stamp.updated) {
                         var entry = {use_time: stamp.use_time, data: JSON.stringify(stamp.data)};
                         if (stamp.rlog_id == NEW_STAMP) {
-                            rlogs.push($.extend(entry, {action: "create"}));
+                            rlogs.push($.extend(entry, {reg_id: currentReg.reg_id, action: "create"}));
                         } else {  // modified stamp
                             rlogs.push($.extend(entry, {rlog_id: stamp.rlog_id, action: "update"}));
                         }
@@ -1088,15 +1064,13 @@
                     .text(currentReg.total - currentReg.unused)
                     .end().find(".lesson-unused-count")
                     .text(currentReg.unused);
-                app.refresh_listview(app.doms.listStudentHistory);
 
-                var $daytimeList = app.doms.pageRegistrationInfo.find(".daytime-list");
+                var $daytimeList = app.doms.pageRegistrationInfo.find(".daytime-list"),
+                    daytimeList = currentReg.daytimes == "" ? [] : currentReg.daytimes.split(","),
+                    a;
                 $daytimeList.empty();
-                var daytimeList = currentReg.daytimes == "" ? [] : currentReg.daytimes.split(",");
                 $.each(daytimeList, function (idx, daytime) {
-                    $("<li>").append($("<a>", {href: "#", text: daytime})).
-                        append($("<a>", {href: "#", text: "delete"})).
-                        appendTo($daytimeList);
+                    $daytimeList.append(app.createDaytimeLi(daytime));
                 });
                 app.refresh_listview($daytimeList);
 
@@ -1383,7 +1357,7 @@
                                         if (request.sender.username == me.username) {
                                             texts = "You requested to enroll " + app.getUserDisplayName(request.receiver) + " to " + request.lesson.name;
                                         } else {
-                                            texts = app.getUserDisplayName(request.receiver) + " asked you to join " + request.lesson.name;
+                                            texts = app.getUserDisplayName(request.sender) + " requested to enroll you to " + request.lesson.name;
                                         }
                                         break;
                                     case REQUEST_JOIN:
@@ -1580,7 +1554,9 @@
                 .fail(app.ajaxErrorHandler);
         },
 
-        showRegsForTeachLesson: function () {
+        showRegsForTeachLesson: function (changePage) {
+            changePage = changePage == undefined ? true : changePage;
+
             $.ajax({
                 url: server_url + "j/process_lesson_regs/",
                 data: {lesson_id: currentTeach.lesson_id}
@@ -1602,9 +1578,11 @@
                     });
                     app.refresh_listview(app.doms.listStudents);
 
-                    $.mobile.changePage(app.doms.pageTeachRegs, {
-                        transition: "slide"
-                    });
+                    if (changePage) {
+                        $.mobile.changePage(app.doms.pageTeachRegs, {
+                            transition: "slide"
+                        });
+                    }
                 })
                 .fail(app.ajaxErrorHandler);
         },
@@ -1665,6 +1643,21 @@
             btn.find("h2").text(name);
             btn.find("p").text(
                     headingText + app.processTimestampString(me.creation_time).dateString);
+        },
+
+        createDaytimeLi: function (daytime) {
+            var a = $('<a href="#"><span class="list-leading">Class time</span><span></span></a>');
+            a.find("span:eq(1)").text(daytime);
+            return $("<li>").append(a).append($('<a href="#">delete</a>'));
+        },
+
+        readDaytimeList: function ($daytimeList) {
+            var theList = [];
+            $.each($daytimeList.find("li a:not([title='delete']) span:not(.list-leading)"),
+                function (idx, dom) {
+                    theList.push(dom.innerHTML);
+                });
+            return theList.join(",");
         },
 
         getCurrentTimestamp: function (dateOnly) {

@@ -139,13 +139,17 @@
     <footer data-role="footer" data-position="fixed" data-tap-toggle="false" data-theme="b" class="ui-mini">
         <div data-role="navbar" data-grid="c" class="ui-mini">
             <ul id="home-nav-bar" class="ui-mini">
-                <li><a href="#" id="icon-news" data-icon="custom">News<div><span id="news-pulse">&bullet;</span></div>
+                <li><a href="#" id="icon-news" data-icon="custom">News
+                    <div><span id="news-pulse">&bullet;</span></div>
                 </a></li>
-                <li><a href="#" id="icon-teach" data-icon="custom">Teach<div><span id="teach-pulse">&bullet;</span></div>
+                <li><a href="#" id="icon-teach" data-icon="custom">Teach
+                    <div><span id="teach-pulse">&bullet;</span></div>
                 </a></li>
-                <li><a href="#" id="icon-study" data-icon="custom">Study<div><span id="study-pulse">&bullet;</span></div>
+                <li><a href="#" id="icon-study" data-icon="custom">Study
+                    <div><span id="study-pulse">&bullet;</span></div>
                 </a></li>
-                <li><a href="#" id="icon-more" data-icon="custom">More<div><span id="more-pulse">&bullet;</span></div>
+                <li><a href="#" id="icon-more" data-icon="custom">More
+                    <div><span id="more-pulse">&bullet;</span></div>
                 </a></li>
             </ul>
         </div>
@@ -498,30 +502,28 @@
            class="ui-btn ui-btn-corner-all ui-btn-right ui-shadow">Done</a>
     </header>
     <div role="main" class="ui-content">
-        <ul data-role="listview" data-inset="true">
+
+        <ul data-role="listview">
             <li class="user-details-btn">
                 <a href="#user-details-page" data-transition="slide">
                     <span class="list-leading">Name</span><span class="user-displayname"></span>
                 </a>
             </li>
-        </ul>
-
-        <ul data-role="listview" data-inset="true" id="student-history"
-            class="ui-mini">
             <li><a href="#taken-history-page" data-transition="slide"><span class="list-leading">Taken</span>
                 <span class="lesson-taken-count"></span></a></li>
             <li><span class="list-leading">Unused</span><span class="lesson-unused-count"></span></li>
         </ul>
 
-        <ul data-role="listview" data-inset="true"
-            class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="a">
+        <ul data-role="listview"
+            class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="a"
+            style="margin-top: 2em;">
         </ul>
         <a href="#daytime-dialog" data-rel="popup" data-position-to="window"
            data-transition="slideup"
-           class="ui-btn ui-icon-plus ui-btn-icon-left">Add Class Time...</a>
+           class="ui-btn ui-corner-all ui-icon-plus ui-btn-icon-left ui-mini solo-btn">Add Class Time...</a>
 
         <a href="#" id="student-delete-btn"
-           class="ui-btn ui-mini ui-corner-all ui-btn-b dangerous">Delete</a>
+           class="ui-btn ui-mini ui-corner-all ui-btn-b dangerous">Disenroll</a>
 
     </div>
 </section>
@@ -587,20 +589,29 @@
 <section id="new-student-online" data-role="page">
     <header data-role="header" data-position="fixed">
         <h1>New Student</h1>
+        <a data-rel="back"
+           class="ui-btn ui-btn-corner-all ui-icon-carat-l ui-btn-left ui-btn-icon-notext">Back</a>
     </header>
     <div role="main" class="ui-content">
-        <div>
-            <ul data-role="listview">
-                <li><a href="#user-details-page" data-transition="slide"><span class="list-leading">Name</span><span
-                        class="user-displayname"></span></a></li>
-            </ul>
-            <ul data-role="listview" data-inset="true"
-                class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="a">
-            </ul>
-            <a href="#daytime-dialog" data-rel="popup" data-position-to="window"
-               data-transition="slideup"
-               class="ui-btn ui-icon-plus ui-btn-icon-left">Add Class Time...</a>
-        </div>
+
+        <ul data-role="listview">
+            <li><a href="#user-details-page" data-transition="slide"><span class="list-leading">Name</span><span
+                    class="user-displayname"></span></a></li>
+            <li>
+                <span class="list-leading">Message</span>
+                <textarea cols="40" rows="6" id="enroll-request-message" data-autogrow="false"
+                          style="resize: none;"></textarea>
+            </li>
+        </ul>
+
+        <ul data-role="listview"
+            class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="a"
+            style="margin-top: 2em;">
+        </ul>
+        <a href="#daytime-dialog" data-rel="popup" data-position-to="window"
+           data-transition="slideup"
+           class="ui-btn ui-corner-all ui-icon-plus ui-btn-icon-left ui-mini solo-btn">Add Class Time...</a>
+
     </div>
     <footer data-role="footer" data-position="fixed">
         <fieldset class="ui-grid-a">
@@ -634,12 +645,13 @@
                     <label for="addlname" class="ui-hidden-accessible">Last Name</label>
                     <input type="text" name="last_name" id="addlname" value="" data-theme="a" placeholder="Last Name"/>
                 </div>
-                <ul data-role="listview" data-inset="true"
-                    class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="a">
+                <ul data-role="listview"
+                    class="ui-mini daytime-list" data-split-icon="delete" data-split-theme="a"
+                    style="margin-top: 2em;">
                 </ul>
                 <a href="#daytime-dialog" data-rel="popup" data-position-to="window"
                    data-transition="slideup"
-                   class="ui-btn ui-icon-plus ui-btn-icon-left">Add Class Time...</a>
+                   class="ui-btn ui-corner-all ui-icon-plus ui-btn-icon-left ui-mini solo-btn">Add Class Time...</a>
             </form>
         </div>
     </div>

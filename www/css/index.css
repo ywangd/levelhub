@@ -359,6 +359,12 @@ body {
     font-weight: normal;
 }
 
+a.solo-btn {
+    margin-left: 15%;
+    margin-right: 15%;
+    margin-top: 2em;
+}
+
 a.dangerous {
     background-color: darkred !important;
     margin-top: 4em;
