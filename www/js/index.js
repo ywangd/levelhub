@@ -1395,6 +1395,7 @@
                         })
                         .fail(app.ajaxErrorHandler);
                 })
+                // populate the lesson request details page
                 .on("click", "a[href='#lesson-request-details']", function () {
                     var $this = $(this);
                     currentRequest = $this.data("request");
@@ -1445,6 +1446,22 @@
                             btnYesNo.hide();
                             btnDismiss.hide();
                             break;
+                    }
+                })
+                // referesh the news page when pull down
+                .on("iscroll_onpulldown", ".iscroll-wrapper", function (event, d) {
+                    if (event.target.id == "news") {
+                        console.log(event, d);
+                        app.showMessages();
+                        d.iscrollview.refresh();
+                    }
+                })
+                // refresh the news page when pull up
+                .on("iscroll_onpullup", ".iscroll-wrapper", function (event, d) {
+                    if (event.target.id == "news") {
+                        console.log(event, d);
+                        app.showMessages();
+                        d.iscrollview.refresh();
                     }
                 });
         },
