@@ -1456,11 +1456,11 @@
                         d.iscrollview.refresh();
                     }
                 })
-                // refresh the news page when pull up
+                // refresh the news page when pull up to get older messages
                 .on("iscroll_onpullup", ".iscroll-wrapper", function (event, d) {
                     if (event.target.id == "news") {
                         console.log(event, d);
-                        app.showMessages();
+                        app.showMessages(true);  // pass true to get older messages
                         d.iscrollview.refresh();
                     }
                 });
@@ -1488,12 +1488,43 @@
                 .fail(app.ajaxErrorHandler);
         },
 
-        showMessages: function () {
+        showMessages: function (olderRequired) {
+            olderRequired = olderRequired || false;
+
+            // Retrieve messages newer or older than the max or min known
+            // message id.
+            var msg_id = 0, action = 'newer';
+            if (messages && messages.length > 0) {
+                if (olderRequired) {
+                    msg_id = messages[messages.length-1].message.message_id;
+                    action = 'older';
+                } else {
+                    msg_id = messages[0].message.message_id;
+                    action = 'newer';
+                }
+            }
+
             $.ajax({
-                url: server_url + 'j/process_lesson_messages/'
+                url: server_url + 'j/process_lesson_messages/',
+                data: {msg_id: msg_id, action: action}
             })
                 .done(function (data) {
-                    messages = app.process_pulse(data);
+                    var new_messages = app.process_pulse(data);
+
+                    // add to the existing messages
+                    if (action == 'newer') {
+                        messages = msg_id == 0 ? new_messages : new_messages.concat(messages);
+                        // keep the total message number under 50 when getting new messages
+                        if (messages.length > 50) {
+                            messages = messages.slice(0,50);
+                        }
+                    } else {
+                        // Add older messages to existing messages. No throttle on this list
+                        // and it can go beyond 50. However, the server side only transmit
+                        // 15 old messages at a time.
+                        messages = messages.concat(new_messages);
+                    }
+
                     var messageList = $("#message-list");
                     messageList.empty();
                     var lastDateString = "",
