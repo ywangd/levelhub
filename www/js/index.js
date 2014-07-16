@@ -50,6 +50,8 @@
 
     var re_email = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
+    var timezoneOffset;
+
     var server_url = "http://levelhub-ywangd.rhcloud.com/";
     server_url = "http://localhost:8000/";
     if (window.location.hostname != "localhost") {
@@ -73,6 +75,9 @@
                 // Just ignore it on android
                 console.log(err.message);
             }
+
+            // Set the timezone offset for the current user
+            timezoneOffset = -(new Date()).getTimezoneOffset() * 60 * 1e3;  // in milliseconds
 
             // This is to ensure the same ajax call does not fire twice
             ajaxThrottle = {};
@@ -1496,7 +1501,7 @@
             var msg_id = 0, action = 'newer';
             if (messages && messages.length > 0) {
                 if (olderRequired) {
-                    msg_id = messages[messages.length-1].message.message_id;
+                    msg_id = messages[messages.length - 1].message.message_id;
                     action = 'older';
                 } else {
                     msg_id = messages[0].message.message_id;
@@ -1516,7 +1521,7 @@
                         messages = msg_id == 0 ? new_messages : new_messages.concat(messages);
                         // keep the total message number under 50 when getting new messages
                         if (messages.length > 50) {
-                            messages = messages.slice(0,50);
+                            messages = messages.slice(0, 50);
                         }
                     } else {
                         // Add older messages to existing messages. No throttle on this list
@@ -1533,9 +1538,9 @@
                         var message = entry.message,
                             lessons = entry.lessons;
 
-                        var fields = message.creation_time.split(" "),
-                            dateString = fields[0],
-                            timeString = fields[1];
+                        var fields = app.processTimestampString(message.creation_time),
+                            dateString = fields.dateString,
+                            timeString = fields.timeString;
 
                         // list divider for showing the dates
                         if (dateString != lastDateString) {
@@ -1543,7 +1548,7 @@
                             if (dateString == today) {
                                 var headingValue = 'Today, ' + dateString;
                             } else {
-                                var date = app.parseDate(dateString),
+                                var date = app.parseDateString(dateString),
                                     headingValue = weekdays[date.getDay()] + ', ' + dateString;
                             }
                             messageList.append(
@@ -1561,7 +1566,7 @@
                             }
                         });
                         li.find(".lesson").text(lesson_names.join(", "));
-                        li.find(".time").text(app.formatTime(timeString));
+                        li.find(".time").text(app.formatTimeString(timeString));
                         messageList.append(li);
                     });
                     app.refresh_listview(messageList);
@@ -1708,27 +1713,40 @@
             return theList.join(",");
         },
 
-        getCurrentTimestamp: function (dateOnly) {
-            dateOnly = typeof dateOnly == 'undefined' ? false : dateOnly;
-
-            var now = new Date();
-            var mon = now.getMonth() + 1;
-            var date = now.getDate();
+        // Format the javascriopt date object
+        formatDate: function (jsdate) {
+            var mon = jsdate.getMonth() + 1,
+                date = jsdate.getDate(),
+                year = jsdate.getFullYear();
 
             if (mon < 10) mon = '0' + mon;
             if (date < 10) date = '0' + date;
 
-            var dateString = now.getFullYear() + '-' + mon + '-' + date;
+            var dateString = year + '-' + mon + '-' + date;
+
+            var hour = jsdate.getHours(),
+                min = jsdate.getMinutes(),
+                sec = jsdate.getSeconds();
+            if (hour < 10) hour = '0' + hour;
+            if (min < 10) min = '0' + min;
+            if (sec < 10) sec = '0' + sec;
+            var timeString = hour + ':' + min + ':' + sec;
+
+            return {dateString: dateString, timeString: timeString}
+        },
+
+        getCurrentTimestamp: function (dateOnly) {
+            dateOnly = typeof dateOnly == 'undefined' ? false : dateOnly;
+
+            var now = new Date(),
+                nowFormated = app.formatDate(now),
+                dateString = nowFormated.dateString,
+                timeString = nowFormated.timeString;
+
             if (dateOnly) {
                 return dateString;
             } else {
-                var hour = now.getHours();
-                var min = now.getMinutes();
-                var sec = now.getSeconds();
-                if (hour < 10) hour = '0' + hour;
-                if (min < 10) min = '0' + min;
-                if (sec < 10) sec = '0' + sec;
-                return dateString + ' ' + hour + ':' + min + ':' + sec;
+                return dateString + ' ' + timeString;
             }
         },
 
@@ -1736,16 +1754,27 @@
             // timestamp string is of format YYYY-MM-DD HH:MM:SSZ
             var fields = tsString.split(" "),
                 dateString = fields[0],
+                YYYY = dateString.slice(0, 4),
+                MM = dateString.slice(5, 7) - 1,
+                DD = dateString.slice(8, 10),
                 timeString = fields[1].slice(0, 8),
+                hh = timeString.slice(0, 2),
+                mm = timeString.slice(3, 5),
+                ss = timeString.slice(6, 8),
                 tzString = fields[1].slice(8);
 
             if (tzString != "Z") {
                 console.log("Time Zone is not UTC [" + tzString + "]", tsString);
+            } else {
+                var offsetDate = new Date((new Date(YYYY, MM, DD, hh, mm, ss)).getTime() + timezoneOffset);
+                var formattedOffsetDate = app.formatDate(offsetDate);
+                dateString = formattedOffsetDate.dateString;
+                timeString = formattedOffsetDate.timeString;
             }
 
-            var date = app.parseDate(dateString),
+            var date = app.parseDateString(dateString),
                 dayName = weekdays[date.getDay()],
-                simpleTimeString = app.formatTime(timeString);
+                simpleTimeString = app.formatTimeString(timeString);
 
             return {
                 dateString: dateString,
@@ -1755,14 +1784,14 @@
             };
         },
 
-        parseDate: function (dateString) {
+        parseDateString: function (dateString) {
             // dateString is of format YYYY-MM-DD
             var fields = dateString.split("-"),
                 date = new Date(parseInt(fields[0]), parseInt(fields[1]) - 1, parseInt(fields[2]));
             return date;
         },
 
-        formatTime: function (timeString) {
+        formatTimeString: function (timeString) {
             // timeString is of format HH:MM:SS
             var fields = timeString.split(":"),
                 hour = parseInt(fields[0]),
